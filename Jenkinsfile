@@ -1,5 +1,5 @@
 pipeline {
-    agent any
+    agent { label 'built-in' } // Для старых версий Jenkins (до 2.319) используйте label 'master'
 
     environment {
         // Конфигурация локального реестра
