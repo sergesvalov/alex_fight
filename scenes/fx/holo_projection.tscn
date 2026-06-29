@@ -1,0 +1,33 @@
+[gd_scene load_steps=5 format=3 uid="uid://holo123"]
+
+[ext_resource type="Script" path="res://scripts/fx/holo_projection.gd" id="1_holo"]
+[ext_resource type="Shader" path="res://shaders/hologram.gdshader" id="2_holo"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_holo"]
+render_priority = 0
+shader = ExtResource("2_holo")
+shader_parameter/holo_color = Color(0, 0.8, 1, 1)
+shader_parameter/scan_speed = 1.5
+shader_parameter/scan_density = 80.0
+shader_parameter/flicker_speed = 8.0
+shader_parameter/alpha = 0.7
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_holo"]
+top_radius = 0.0
+bottom_radius = 0.5
+height = 2.0
+
+[node name="HoloProjection" type="Node3D"]
+script = ExtResource("1_holo")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+material_override = SubResource("ShaderMaterial_holo")
+mesh = SubResource("CylinderMesh_holo")
+
+[node name="Label3D" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.2, 0)
+pixel_size = 0.005
+billboard = 1
+text = "[ Заголовок ]
+Текст сообщения..."

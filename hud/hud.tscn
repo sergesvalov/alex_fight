@@ -1,0 +1,105 @@
+[gd_scene load_steps=2 format=3 uid="uid://blablahud222"]
+
+[ext_resource type="PackedScene" uid="uid://cx1g6n4f8v5f5" path="res://hud/virtual_joystick.tscn" id="1_vjoy"]
+
+[node name="HUD" type="CanvasLayer"]
+
+[node name="GameHUD" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="AmmoCounter" type="HBoxContainer" parent="GameHUD"]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -150.0
+offset_top = -60.0
+offset_right = -20.0
+offset_bottom = -20.0
+grow_horizontal = 0
+grow_vertical = 0
+
+[node name="ShotsLabel" type="Label" parent="GameHUD/AmmoCounter"]
+layout_mode = 2
+text = "2/2"
+
+[node name="AmmoLabel" type="Label" parent="GameHUD/AmmoCounter"]
+layout_mode = 2
+text = "× 18"
+
+[node name="HealthBar" type="ProgressBar" parent="GameHUD"]
+layout_mode = 1
+offset_left = 20.0
+offset_top = 20.0
+offset_right = 220.0
+offset_bottom = 47.0
+value = 100.0
+
+[node name="InteractPrompt" type="Label" parent="GameHUD"]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -120.0
+offset_top = 20.0
+offset_right = 120.0
+offset_bottom = 43.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "Нажмите для взаимодействия"
+horizontal_alignment = 1
+
+[node name="NarrativeText" type="RichTextLabel" parent="GameHUD"]
+visible = false
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 50.0
+offset_bottom = 150.0
+grow_horizontal = 2
+bbcode_enabled = true
+text = "[center]Narrative Text[/center]"
+
+[node name="MobileControls" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="LeftZone" type="Control" parent="MobileControls"]
+layout_mode = 1
+anchors_preset = 9
+anchor_bottom = 1.0
+offset_right = 640.0
+grow_vertical = 2
+
+[node name="LeftJoystick" parent="MobileControls/LeftZone" instance=ExtResource("1_vjoy")]
+unique_name_in_owner = true
+layout_mode = 1
+
+[node name="RightZone" type="Control" parent="MobileControls"]
+layout_mode = 1
+anchors_preset = 11
+anchor_left = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -640.0
+grow_horizontal = 0
+grow_vertical = 2
+
+[node name="RightJoystick" parent="MobileControls/RightZone" instance=ExtResource("1_vjoy")]
+unique_name_in_owner = true
+layout_mode = 1

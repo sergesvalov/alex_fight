@@ -1,0 +1,67 @@
+FROM ubuntu:24.04
+
+# Отключаем интерактивные запросы при установке пакетов
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Устанавливаем базовые утилиты и Java 17 для Android SDK
+RUN apt-get update && apt-get install -y \
+    openjdk-17-jdk \
+    curl \
+    wget \
+    unzip \
+    git \
+    aapt \
+    zipalign \
+    apksigner \
+    fontconfig \
+    adb \
+    && rm -rf /var/lib/apt/lists/*
+
+# Настройка переменных окружения для Android SDK
+ENV ANDROID_HOME=/opt/android-sdk
+ENV PATH=${PATH}:${ANDROID_HOME}/cmdline-tools/latest/bin:${ANDROID_HOME}/platform-tools
+
+# Скачиваем Android Command Line Tools
+RUN mkdir -p ${ANDROID_HOME}/cmdline-tools && \
+    wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O tools.zip && \
+    unzip -q tools.zip -d ${ANDROID_HOME}/cmdline-tools && \
+    mv ${ANDROID_HOME}/cmdline-tools/cmdline-tools ${ANDROID_HOME}/cmdline-tools/latest && \
+    rm tools.zip
+
+# Соглашаемся с лицензиями и ставим базовые пакеты платформы
+RUN yes | sdkmanager --licenses
+RUN sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
+
+# Подмена x86_64 утилит на нативные ARM из Ubuntu (критично для Raspberry Pi / ARM64)
+RUN ln -sf /usr/bin/zipalign ${ANDROID_HOME}/build-tools/34.0.0/zipalign && \
+    ln -sf /usr/bin/aapt ${ANDROID_HOME}/build-tools/34.0.0/aapt && \
+    ln -sf /usr/bin/apksigner ${ANDROID_HOME}/build-tools/34.0.0/apksigner && \
+    ln -sf /usr/bin/adb ${ANDROID_HOME}/platform-tools/adb || true
+
+# Установка Godot (Сборка под Linux ARM64)
+ARG GODOT_VERSION=4.7
+ENV GODOT_VERSION=${GODOT_VERSION}
+ENV GODOT_BIN=Godot_v${GODOT_VERSION}-stable_linux.arm64
+
+RUN wget -q https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/${GODOT_BIN}.zip -O godot.zip && \
+    unzip -q godot.zip -d /usr/local/bin/ && \
+    mv /usr/local/bin/${GODOT_BIN} /usr/local/bin/godot && \
+    chmod +x /usr/local/bin/godot && \
+    rm godot.zip
+
+# Установка шаблонов экспорта (Export Templates) для сборки под Android
+RUN mkdir -p ~/.local/share/godot/export_templates/${GODOT_VERSION}.stable && \
+    wget -q https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_export_templates.tpz -O templates.tpz && \
+    unzip -q templates.tpz && \
+    mv templates/* ~/.local/share/godot/export_templates/${GODOT_VERSION}.stable/ && \
+    rm -rf templates templates.tpz
+
+# Задаем переменные, чтобы Godot знал, где лежит Android SDK
+ENV ANDROID_SDK_ROOT=/opt/android-sdk
+
+# Глобально прописываем пути к SDK для Godot в конфигурации пользователя root
+RUN mkdir -p /root/.config/godot && \
+    echo '[gd_resource type="EditorSettings" format=3]' > /root/.config/godot/editor_settings-4.tres && \
+    echo '[resource]' >> /root/.config/godot/editor_settings-4.tres && \
+    echo 'export/android/android_sdk_path = "/opt/android-sdk"' >> /root/.config/godot/editor_settings-4.tres && \
+    echo 'export/android/java_sdk_path = "/usr/lib/jvm/java-17-openjdk-arm64"' >> /root/.config/godot/editor_settings-4.tres
