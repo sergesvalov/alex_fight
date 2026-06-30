@@ -9,6 +9,8 @@
 ## 📋 Документация
 
 - **[GDD.md](GDD.md)** — полный Game Design Document и техническая архитектура (Godot 4.7, GDScript, Mobile UX)
+- **[MECHANICS.md](MECHANICS.md)** — описание основных игровых механик, управления и боевки
+- **[.agents/AGENTS.md](.agents/AGENTS.md)** — технический контекст и правила проекта для AI-агентов
 
 ---
 
