@@ -1,6 +1,8 @@
 [gd_scene load_steps=5 format=3 uid="uid://cerb123"]
 
 [ext_resource type="Script" path="res://scripts/enemies/cerberus_ai.gd" id="1_cerb"]
+[ext_resource type="Script" path="res://scripts/enemies/components/cerberus_movement.gd" id="move_script"]
+[ext_resource type="Script" path="res://scripts/enemies/components/cerberus_sensors.gd" id="sensor_script"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_cerb"]
 
@@ -39,3 +41,9 @@ shape = SubResource("SphereShape3D_cerb")
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
 
 [node name="AudioStreamPlayer3D" type="AudioStreamPlayer3D" parent="."]
+
+[node name="CerberusMovement" type="Node" parent="."]
+script = ExtResource("move_script")
+
+[node name="CerberusSensors" type="Node" parent="."]
+script = ExtResource("sensor_script")
