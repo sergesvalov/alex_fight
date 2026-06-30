@@ -468,6 +468,102 @@ use_collision = true
 collision_layer = 2
 size = Vector3(7, 4, 1)
 material = SubResource("StandardMaterial3D_wall")
+
+; ======= WC / Уборные (по плану этажа) =======
+
+; --- WC RoomL1 (DBL ROOM 403) ---
+; Разделительная стена (S-граница WC, z=-15.5): отгораживает кабинку 2.5x2 в NE углу
+[node name="RoomL1_WC_WallS" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.25, 2, -15.5)
+use_collision = true
+collision_layer = 2
+size = Vector3(2.5, 4, 0.5)
+material = SubResource("StandardMaterial3D_wall")
+
+; Западная стена WC (x=-5.75): отделяет WC от основной части комнаты
+[node name="RoomL1_WC_WallW" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.75, 2, -16.5)
+use_collision = true
+collision_layer = 2
+size = Vector3(0.5, 4, 2)
+material = SubResource("StandardMaterial3D_wall")
+
+; --- WC RoomL2 (DBL ROOM 405) ---
+[node name="RoomL2_WC_WallS" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.25, 2, -28.0)
+use_collision = true
+collision_layer = 2
+size = Vector3(2.5, 4, 0.5)
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="RoomL2_WC_WallW" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.75, 2, -29.0)
+use_collision = true
+collision_layer = 2
+size = Vector3(0.5, 4, 2)
+material = SubResource("StandardMaterial3D_wall")
+
+; --- WC RoomL3 (DBL ROOM 406/408) ---
+[node name="RoomL3_WC_WallS" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.25, 2, -40.5)
+use_collision = true
+collision_layer = 2
+size = Vector3(2.5, 4, 0.5)
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="RoomL3_WC_WallW" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.75, 2, -41.5)
+use_collision = true
+collision_layer = 2
+size = Vector3(0.5, 4, 2)
+material = SubResource("StandardMaterial3D_wall")
+
+; --- WC RoomR1 (SNGL ROOM 413) ---
+; Кабинка 2x2 в NE углу (x: 8..10, z: -13.5..-15.5)
+[node name="RoomR1_WC_WallS" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 2, -13.5)
+use_collision = true
+collision_layer = 2
+size = Vector3(2, 4, 0.5)
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="RoomR1_WC_WallW" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 2, -14.5)
+use_collision = true
+collision_layer = 2
+size = Vector3(0.5, 4, 2)
+material = SubResource("StandardMaterial3D_wall")
+
+; --- WC RoomR2 (SNGL ROOM 416) ---
+[node name="RoomR2_WC_WallS" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 2, -26.0)
+use_collision = true
+collision_layer = 2
+size = Vector3(2, 4, 0.5)
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="RoomR2_WC_WallW" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 2, -27.0)
+use_collision = true
+collision_layer = 2
+size = Vector3(0.5, 4, 2)
+material = SubResource("StandardMaterial3D_wall")
+
+; --- WC RoomR3 (SNGL ROOM 417) ---
+[node name="RoomR3_WC_WallS" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 2, -38.5)
+use_collision = true
+collision_layer = 2
+size = Vector3(2, 4, 0.5)
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="RoomR3_WC_WallW" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 2, -39.5)
+use_collision = true
+collision_layer = 2
+size = Vector3(0.5, 4, 2)
+material = SubResource("StandardMaterial3D_wall")
+
 [node name="Stairwell" type="CSGCombiner3D" parent="NavigationRegion3D/HotelGeometry"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -45)
 use_collision = true
@@ -660,6 +756,42 @@ light_color = Color(0.9, 0.8, 0.6, 1)
 light_energy = 0.5
 omni_range = 10.0
 shadow_enabled = true
+
+[node name="WC_LightL_1" type="OmniLight3D" parent="InteractableObjects"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.25, 3.5, -16.5)
+light_color = Color(0.85, 0.95, 1.0, 1)
+light_energy = 0.6
+omni_range = 4.0
+
+[node name="WC_LightR_1" type="OmniLight3D" parent="InteractableObjects"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 3.5, -14.5)
+light_color = Color(0.85, 0.95, 1.0, 1)
+light_energy = 0.6
+omni_range = 4.0
+
+[node name="WC_LightL_2" type="OmniLight3D" parent="InteractableObjects"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.25, 3.5, -29.0)
+light_color = Color(0.85, 0.95, 1.0, 1)
+light_energy = 0.6
+omni_range = 4.0
+
+[node name="WC_LightR_2" type="OmniLight3D" parent="InteractableObjects"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 3.5, -27.0)
+light_color = Color(0.85, 0.95, 1.0, 1)
+light_energy = 0.6
+omni_range = 4.0
+
+[node name="WC_LightL_3" type="OmniLight3D" parent="InteractableObjects"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.25, 3.5, -41.5)
+light_color = Color(0.85, 0.95, 1.0, 1)
+light_energy = 0.6
+omni_range = 4.0
+
+[node name="WC_LightR_3" type="OmniLight3D" parent="InteractableObjects"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 3.5, -39.5)
+light_color = Color(0.85, 0.95, 1.0, 1)
+light_energy = 0.6
+omni_range = 4.0
 
 [node name="Mirror" parent="InteractableObjects" instance=ExtResource("10_mirror")]
 transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 2.9, 0, -4)
