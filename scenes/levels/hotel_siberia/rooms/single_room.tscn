@@ -58,6 +58,11 @@ collision_layer = 2
 size = Vector3(2, 4, 0.5)
 material = SubResource("StandardMaterial3D_wall")
 
+[node name="DoorHole" type="CSGBox3D" parent="WC_WallS"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.2, -0.75, 0)
+operation = 2
+size = Vector3(0.8, 2.5, 1)
+
 [node name="WC_WallW" type="CSGBox3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 2, -2)
 use_collision = true
