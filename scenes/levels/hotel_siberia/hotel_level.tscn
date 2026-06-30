@@ -257,11 +257,77 @@ size = Vector3(1, 4, 9.5)
 material = SubResource("StandardMaterial3D_wall")
 
 [node name="CorrWallE4" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.5, 2, -42)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.5, 2, -39.75)
 use_collision = true
 collision_layer = 2
-size = Vector3(1, 4, 6)
+size = Vector3(1, 4, 1.5)
 material = SubResource("StandardMaterial3D_wall")
+
+
+[node name="SideCorridorFloor" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.5, 0, -42.5)
+use_collision = true
+collision_layer = 2
+size = Vector3(9, 0.5, 4)
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="SideCorridorCeiling" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.5, 4.25, -42.5)
+use_collision = true
+collision_layer = 2
+size = Vector3(9, 0.5, 4)
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="ElevatorWallS" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.5, 2, -44.5)
+use_collision = true
+collision_layer = 2
+size = Vector3(9, 4, 1)
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="ElevatorDoorHole" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry/ElevatorWallS"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.75, 0)
+operation = 2
+size = Vector3(3, 2.5, 2)
+
+[node name="ElevatorShaft" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.5, 2, -47.5)
+use_collision = true
+collision_layer = 2
+size = Vector3(6, 4, 5)
+material = SubResource("StandardMaterial3D_wall")
+flip_faces = true
+
+[node name="MaintenanceWallW" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 2, -42.5)
+use_collision = true
+collision_layer = 2
+size = Vector3(1, 4, 5)
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="MaintenanceDoorHole" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry/MaintenanceWallW"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.75, 0)
+operation = 2
+size = Vector3(2, 2.5, 1.5)
+
+[node name="MaintenanceRoom" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 2, -42.5)
+use_collision = true
+collision_layer = 2
+size = Vector3(6, 4, 5)
+material = SubResource("StandardMaterial3D_wall")
+flip_faces = true
+
+[node name="ElevatorLight" type="OmniLight3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.5, 3.5, -46)
+light_color = Color(0.9, 0.95, 1, 1)
+omni_range = 8.0
+
+[node name="MaintenanceLight" type="OmniLight3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 3.5, -42.5)
+light_color = Color(1, 0.9, 0.7, 1)
+omni_range = 8.0
+
 
 [node name="DoubleRoomL1" parent="NavigationRegion3D/HotelGeometry" instance=ExtResource("double_room")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.5, 0, -12.5)
