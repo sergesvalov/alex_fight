@@ -23,6 +23,7 @@ var look_input: Vector2 = Vector2.ZERO
 var is_sprinting: bool = false
 var camera_x_rotation: float = 0.0
 const CAMERA_X_LIMIT: float = PI / 2.5
+var is_desktop: bool = false
 
 func _ready() -> void:
     # Jolt physics tweaks
@@ -45,7 +46,8 @@ func _ready() -> void:
         if right: right.input_vector_changed.connect(_on_right_joystick_changed)
     
     # Для десктоп теста
-    if OS.get_name() in ["Windows", "macOS", "Linux", "FreeBSD", "NetBSD", "OpenBSD", "BSD"]:
+    is_desktop = OS.get_name() in ["Windows", "macOS", "Linux", "FreeBSD", "NetBSD", "OpenBSD", "BSD"]
+    if is_desktop:
         Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 func _input(event: InputEvent) -> void:
@@ -63,7 +65,7 @@ func _physics_process(delta: float) -> void:
         return  # Заморозить управление во время чтения
         
     # Десктоп-фаллбэк (WASD)
-    if move_input == Vector2.ZERO:
+    if move_input == Vector2.ZERO and is_desktop:
         move_input.x = Input.get_action_strength("ui_right") - Input.get_action_strength("ui_left")
         move_input.y = Input.get_action_strength("ui_down") - Input.get_action_strength("ui_up")
         if move_input.length() > 1.0: move_input = move_input.normalized()
