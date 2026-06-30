@@ -90,7 +90,7 @@ func _physics_process(delta: float) -> void:
     if GameStateManager.current_state == GameStateManager.GameState.READING:
         return  # Заморозить управление во время чтения
         
-    if Input.is_action_just_pressed("shoot"):
+    if Input.is_action_just_pressed("shoot") and is_desktop:
         shoot()
         
     # Десктоп-фаллбэк (WASD)
