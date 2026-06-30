@@ -15,7 +15,6 @@ var is_overheated: bool = false
 
 @onready var raycast: RayCast3D = $RayCast3D
 @onready var beam_mesh: MeshInstance3D = $BeamMesh
-@onready var spark_particles: GPUParticles3D = $Sparks
 
 func _ready() -> void:
     beam_mesh.hide()
@@ -56,17 +55,19 @@ func shoot() -> void:
         if collider and collider.has_method("take_damage"):
             collider.take_damage(damage)
             
-        # Particles
-        spark_particles.global_position = hit_point
-        var normal = raycast.get_collision_normal()
-        # Look at normal
-        if normal.is_normalized():
-            # Basic look_at safe check
-            if abs(normal.dot(Vector3.UP)) < 0.99:
-                spark_particles.look_at(hit_point + normal, Vector3.UP)
-            else:
-                spark_particles.look_at(hit_point + normal, Vector3.RIGHT)
-        spark_particles.restart()
+        # Spawn Hit Marker (Decal and Sparks)
+        var hit_marker_scene = preload("res://scenes/fx/hit_marker.tscn")
+        if hit_marker_scene:
+            var marker = hit_marker_scene.instantiate()
+            get_tree().current_scene.add_child(marker)
+            marker.global_position = hit_point
+            
+            var normal = raycast.get_collision_normal()
+            if normal.is_normalized():
+                if abs(normal.dot(Vector3.UP)) < 0.99:
+                    marker.look_at(hit_point + normal, Vector3.UP)
+                else:
+                    marker.look_at(hit_point + normal, Vector3.RIGHT)
 
     # Visual beam
     # Height of cylinder matches distance

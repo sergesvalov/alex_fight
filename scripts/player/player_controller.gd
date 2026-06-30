@@ -46,5 +46,3 @@ func _on_right_swipe_dragged(relative: Vector2) -> void:
 func collect_tape() -> void:
     interaction.collect_tape()
 
-func spawn_hit_marker(pos: Vector3) -> void:
-    weapon.spawn_hit_marker(pos)
