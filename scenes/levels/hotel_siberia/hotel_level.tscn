@@ -4,8 +4,8 @@
 [ext_resource type="PackedScene" uid="uid://blablahud222" path="res://hud/hud.tscn" id="2_hud"]
 [ext_resource type="PackedScene" uid="uid://tape123" path="res://entities/interactables/vhs_tape.tscn" id="3_tape"]
 [ext_resource type="Script" path="res://scripts/levels/hotel_level.gd" id="4_level"]
-[ext_resource type="Texture2D" uid="uid://hotelcarpet123" path="res://assets/textures/hotel_carpet.png" id="5_carpet"]
-[ext_resource type="Texture2D" uid="uid://hotelwallpaper123" path="res://assets/textures/hotel_wallpaper.png" id="6_wallpaper"]
+[ext_resource type="Texture2D" path="res://assets/textures/hotel_carpet.png" id="5_carpet"]
+[ext_resource type="Texture2D" path="res://assets/textures/hotel_wallpaper.png" id="6_wallpaper"]
 
 [sub_resource type="NavigationMesh" id="NavigationMesh_nav"]
 
