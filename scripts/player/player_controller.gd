@@ -2,47 +2,18 @@
 class_name PlayerController
 extends CharacterBody3D
 
-# === Параметры ===
-@export var walk_speed: float = 4.0
-@export var sprint_speed: float = 7.0
-@export var camera_sensitivity: float = 0.003    # Для тач-управления
-@export var gravity: float = 9.8
-@export var jump_height: float = 0.0             # Без прыжков в шутере
-
-# === Узлы ===
-@onready var camera_rig: Node3D = $CameraRig
-@onready var camera: Camera3D = $CameraRig/Camera3D
-@onready var ray_interact: RayCast3D = $RayCast3D
-@onready var weapon_holder: Node3D = $CameraRig/Camera3D/WeaponHolder
-@onready var laser_pistol: Node3D = $CameraRig/Camera3D/WeaponHolder/LaserPistol
-# @onready var left_joystick: VirtualJoystick = %LeftJoystick
-# @onready var right_joystick: VirtualJoystick = %RightJoystick
-
-# === Состояние ===
-var move_input: Vector2 = Vector2.ZERO
-var is_sprinting: bool = false
-var camera_x_rotation: float = 0.0
-const CAMERA_X_LIMIT: float = PI / 2.5
-var hit_marker_scene = preload("res://scenes/fx/hit_marker.tscn")
-var is_desktop: bool = false
-var tapes_collected: int = 0
-var max_tapes: int = 3
+@onready var movement: PlayerMovement = $PlayerMovement
+@onready var camera_comp: PlayerCamera = $PlayerCamera
+@onready var interaction: PlayerInteraction = $PlayerInteraction
+@onready var weapon: PlayerWeapon = $PlayerWeapon
 
 func _ready() -> void:
-    
-    # Jolt physics tweaks
-    collision_layer = 1   # Слой "Player"
-    collision_mask = 2    # Слой коллизий "World"
-    floor_stop_on_slope = true
-    floor_max_angle = deg_to_rad(45)
-    floor_snap_length = 0.1
-
-    # Подключение UI
     var hud = null
     if get_tree().current_scene:
         hud = get_tree().current_scene.find_child("HUD", true, false)
     if not hud:
         hud = get_node_or_null("../HUD")
+        
     if hud:
         var left = hud.find_child("LeftJoystick", true, false)
         var right_zone = hud.find_child("RightZone", true, false)
@@ -51,99 +22,29 @@ func _ready() -> void:
         
         var interact_btn = hud.find_child("InteractButton", true, false)
         if interact_btn:
-            interact_btn.pressed.connect(try_interact)
-            
-    if laser_pistol:
-        laser_pistol.heat_changed.connect(_on_heat_changed)
-        
-    update_tapes_ui()
-    
-    # Для десктоп теста
-    is_desktop = OS.get_name() in ["Windows", "macOS", "Linux", "FreeBSD", "NetBSD", "OpenBSD", "BSD"]
-    if is_desktop:
-        Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+            interact_btn.pressed.connect(interaction.try_interact)
 
 func _input(event: InputEvent) -> void:
-    if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED and event is InputEventMouseMotion:
-        var look_factor = camera_sensitivity * 0.5
-        rotate_y(-event.relative.x * look_factor)
-        camera_x_rotation -= event.relative.y * look_factor
-        camera_x_rotation = clamp(camera_x_rotation, -CAMERA_X_LIMIT, CAMERA_X_LIMIT)
-        camera_rig.rotation.x = camera_x_rotation
+    camera_comp.process_input(event)
         
     if event is InputEventScreenTouch and event.pressed and event.double_tap:
-        shoot()
-
-func _on_left_joystick_changed(vector: Vector2) -> void:
-    move_input = vector
-
-func _on_right_swipe_dragged(relative: Vector2) -> void:
-    # Mobile is restricted to horizontal rotation only
-    var look_factor = camera_sensitivity * 0.5
-    rotate_y(-relative.x * look_factor)
-
-func _on_heat_changed(current_heat: float) -> void:
-    if EventBus.has_signal("heat_updated"):
-        EventBus.heat_updated.emit(current_heat)
+        weapon.shoot()
 
 func _physics_process(delta: float) -> void:
-    if GameStateManager.current_state == GameStateManager.GameState.READING:
-        return  # Заморозить управление во время чтения
+    if Input.is_action_just_pressed("shoot") and camera_comp.is_desktop:
+        weapon.shoot()
         
-    if Input.is_action_just_pressed("shoot") and is_desktop:
-        shoot()
-        
-    # Десктоп-фаллбэк (WASD)
-    if move_input == Vector2.ZERO and is_desktop:
-        move_input.x = Input.get_action_strength("ui_right") - Input.get_action_strength("ui_left")
-        move_input.y = Input.get_action_strength("ui_down") - Input.get_action_strength("ui_up")
-        if move_input.length() > 1.0: move_input = move_input.normalized()
-    
-    _apply_gravity(delta)
-    _apply_movement(delta)
-    move_and_slide()
+    movement.process_movement(delta)
 
-func _apply_movement(delta: float) -> void:
-    var speed: float = sprint_speed if is_sprinting else walk_speed
-    var direction: Vector3 = (
-        transform.basis.x * move_input.x +
-        transform.basis.z * move_input.y
-    ).normalized()
-    velocity.x = direction.x * speed
-    velocity.z = direction.z * speed
+func _on_left_joystick_changed(vector: Vector2) -> void:
+    movement.set_move_input(vector)
 
-func _apply_gravity(delta: float) -> void:
-    if not is_on_floor():
-        velocity.y -= gravity * delta
+func _on_right_swipe_dragged(relative: Vector2) -> void:
+    camera_comp.process_swipe(relative)
 
-func try_interact() -> void:
-    if ray_interact.is_colliding():
-        var collider = ray_interact.get_collider()
-        if collider.has_method("interact"):
-            collider.interact(self)
-
+# Helper methods to maintain compatibility with external calls (like vhs_tape.gd calling collect_tape or cerberus_ai)
 func collect_tape() -> void:
-    tapes_collected += 1
-    update_tapes_ui()
-    
-func update_tapes_ui() -> void:
-    if EventBus.has_signal("tapes_collected_updated"):
-        EventBus.tapes_collected_updated.emit(tapes_collected, max_tapes)
-
-func shoot() -> void:
-    var tween = create_tween()
-    var current_rot = camera_rig.rotation.x
-    tween.tween_property(camera_rig, "rotation:x", current_rot + deg_to_rad(2), 0.05)
-    tween.tween_property(camera_rig, "rotation:x", current_rot, 0.1)
-    
-    if laser_pistol and laser_pistol.has_method("shoot"):
-        laser_pistol.shoot()
+    interaction.collect_tape()
 
 func spawn_hit_marker(pos: Vector3) -> void:
-    if hit_marker_scene:
-        var instance = hit_marker_scene.instantiate()
-        instance.global_position = pos
-        var scene = get_tree().current_scene
-        if scene:
-            scene.add_child(instance)
-            get_tree().create_timer(1.0).timeout.connect(instance.queue_free)
+    weapon.spawn_hit_marker(pos)

@@ -2,6 +2,10 @@
 
 [ext_resource type="Script" path="res://scripts/player/player_controller.gd" id="1_player"]
 [ext_resource type="PackedScene" uid="uid://laser12345pistol" path="res://entities/weapons/laser_pistol.tscn" id="2_laser"]
+[ext_resource type="Script" path="res://scripts/player/components/player_movement.gd" id="move_script"]
+[ext_resource type="Script" path="res://scripts/player/components/player_camera.gd" id="cam_script"]
+[ext_resource type="Script" path="res://scripts/player/components/player_interaction.gd" id="inter_script"]
+[ext_resource type="Script" path="res://scripts/player/components/player_weapon.gd" id="weap_script"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_pl"]
 
@@ -86,3 +90,18 @@ collide_with_areas = true
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
 
 [node name="AudioStreamPlayer3D" type="AudioStreamPlayer3D" parent="."]
+
+[node name="PlayerMovement" type="Node" parent="."]
+script = ExtResource("move_script")
+walk_speed = 4.0
+sprint_speed = 7.0
+gravity = 9.8
+
+[node name="PlayerCamera" type="Node" parent="."]
+script = ExtResource("cam_script")
+
+[node name="PlayerInteraction" type="Node" parent="."]
+script = ExtResource("inter_script")
+
+[node name="PlayerWeapon" type="Node" parent="."]
+script = ExtResource("weap_script")
