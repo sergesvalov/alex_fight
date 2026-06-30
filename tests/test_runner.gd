@@ -71,8 +71,8 @@ func _ready() -> void:
     if passed:
         print("  ✅ ТЕСТЫ ПРОЙДЕНЫ УСПЕШНО  ")
         print("===============================\n")
-        quit(0)
+        get_tree().quit(0)
     else:
         print("  ❌ ОШИБКА В ТЕСТАХ!  ")
         print("===============================\n")
-        quit(1)
+        get_tree().quit(1)
