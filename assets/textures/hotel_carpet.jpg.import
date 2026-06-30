@@ -2,15 +2,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://c1a2r3p4e5t6s"
-path="res://.godot/imported/hotel_carpet.png-c1a2r3p4e5t6s.ctex"
+path="res://.godot/imported/hotel_carpet.jpg-c1a2r3p4e5t6s.ctex"
 metadata={
 "vram_texture": false
 }
 valid=false
 
 [deps]
-source_file="res://assets/textures/hotel_carpet.png"
-dest_files=["res://.godot/imported/hotel_carpet.png-c1a2r3p4e5t6s.ctex"]
+source_file="res://assets/textures/hotel_carpet.jpg"
+dest_files=["res://.godot/imported/hotel_carpet.jpg-c1a2r3p4e5t6s.ctex"]
 
 [params]
 compress/mode=0
