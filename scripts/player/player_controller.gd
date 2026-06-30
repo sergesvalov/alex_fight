@@ -46,9 +46,9 @@ func _ready() -> void:
         hud = get_node_or_null("../HUD")
     if hud:
         var left = hud.find_child("LeftJoystick", true, false)
-        var right = hud.find_child("RightJoystick", true, false)
+        var right_zone = hud.find_child("RightZone", true, false)
         if left: left.input_vector_changed.connect(_on_left_joystick_changed)
-        if right: right.input_vector_changed.connect(_on_right_joystick_changed)
+        if right_zone: right_zone.swipe_dragged.connect(_on_right_swipe_dragged)
         
         hud_heat_bar = hud.find_child("HeatBar", true, false)
         hud_tapes_counter = hud.find_child("TapesCounter", true, false)
@@ -74,8 +74,13 @@ func _input(event: InputEvent) -> void:
 func _on_left_joystick_changed(vector: Vector2) -> void:
     move_input = vector
 
-func _on_right_joystick_changed(vector: Vector2) -> void:
-    look_input = vector
+func _on_right_swipe_dragged(relative: Vector2) -> void:
+    # Rotate instantly like a mouse motion
+    var look_factor = camera_sensitivity * 0.5
+    rotate_y(-relative.x * look_factor)
+    camera_x_rotation -= relative.y * look_factor
+    camera_x_rotation = clamp(camera_x_rotation, -CAMERA_X_LIMIT, CAMERA_X_LIMIT)
+    camera_rig.rotation.x = camera_x_rotation
 
 func _on_heat_changed(current_heat: float) -> void:
     if hud_heat_bar:
