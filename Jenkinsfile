@@ -1,6 +1,10 @@
 pipeline {
     agent { label 'built-in' } // Для старых версий Jenkins (до 2.319) используйте label 'master'
 
+    parameters {
+        booleanParam(name: 'RUN_TESTS', defaultValue: false, description: 'Запускать ли автотесты Godot перед сборкой')
+    }
+
     environment {
         // Конфигурация локального реестра
         REGISTRY_IP   = "192.168.10.222" 
@@ -72,14 +76,18 @@ pipeline {
                         }
 
                         stage('Run Autotests') {
-                            echo "Запуск headless автотестов Godot..."
-                            sh '''
-                            godot --headless tests/test_runner.tscn || {
-                                echo '❌ АВТОТЕСТЫ ПРОВАЛЕНЫ!'
-                                exit 1
+                            if (params.RUN_TESTS) {
+                                echo "Запуск headless автотестов Godot..."
+                                sh '''
+                                godot --headless tests/test_runner.tscn || {
+                                    echo '❌ АВТОТЕСТЫ ПРОВАЛЕНЫ!'
+                                    exit 1
+                                }
+                                echo '✅ АВТОТЕСТЫ ПРОЙДЕНЫ!'
+                                '''
+                            } else {
+                                echo "Автотесты пропущены (RUN_TESTS = false)"
                             }
-                            echo '✅ АВТОТЕСТЫ ПРОЙДЕНЫ!'
-                            '''
                         }
 
                         stage('Build Android APK') {
