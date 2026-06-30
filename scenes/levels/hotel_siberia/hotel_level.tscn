@@ -213,7 +213,7 @@ shape = SubResource("BoxShape3D_corridor_wall_end")
 mesh = SubResource("BoxMesh_corridor_wall_end")
 
 [node name="MapDecal" type="MeshInstance3D" parent="NavigationRegion3D/HotelGeometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, -5.6)
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 2.99, 2, -10)
 mesh = SubResource("QuadMesh_map")
 
 [node name="InteractableObjects" type="Node3D" parent="."]
