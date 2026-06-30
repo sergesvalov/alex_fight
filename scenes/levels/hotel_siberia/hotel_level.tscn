@@ -7,7 +7,7 @@
 [ext_resource type="Texture2D" path="res://assets/textures/hotel_carpet.jpg" id="5_carpet"]
 [ext_resource type="Texture2D" path="res://assets/textures/hotel_wallpaper.jpg" id="6_wallpaper"]
 [ext_resource type="PackedScene" uid="uid://cerb123" path="res://entities/enemies/cerberus/cerberus.tscn" id="7_cerb"]
-[ext_resource type="Texture2D" path="res://assets/textures/hotel_map.png" id="8_map"]
+[ext_resource type="Texture2D" path="res://assets/textures/hotel_map.jpg" id="8_map"]
 [ext_resource type="PackedScene" uid="uid://table_123" path="res://entities/props/table.tscn" id="table"]
 [ext_resource type="PackedScene" uid="uid://chair_123" path="res://entities/props/chair.tscn" id="chair"]
 [ext_resource type="PackedScene" uid="uid://bed_123" path="res://entities/props/bed.tscn" id="bed"]
@@ -604,6 +604,7 @@ patrol_points = [NodePath("../PatrolPoints/Point1"), NodePath("../PatrolPoints/P
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
 
 [node name="HUD" parent="." instance=ExtResource("2_hud")]
+
 
 
 
