@@ -5,6 +5,7 @@
 [ext_resource type="PackedScene" uid="uid://table_123" path="res://entities/props/table.tscn" id="3_table"]
 [ext_resource type="PackedScene" uid="uid://chair_123" path="res://entities/props/chair.tscn" id="4_chair"]
 [ext_resource type="PackedScene" uid="uid://bed_123" path="res://entities/props/bed.tscn" id="5_bed"]
+[ext_resource type="PackedScene" path="res://entities/props/door.tscn" id="6_door"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_floor"]
 albedo_texture = ExtResource("1_carpet")
@@ -22,6 +23,12 @@ use_collision = true
 collision_layer = 2
 size = Vector3(7, 0.5, 6)
 material = SubResource("StandardMaterial3D_floor")
+
+[node name="MainDoor" parent="." instance=ExtResource("6_door")]
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -3.0, 0.25, 0.0)
+
+[node name="WCDoor" parent="." instance=ExtResource("6_door")]
+transform = Transform3D(0.8, 0, 0, 0, 1, 0, 0, 0, 1, -2.4, 0.25, -0.25)
 
 [node name="Ceil" type="CSGBox3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.25, 0)
