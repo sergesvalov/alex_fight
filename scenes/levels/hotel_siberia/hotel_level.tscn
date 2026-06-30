@@ -20,6 +20,7 @@
 [ext_resource type="PackedScene" path="res://scenes/levels/hotel_siberia/rooms/double_room.tscn" id="double_room"]
 [ext_resource type="PackedScene" path="res://scenes/levels/hotel_siberia/rooms/single_room.tscn" id="single_room"]
 [ext_resource type="PackedScene" path="res://entities/props/dead_body.tscn" id="dead_body"]
+[ext_resource type="PackedScene" path="res://scenes/levels/hotel_siberia/stairwell.tscn" id="stairwell"]
 
 [sub_resource type="NavigationMesh" id="NavigationMesh_nav"]
 
