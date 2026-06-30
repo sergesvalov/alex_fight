@@ -13,7 +13,7 @@ extends CharacterBody3D
 @onready var camera_rig: Node3D = $CameraRig
 @onready var camera: Camera3D = $CameraRig/Camera3D
 @onready var ray_interact: RayCast3D = $RayCast3D
-# @onready var weapon: Node3D = $CameraRig/Camera3D/WeaponHolder/Shotgun
+@onready var ray_gun: RayCast3D = $CameraRig/Camera3D/RayCastGun
 # @onready var left_joystick: VirtualJoystick = %LeftJoystick
 # @onready var right_joystick: VirtualJoystick = %RightJoystick
 
@@ -64,6 +64,9 @@ func _physics_process(delta: float) -> void:
     if GameStateManager.current_state == GameStateManager.GameState.READING:
         return  # Заморозить управление во время чтения
         
+    if Input.is_action_just_pressed("shoot"):
+        shoot()
+        
     # Десктоп-фаллбэк (WASD)
     if move_input == Vector2.ZERO and is_desktop:
         move_input.x = Input.get_action_strength("ui_right") - Input.get_action_strength("ui_left")
@@ -109,3 +112,36 @@ func try_interact() -> void:
         var collider = ray_interact.get_collider()
         if collider.has_method("interact"):
             collider.interact(self)
+
+func shoot() -> void:
+    var tween = create_tween()
+    var current_rot = camera_rig.rotation.x
+    tween.tween_property(camera_rig, "rotation:x", current_rot + deg_to_rad(2), 0.05)
+    tween.tween_property(camera_rig, "rotation:x", current_rot, 0.1)
+    
+    if ray_gun.is_colliding():
+        var collider = ray_gun.get_collider()
+        if collider and collider.has_method("take_damage"):
+            collider.take_damage(20)
+            
+        var hit_pos = ray_gun.get_collision_point()
+        spawn_hit_marker(hit_pos)
+
+func spawn_hit_marker(pos: Vector3) -> void:
+    var mesh_instance = MeshInstance3D.new()
+    var sphere_mesh = SphereMesh.new()
+    sphere_mesh.radius = 0.1
+    sphere_mesh.height = 0.2
+    
+    var material = StandardMaterial3D.new()
+    material.albedo_color = Color(1, 0, 0)
+    material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+    sphere_mesh.material = material
+    
+    mesh_instance.mesh = sphere_mesh
+    mesh_instance.global_position = pos
+    
+    var scene = get_tree().current_scene
+    if scene:
+        scene.add_child(mesh_instance)
+        get_tree().create_timer(1.0).timeout.connect(mesh_instance.queue_free)
