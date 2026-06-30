@@ -33,9 +33,11 @@ func _ready() -> void:
     floor_snap_length = 0.1
 
     # Подключение UI (когда будет добавлено в дерево сцен)
-    var hud = get_tree().current_scene.find_child("HUD", true, false)
+    var hud = null
+    if get_tree().current_scene:
+        hud = get_tree().current_scene.find_child("HUD", true, false)
     if not hud:
-        hud = get_parent().get_node_or_null("HUD")
+        hud = get_node_or_null("../HUD")
     if hud:
         var left = hud.find_child("LeftJoystick", true, false)
         var right = hud.find_child("RightJoystick", true, false)

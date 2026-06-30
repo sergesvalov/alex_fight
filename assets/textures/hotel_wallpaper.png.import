@@ -1,0 +1,13 @@
+[remap]
+importer="texture"
+type="CompressedTexture2D"
+uid="uid://hotelwallpaper123"
+path="res://.godot/imported/hotel_wallpaper.png-hotelwallpaper123.ctex"
+valid=false
+
+[deps]
+source_file="res://assets/textures/hotel_wallpaper.png"
+dest_files=["res://.godot/imported/hotel_wallpaper.png-hotelwallpaper123.ctex"]
+
+[params]
+compress/mode=0
