@@ -6,7 +6,7 @@ path="res://.godot/imported/hotel_wallpaper.png-w1a2l3l4p5a6p.ctex"
 metadata={
 "vram_texture": false
 }
-valid=true
+valid=false
 
 [deps]
 source_file="res://assets/textures/hotel_wallpaper.png"
