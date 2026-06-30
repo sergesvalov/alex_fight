@@ -76,6 +76,15 @@ shading_mode = 0
 material = SubResource("StandardMaterial3D_map")
 size = Vector2(2, 2)
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_coca"]
+albedo_texture = ExtResource("coca_cola_tex")
+roughness = 0.5
+uv1_scale = Vector3(1, 1, 1)
+
+[sub_resource type="QuadMesh" id="QuadMesh_coca"]
+material = SubResource("StandardMaterial3D_coca")
+size = Vector2(2, 3)
+
 [node name="HotelLevel" type="Node3D"]
 script = ExtResource("4_level")
 
@@ -468,15 +477,6 @@ transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 2.99, 
 mesh = SubResource("QuadMesh_map")
 
 [node name="InteractableObjects" type="Node3D" parent="."]
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_coca"]
-albedo_texture = ExtResource("coca_cola_tex")
-roughness = 0.5
-uv1_scale = Vector3(1, 1, 1)
-
-[sub_resource type="QuadMesh" id="QuadMesh_coca"]
-material = SubResource("StandardMaterial3D_coca")
-size = Vector2(2, 3)
 
 [node name="CocaColaPlaque" type="MeshInstance3D" parent="InteractableObjects"]
 transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -3.49, 2, -7)
