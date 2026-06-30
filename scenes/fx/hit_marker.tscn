@@ -1,0 +1,13 @@
+[gd_scene load_steps=4 format=3 uid="uid://hitmarker_fx"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_hit"]
+albedo_color = Color(1, 0, 0, 1)
+shading_mode = 0
+
+[sub_resource type="SphereMesh" id="SphereMesh_hit"]
+material = SubResource("StandardMaterial3D_hit")
+radius = 0.1
+height = 0.2
+
+[node name="HitMarker" type="MeshInstance3D"]
+mesh = SubResource("SphereMesh_hit")

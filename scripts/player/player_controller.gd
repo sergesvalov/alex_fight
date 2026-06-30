@@ -23,20 +23,13 @@ var move_input: Vector2 = Vector2.ZERO
 var is_sprinting: bool = false
 var camera_x_rotation: float = 0.0
 const CAMERA_X_LIMIT: float = PI / 2.5
+var hit_marker_scene = preload("res://scenes/fx/hit_marker.tscn")
 var is_desktop: bool = false
-var hud_heat_bar: ProgressBar = null
-var hud_tapes_counter: Label = null
 var tapes_collected: int = 0
 var max_tapes: int = 3
 
 func _ready() -> void:
-    # Auto-register shoot action for PC
-    if not InputMap.has_action("shoot"):
-        InputMap.add_action("shoot")
-        var event = InputEventMouseButton.new()
-        event.button_index = MOUSE_BUTTON_LEFT
-        InputMap.action_add_event("shoot", event)
-
+    
     # Jolt physics tweaks
     collision_layer = 1   # Слой "Player"
     collision_mask = 2    # Слой коллизий "World"
@@ -44,7 +37,7 @@ func _ready() -> void:
     floor_max_angle = deg_to_rad(45)
     floor_snap_length = 0.1
 
-    # Подключение UI (когда будет добавлено в дерево сцен)
+    # Подключение UI
     var hud = null
     if get_tree().current_scene:
         hud = get_tree().current_scene.find_child("HUD", true, false)
@@ -55,9 +48,6 @@ func _ready() -> void:
         var right_zone = hud.find_child("RightZone", true, false)
         if left: left.input_vector_changed.connect(_on_left_joystick_changed)
         if right_zone: right_zone.swipe_dragged.connect(_on_right_swipe_dragged)
-        
-        hud_heat_bar = hud.find_child("HeatBar", true, false)
-        hud_tapes_counter = hud.find_child("TapesCounter", true, false)
         
         var interact_btn = hud.find_child("InteractButton", true, false)
         if interact_btn:
@@ -93,8 +83,8 @@ func _on_right_swipe_dragged(relative: Vector2) -> void:
     rotate_y(-relative.x * look_factor)
 
 func _on_heat_changed(current_heat: float) -> void:
-    if hud_heat_bar:
-        hud_heat_bar.value = current_heat
+    if EventBus.has_signal("heat_updated"):
+        EventBus.heat_updated.emit(current_heat)
 
 func _physics_process(delta: float) -> void:
     if GameStateManager.current_state == GameStateManager.GameState.READING:
@@ -137,8 +127,8 @@ func collect_tape() -> void:
     update_tapes_ui()
     
 func update_tapes_ui() -> void:
-    if hud_tapes_counter:
-        hud_tapes_counter.text = "Tapes: " + str(tapes_collected) + "/" + str(max_tapes)
+    if EventBus.has_signal("tapes_collected_updated"):
+        EventBus.tapes_collected_updated.emit(tapes_collected, max_tapes)
 
 func shoot() -> void:
     var tween = create_tween()
@@ -150,20 +140,10 @@ func shoot() -> void:
         laser_pistol.shoot()
 
 func spawn_hit_marker(pos: Vector3) -> void:
-    var mesh_instance = MeshInstance3D.new()
-    var sphere_mesh = SphereMesh.new()
-    sphere_mesh.radius = 0.1
-    sphere_mesh.height = 0.2
-    
-    var material = StandardMaterial3D.new()
-    material.albedo_color = Color(1, 0, 0)
-    material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-    sphere_mesh.material = material
-    
-    mesh_instance.mesh = sphere_mesh
-    mesh_instance.global_position = pos
-    
-    var scene = get_tree().current_scene
-    if scene:
-        scene.add_child(mesh_instance)
-        get_tree().create_timer(1.0).timeout.connect(mesh_instance.queue_free)
+    if hit_marker_scene:
+        var instance = hit_marker_scene.instantiate()
+        instance.global_position = pos
+        var scene = get_tree().current_scene
+        if scene:
+            scene.add_child(instance)
+            get_tree().create_timer(1.0).timeout.connect(instance.queue_free)
