@@ -91,7 +91,6 @@ light_energy = 2.0
 omni_range = 15.0
 shadow_enabled = true
 
-[node name="LightmapGI" type="LightmapGI" parent="."]
 
 [node name="NavigationRegion3D" type="NavigationRegion3D" parent="."]
 navigation_mesh = SubResource("NavigationMesh_nav")
@@ -468,6 +467,43 @@ transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 2.99, 
 mesh = SubResource("QuadMesh_map")
 
 [node name="InteractableObjects" type="Node3D" parent="."]
+[node name="RoomLightL_1" type="OmniLight3D" parent="InteractableObjects"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 3.5, -12.5)
+light_color = Color(0.9, 0.8, 0.6, 1)
+light_energy = 0.5
+omni_range = 10.0
+shadow_enabled = true
+[node name="RoomLightR_1" type="OmniLight3D" parent="InteractableObjects"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 3.5, -12.5)
+light_color = Color(0.9, 0.8, 0.6, 1)
+light_energy = 0.5
+omni_range = 10.0
+shadow_enabled = true
+[node name="RoomLightL_2" type="OmniLight3D" parent="InteractableObjects"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 3.5, -25.0)
+light_color = Color(0.9, 0.8, 0.6, 1)
+light_energy = 0.5
+omni_range = 10.0
+shadow_enabled = true
+[node name="RoomLightR_2" type="OmniLight3D" parent="InteractableObjects"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 3.5, -25.0)
+light_color = Color(0.9, 0.8, 0.6, 1)
+light_energy = 0.5
+omni_range = 10.0
+shadow_enabled = true
+[node name="RoomLightL_3" type="OmniLight3D" parent="InteractableObjects"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 3.5, -37.5)
+light_color = Color(0.9, 0.8, 0.6, 1)
+light_energy = 0.5
+omni_range = 10.0
+shadow_enabled = true
+[node name="RoomLightR_3" type="OmniLight3D" parent="InteractableObjects"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 3.5, -37.5)
+light_color = Color(0.9, 0.8, 0.6, 1)
+light_energy = 0.5
+omni_range = 10.0
+shadow_enabled = true
+
 [node name="Mirror" parent="InteractableObjects" instance=ExtResource("10_mirror")]
 transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, 4.9, 0, -2)
 
