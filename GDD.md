@@ -21,6 +21,7 @@
 - Кассетные проигрыватели с голо-проекцией
 - Люминесцентные лампы, мигающие в такт тревожным событиям
 - Смешение советской архитектуры с нео-технологиями
+- P.T.-подобная неевклидова геометрия (бесконечные лестницы)
 
 ---
 
@@ -47,9 +48,9 @@
 
 | Действие | Доля времени | Механика |
 |---|---|---|
-| 🔍 Исследование | 50% | Ходьба, осмотр объектов, сбор патронов |
+| 🔍 Исследование | 50% | Ходьба, осмотр объектов |
 | 📼 Нарратив | 20% | Голо-кассеты, текстовые записки на CRT |
-| 🔫 Стрельба | 30% | Шотган, ограниченные патроны, давление |
+| 🔫 Стрельба | 30% | Лазерный пистолет, перегрев оружия, давление |
 
 ---
 
@@ -134,16 +135,9 @@ res://
 │       ├── holo_projection.tscn          # Голопроекция кассеты
 │       └── muzzle_flash.tscn
 ├── scripts/
-│   ├── autoloads/
-│   │   ├── GameStateManager.gd
-│   │   ├── InventoryManager.gd
-│   │   ├── DialogSystem.gd
-│   │   ├── AudioManager.gd
-│   │   └── SaveManager.gd
-│   ├── player/
-│   │   ├── player_controller.gd
-│   │   ├── player_camera.gd
-│   │   └── weapon_shotgun.gd
+│   ├── autoloads/        ← EventBus, GameStateManager, DialogSystem, MouseManager
+│   ├── player/           ← Контроллер игрока (player_controller.gd)
+│   ├── weapons/          ← Оружие (laser_pistol.gd)
 │   ├── enemies/
 │   │   ├── enemy_base.gd
 │   │   └── cerberus_ai.gd
@@ -203,7 +197,7 @@ Player (CharacterBody3D)
 ├── CameraRig (Node3D)
 │   └── Camera3D
 │       └── WeaponHolder (Node3D)
-│           └── Shotgun (Node3D)
+│           └── LaserPistol (Node3D)
 │               ├── MeshInstance3D
 │               └── MuzzlePoint (Marker3D)   ← Точка выстрела
 ├── RayCast3D                       ← Для проверки взаимодействия
@@ -291,38 +285,15 @@ func collect_tape(tape_id: int) -> void:
             enemy_spawned.emit()
 ```
 
-#### `InventoryManager.gd`
+#### `MouseManager.gd`
 
 ```gdscript
-# autoloads/InventoryManager.gd
+# autoloads/MouseManager.gd
 extends Node
 
-signal ammo_changed(shots_in_chamber: int, reserve_ammo: int)
-signal item_added(item_name: String)
+var target_look: Vector2 = Vector2.ZERO
 
-# Шотган: патроны в стволе и в запасе
-var shots_in_chamber: int = 2   # Текущие патроны в стволе (макс. 2)
-var reserve_ammo: int = 8       # Запасные патроны
-
-const MAX_CHAMBER: int = 2      # Шотган двустволка
-
-func spend_shot() -> bool:
-    if shots_in_chamber <= 0:
-        return false
-    shots_in_chamber -= 1
-    ammo_changed.emit(shots_in_chamber, reserve_ammo)
-    return true
-
-func reload() -> void:
-    var needed: int = MAX_CHAMBER - shots_in_chamber
-    var can_reload: int = min(needed, reserve_ammo)
-    shots_in_chamber += can_reload
-    reserve_ammo -= can_reload
-    ammo_changed.emit(shots_in_chamber, reserve_ammo)
-
-func add_ammo(amount: int) -> void:
-    reserve_ammo += amount
-    ammo_changed.emit(shots_in_chamber, reserve_ammo)
+# Отвечает за глобальную обработку относительного сенсорного ввода для управления камерой.
 ```
 
 #### `DialogSystem.gd`
