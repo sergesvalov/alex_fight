@@ -9,6 +9,7 @@
 [ext_resource type="Script" path="res://scripts/ui/health_bar_ui.gd" id="health_script"]
 [ext_resource type="Script" path="res://scripts/ui/heat_bar_ui.gd" id="heat_script"]
 [ext_resource type="Script" path="res://scripts/ui/tapes_counter_ui.gd" id="tapes_script"]
+[ext_resource type="Script" path="res://scripts/ui/inventory_ui.gd" id="inventory_script"]
 [node name="HUD" type="CanvasLayer"]
 script = ExtResource("1_hud")
 
@@ -170,3 +171,75 @@ offset_right = 140.0
 offset_bottom = -20.0
 grow_vertical = 0
 text = "INTERACT"
+
+[node name="InventoryButton" type="Button" parent="MobileControls"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -140.0
+offset_top = 60.0
+offset_right = -20.0
+offset_bottom = 110.0
+grow_horizontal = 0
+text = "INVENTORY"
+
+[node name="InventoryUI" type="Panel" parent="."]
+process_mode = 3
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -300.0
+offset_top = -200.0
+offset_right = 300.0
+offset_bottom = 200.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("inventory_script")
+
+[node name="Label" type="Label" parent="InventoryUI"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 10.0
+offset_bottom = 40.0
+grow_horizontal = 2
+text = "INVENTORY"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ScrollContainer" type="ScrollContainer" parent="InventoryUI"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = 50.0
+offset_right = -20.0
+offset_bottom = -60.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="GridContainer" type="GridContainer" parent="InventoryUI/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+columns = 6
+
+[node name="CloseButton" type="Button" parent="InventoryUI"]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -60.0
+offset_top = -50.0
+offset_right = 60.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 0
+text = "CLOSE"
