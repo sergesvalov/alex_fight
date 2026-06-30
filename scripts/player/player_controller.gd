@@ -20,7 +20,6 @@ extends CharacterBody3D
 
 # === Состояние ===
 var move_input: Vector2 = Vector2.ZERO
-var look_input: Vector2 = Vector2.ZERO
 var is_sprinting: bool = false
 var camera_x_rotation: float = 0.0
 const CAMERA_X_LIMIT: float = PI / 2.5
@@ -69,18 +68,19 @@ func _ready() -> void:
 
 func _input(event: InputEvent) -> void:
     if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED and event is InputEventMouseMotion:
-        look_input = -event.relative * 0.5 # mouse sensitivity scaling
+        var look_factor = camera_sensitivity * 0.5
+        rotate_y(-event.relative.x * look_factor)
+        camera_x_rotation -= event.relative.y * look_factor
+        camera_x_rotation = clamp(camera_x_rotation, -CAMERA_X_LIMIT, CAMERA_X_LIMIT)
+        camera_rig.rotation.x = camera_x_rotation
 
 func _on_left_joystick_changed(vector: Vector2) -> void:
     move_input = vector
 
 func _on_right_swipe_dragged(relative: Vector2) -> void:
-    # Rotate instantly like a mouse motion
+    # Mobile is restricted to horizontal rotation only
     var look_factor = camera_sensitivity * 0.5
     rotate_y(-relative.x * look_factor)
-    camera_x_rotation -= relative.y * look_factor
-    camera_x_rotation = clamp(camera_x_rotation, -CAMERA_X_LIMIT, CAMERA_X_LIMIT)
-    camera_rig.rotation.x = camera_x_rotation
 
 func _on_heat_changed(current_heat: float) -> void:
     if hud_heat_bar:
@@ -101,12 +101,7 @@ func _physics_process(delta: float) -> void:
     
     _apply_gravity(delta)
     _apply_movement(delta)
-    _apply_look(delta)
     move_and_slide()
-    
-    # Reset look input from mouse to prevent spinning if used as direct offset rather than vector
-    if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
-        look_input = Vector2.ZERO
 
 func _apply_movement(delta: float) -> void:
     var speed: float = sprint_speed if is_sprinting else walk_speed
@@ -116,18 +111,6 @@ func _apply_movement(delta: float) -> void:
     ).normalized()
     velocity.x = direction.x * speed
     velocity.z = direction.z * speed
-
-func _apply_look(delta: float) -> void:
-    if look_input == Vector2.ZERO: return
-    
-    var look_factor = camera_sensitivity * 60 * delta
-    if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
-        look_factor = camera_sensitivity
-        
-    rotate_y(-look_input.x * look_factor)
-    camera_x_rotation -= look_input.y * look_factor
-    camera_x_rotation = clamp(camera_x_rotation, -CAMERA_X_LIMIT, CAMERA_X_LIMIT)
-    camera_rig.rotation.x = camera_x_rotation
 
 func _apply_gravity(delta: float) -> void:
     if not is_on_floor():
