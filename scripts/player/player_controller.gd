@@ -33,10 +33,12 @@ func _ready() -> void:
     floor_snap_length = 0.1
 
     # Подключение UI (когда будет добавлено в дерево сцен)
-    var hud = get_tree().root.get_node_or_null("Main/HUD")
+    var hud = get_tree().current_scene.find_child("HUD", true, false)
+    if not hud:
+        hud = get_parent().get_node_or_null("HUD")
     if hud:
-        var left = hud.get_node_or_null("%LeftJoystick")
-        var right = hud.get_node_or_null("%RightJoystick")
+        var left = hud.find_child("LeftJoystick", true, false)
+        var right = hud.find_child("RightJoystick", true, false)
         if left: left.input_vector_changed.connect(_on_left_joystick_changed)
         if right: right.input_vector_changed.connect(_on_right_joystick_changed)
     
