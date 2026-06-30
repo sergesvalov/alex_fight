@@ -30,9 +30,16 @@ var tapes_collected: int = 0
 var max_tapes: int = 3
 
 func _ready() -> void:
+    # Auto-register shoot action for PC
+    if not InputMap.has_action("shoot"):
+        InputMap.add_action("shoot")
+        var event = InputEventMouseButton.new()
+        event.button_index = MOUSE_BUTTON_LEFT
+        InputMap.action_add_event("shoot", event)
+
     # Jolt physics tweaks
     collision_layer = 1   # Слой "Player"
-    collision_mask = 2    # Видит слой "World"
+    collision_mask = 2    # Слой коллизий "World"
     floor_stop_on_slope = true
     floor_max_angle = deg_to_rad(45)
     floor_snap_length = 0.1
