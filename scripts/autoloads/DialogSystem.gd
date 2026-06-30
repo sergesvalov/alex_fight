@@ -7,25 +7,24 @@ signal narrative_ended
 var is_playing: bool = false
 var holo_scene: PackedScene = preload("res://scenes/fx/holo_projection.tscn")
 
-# Данные кассет
 const TAPE_DATA: Array[Dictionary] = [
     {
         "id": 0,
-        "title": "Личность",
-        "text": "Александр Нечаев. Уволен за превышение полномочий. 2031 год.",
-        "duration": 7.0
+        "title": "ЗАПИСЬ 001: ПРОТОКОЛ ОМЕГА",
+        "text": "Алекс, если ты слушаешь это... значит, стирание памяти прошло успешно. Ты ничего не помнишь, и это ради твоей же безопасности. Не верь персоналу отеля. Найди выход на крышу.",
+        "duration": 10.0
     },
     {
         "id": 1,
-        "title": "Инцидент",
-        "text": "Они пришли из тайги. Гостиница — карантинная зона. Все мертвы.",
-        "duration": 7.0
+        "title": "ЗАПИСЬ 002: ЦЕРБЕР",
+        "text": "Мы потеряли контроль. Проект 'Цербер' вырвался на свободу. Он бродит по коридорам. Твой лазерный пистолет - единственное, что может его пробить.",
+        "duration": 9.0
     },
     {
         "id": 2,
-        "title": "Выход",
-        "text": "Боковая дверь. Код: 1987. Но ОНО охраняет выход.",
-        "duration": 8.0
+        "title": "ЗАПИСЬ 003: ПОСЛЕДНИЙ ПУТЬ",
+        "text": "Я запер дверь на нижние этажи. Они не пройдут. Если ты нашел это, значит меня уже нет. Код от терминала на крыше... *помехи*",
+        "duration": 9.0
     }
 ]
 
@@ -36,7 +35,6 @@ func play_tape(tape_id: int, spawn_position: Vector3) -> void:
     GameStateManager.change_state(GameStateManager.GameState.READING)
     narrative_started.emit(tape_id)
     
-    # Спаунить голограмму
     if holo_scene:
         var holo_instance = holo_scene.instantiate()
         get_tree().current_scene.add_child(holo_instance)
@@ -44,7 +42,6 @@ func play_tape(tape_id: int, spawn_position: Vector3) -> void:
         if holo_instance.has_method("set_tape_data"):
             holo_instance.set_tape_data(TAPE_DATA[tape_id])
     
-    # Автоматически завершить через duration
     await get_tree().create_timer(TAPE_DATA[tape_id]["duration"]).timeout
     end_narrative()
 
@@ -52,3 +49,21 @@ func end_narrative() -> void:
     is_playing = false
     GameStateManager.change_state(GameStateManager.GameState.EXPLORING)
     narrative_ended.emit()
+
+func show_thought(text: String, duration: float = 5.0) -> void:
+    var scene = get_tree().current_scene
+    if scene:
+        var hud = scene.find_child("HUD", true, false)
+        if not hud:
+            hud = scene.get_node_or_null("HUD")
+        if hud:
+            var label = hud.find_child("NarrativeText", true, false)
+            if label:
+                label.text = text
+                label.visible = true
+                var tween = create_tween()
+                tween.tween_property(label, "modulate:a", 1.0, 0.5)
+                tween.tween_interval(duration)
+                tween.tween_property(label, "modulate:a", 0.0, 1.0)
+                # await tween.finished
+                # label.visible = false
