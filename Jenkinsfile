@@ -60,7 +60,7 @@ pipeline {
                         stage('Build Android APK') {
                             echo "Запуск экспорта Android-проекта..."
                             sh '''
-                            if grep -q "name=\"Android\"" export_presets.cfg 2>/dev/null; then
+                            if grep -q 'name="Android"' export_presets.cfg 2>/dev/null; then
                                 godot --headless --export-release "Android" build/alex_fight.apk || true
                                 if [ ! -f "build/alex_fight.apk" ]; then echo 'APK build failed!'; exit 1; fi
                             else
@@ -72,7 +72,7 @@ pipeline {
                         stage('Build PC (Windows)') {
                             echo "Запуск экспорта Windows-проекта для теста..."
                             sh '''
-                            if grep -q "name=\"Windows Desktop\"" export_presets.cfg 2>/dev/null; then
+                            if grep -q 'name="Windows Desktop"' export_presets.cfg 2>/dev/null; then
                                 mkdir -p build/windows
                                 godot --headless --export-release "Windows Desktop" build/windows/alex_fight.exe || true
                                 if [ ! -f "build/windows/alex_fight.exe" ]; then echo 'Windows build failed!'; exit 1; fi
