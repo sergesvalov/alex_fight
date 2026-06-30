@@ -22,6 +22,7 @@ func _ready() -> void:
         
         var interact_btn = hud.find_child("InteractButton", true, false)
         if interact_btn:
+            interaction.interact_btn = interact_btn
             interact_btn.pressed.connect(interaction.try_interact)
 
 func _input(event: InputEvent) -> void:

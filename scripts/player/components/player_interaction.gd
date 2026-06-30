@@ -10,10 +10,22 @@ var max_tapes: int = 3
 func _ready() -> void:
     update_tapes_ui()
 
+var interact_btn: Control = null
+
+func _process(_delta: float) -> void:
+    var can_interact = false
+    if ray_interact.is_colliding():
+        var collider = ray_interact.get_collider()
+        if collider and collider.has_method("interact"):
+            can_interact = true
+            
+    if interact_btn:
+        interact_btn.visible = can_interact
+
 func try_interact() -> void:
     if ray_interact.is_colliding():
         var collider = ray_interact.get_collider()
-        if collider.has_method("interact"):
+        if collider and collider.has_method("interact"):
             collider.interact(player)
 
 func collect_tape() -> void:
