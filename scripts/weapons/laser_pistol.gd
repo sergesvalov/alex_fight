@@ -13,6 +13,10 @@ var heat_per_shot: float = 15.0
 var cooling_rate: float = 25.0
 var is_overheated: bool = false
 
+# Preload один раз при загрузке скрипта, а не при каждом выстреле
+const HIT_MARKER_SCENE := preload("res://scenes/fx/hit_marker.tscn")
+const MAX_HIT_MARKERS: int = 8
+
 @onready var raycast: RayCast3D = $RayCast3D
 @onready var beam_mesh: MeshInstance3D = $BeamMesh
 
@@ -48,38 +52,43 @@ func shoot() -> void:
     var distance: float = max_distance
     
     if raycast.is_colliding():
-        var hit_point = raycast.get_collision_point()
+        var hit_point := raycast.get_collision_point()
         distance = global_position.distance_to(hit_point)
         
-        var collider = raycast.get_collider()
+        var collider := raycast.get_collider()
         if collider and collider.has_method("take_damage"):
             collider.take_damage(damage)
             
-        # Spawn Hit Marker (Decal and Sparks)
-        var hit_marker_scene = preload("res://scenes/fx/hit_marker.tscn")
-        if hit_marker_scene:
-            var marker = hit_marker_scene.instantiate()
-            get_tree().current_scene.add_child(marker)
-            marker.global_position = hit_point
-            
-            var normal = raycast.get_collision_normal()
-            if normal.is_normalized():
-                if abs(normal.dot(Vector3.UP)) < 0.99:
-                    marker.look_at(hit_point + normal, Vector3.UP)
-                else:
-                    marker.look_at(hit_point + normal, Vector3.RIGHT)
+        # Spawn Hit Marker с лимитом на количество в сцене
+        _spawn_hit_marker(hit_point, raycast.get_collision_normal())
 
     # Visual beam
-    # Height of cylinder matches distance
     beam_mesh.mesh.height = distance
-    # Position shifted forward by half distance (because origin is center of cylinder)
     beam_mesh.position.z = -distance / 2.0
-    
-    # Beam animation (thickness)
     beam_mesh.scale = Vector3(1, 1, 1)
     beam_mesh.show()
     
-    var tween = create_tween()
-    # Shrink X and Y (thickness) to 0 over 0.1s
+    var tween := create_tween()
     tween.tween_property(beam_mesh, "scale", Vector3(0, 0, 1), 0.1)
     tween.tween_callback(beam_mesh.hide)
+
+func _spawn_hit_marker(hit_point: Vector3, normal: Vector3) -> void:
+    var scene_root := get_tree().current_scene
+    
+    # Удаляем самый старый маркер если превышен лимит
+    var existing: Array = scene_root.get_children().filter(
+        func(n: Node) -> bool: return n.is_in_group("hit_markers")
+    )
+    if existing.size() >= MAX_HIT_MARKERS:
+        existing[0].queue_free()
+    
+    var marker := HIT_MARKER_SCENE.instantiate()
+    scene_root.add_child(marker)
+    marker.add_to_group("hit_markers")
+    marker.global_position = hit_point
+    
+    if normal.is_normalized():
+        if abs(normal.dot(Vector3.UP)) < 0.99:
+            marker.look_at(hit_point + normal, Vector3.UP)
+        else:
+            marker.look_at(hit_point + normal, Vector3.RIGHT)

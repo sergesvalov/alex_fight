@@ -43,6 +43,10 @@ renderer/rendering_method="mobile"
 renderer/rendering_method.mobile="gl_compatibility"
 environment/defaults/default_environment="res://default_env.tres"
 limits/global_shader_variables/buffer_size=65536
+scaling_3d/mode=2
+scaling_3d/scale=0.75
+occlusion_culling/use_occlusion_culling=true
+textures/vram_compression/import_etc2_astc=true
 
 [input]
 

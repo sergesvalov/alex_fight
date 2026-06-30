@@ -21,6 +21,13 @@ var current_patrol_index: int = 0
 
 var attack_timer: float = 0.0
 var idle_timer: float = 0.0
+var _nav_update_timer: float = 0.0
+var _los_check_timer: float = 0.0
+var _last_los: bool = false
+
+# Интервалы обновления (throttle)
+const NAV_UPDATE_INTERVAL: float = 0.3
+const LOS_CHECK_INTERVAL: float = 0.2
 
 func _ready() -> void:
     add_to_group("enemies")
@@ -37,6 +44,8 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
     movement.apply_gravity(delta)
     attack_timer -= delta
+    _nav_update_timer -= delta
+    _los_check_timer -= delta
     
     match current_state:
         State.IDLE:     _state_idle(delta)
@@ -70,12 +79,20 @@ func _state_chase(_delta: float) -> void:
     if not is_instance_valid(player):
         _set_state(State.RETURN)
         return
-        
-    movement.nav_agent.target_position = player.global_position
+    
+    # Throttle: обновляем маршрут раз в NAV_UPDATE_INTERVAL
+    if _nav_update_timer <= 0.0:
+        movement.nav_agent.target_position = player.global_position
+        _nav_update_timer = NAV_UPDATE_INTERVAL
     movement.move_along_nav(chase_speed)
     
-    if not sensors.has_line_of_sight(player):
-        if attack_timer <= -3.0: 
+    # Throttle: проверяем линию видимости раз в LOS_CHECK_INTERVAL
+    if _los_check_timer <= 0.0:
+        _last_los = sensors.has_line_of_sight(player)
+        _los_check_timer = LOS_CHECK_INTERVAL
+    
+    if not _last_los:
+        if attack_timer <= -3.0:
             _set_state(State.RETURN)
     else:
         attack_timer = 0.0

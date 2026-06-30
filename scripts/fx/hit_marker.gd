@@ -5,6 +5,6 @@ extends Node3D
 func _ready() -> void:
     if particles:
         particles.emitting = true
-    # The decal stays, but we can queue_free the whole thing after 10 seconds to save memory
-    var timer = get_tree().create_timer(10.0)
+    # Маркер исчезает через 3с (было 10с) — оптимизация памяти и GPU
+    var timer := get_tree().create_timer(3.0)
     timer.timeout.connect(queue_free)

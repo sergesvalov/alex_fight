@@ -27,8 +27,9 @@ func _on_body_exited(body: Node3D) -> void:
 func has_line_of_sight(target: Node3D) -> bool:
     if not is_instance_valid(target):
         return false
+    # Jolt Physics автоматически обновляет рейкаст в _physics_process,
+    # force_raycast_update() здесь лишнее (throttle делается в cerberus_ai.gd)
     ray_sight.target_position = ray_sight.to_local(target.global_position)
-    ray_sight.force_raycast_update()
     if ray_sight.is_colliding():
         return ray_sight.get_collider() == target
     return false
