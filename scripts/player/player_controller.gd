@@ -13,7 +13,8 @@ extends CharacterBody3D
 @onready var camera_rig: Node3D = $CameraRig
 @onready var camera: Camera3D = $CameraRig/Camera3D
 @onready var ray_interact: RayCast3D = $RayCast3D
-@onready var ray_gun: RayCast3D = $CameraRig/Camera3D/RayCastGun
+@onready var weapon_holder: Node3D = $CameraRig/Camera3D/WeaponHolder
+@onready var laser_pistol: Node3D = $CameraRig/Camera3D/WeaponHolder/LaserPistol
 # @onready var left_joystick: VirtualJoystick = %LeftJoystick
 # @onready var right_joystick: VirtualJoystick = %RightJoystick
 
@@ -24,6 +25,10 @@ var is_sprinting: bool = false
 var camera_x_rotation: float = 0.0
 const CAMERA_X_LIMIT: float = PI / 2.5
 var is_desktop: bool = false
+var hud_heat_bar: ProgressBar = null
+var hud_tapes_counter: Label = null
+var tapes_collected: int = 0
+var max_tapes: int = 3
 
 func _ready() -> void:
     # Jolt physics tweaks
@@ -44,6 +49,18 @@ func _ready() -> void:
         var right = hud.find_child("RightJoystick", true, false)
         if left: left.input_vector_changed.connect(_on_left_joystick_changed)
         if right: right.input_vector_changed.connect(_on_right_joystick_changed)
+        
+        hud_heat_bar = hud.find_child("HeatBar", true, false)
+        hud_tapes_counter = hud.find_child("TapesCounter", true, false)
+        
+        var interact_btn = hud.find_child("InteractButton", true, false)
+        if interact_btn:
+            interact_btn.pressed.connect(try_interact)
+            
+    if laser_pistol:
+        laser_pistol.heat_changed.connect(_on_heat_changed)
+        
+    update_tapes_ui()
     
     # Для десктоп теста
     is_desktop = OS.get_name() in ["Windows", "macOS", "Linux", "FreeBSD", "NetBSD", "OpenBSD", "BSD"]
@@ -59,6 +76,10 @@ func _on_left_joystick_changed(vector: Vector2) -> void:
 
 func _on_right_joystick_changed(vector: Vector2) -> void:
     look_input = vector
+
+func _on_heat_changed(current_heat: float) -> void:
+    if hud_heat_bar:
+        hud_heat_bar.value = current_heat
 
 func _physics_process(delta: float) -> void:
     if GameStateManager.current_state == GameStateManager.GameState.READING:
@@ -113,19 +134,22 @@ func try_interact() -> void:
         if collider.has_method("interact"):
             collider.interact(self)
 
+func collect_tape() -> void:
+    tapes_collected += 1
+    update_tapes_ui()
+    
+func update_tapes_ui() -> void:
+    if hud_tapes_counter:
+        hud_tapes_counter.text = "Tapes: " + str(tapes_collected) + "/" + str(max_tapes)
+
 func shoot() -> void:
     var tween = create_tween()
     var current_rot = camera_rig.rotation.x
     tween.tween_property(camera_rig, "rotation:x", current_rot + deg_to_rad(2), 0.05)
     tween.tween_property(camera_rig, "rotation:x", current_rot, 0.1)
     
-    if ray_gun.is_colliding():
-        var collider = ray_gun.get_collider()
-        if collider and collider.has_method("take_damage"):
-            collider.take_damage(20)
-            
-        var hit_pos = ray_gun.get_collision_point()
-        spawn_hit_marker(hit_pos)
+    if laser_pistol and laser_pistol.has_method("shoot"):
+        laser_pistol.shoot()
 
 func spawn_hit_marker(pos: Vector3) -> void:
     var mesh_instance = MeshInstance3D.new()
