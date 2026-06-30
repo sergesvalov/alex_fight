@@ -6,6 +6,7 @@
 [ext_resource type="Script" path="res://scripts/levels/hotel_level.gd" id="4_level"]
 [ext_resource type="Texture2D" path="res://assets/textures/hotel_carpet.jpg" id="5_carpet"]
 [ext_resource type="Texture2D" path="res://assets/textures/hotel_wallpaper.jpg" id="6_wallpaper"]
+[ext_resource type="Texture2D" path="res://assets/textures/coca_cola.jpg" id="coca_cola_tex"]
 [ext_resource type="PackedScene" uid="uid://cerb123" path="res://entities/enemies/cerberus/cerberus.tscn" id="7_cerb"]
 [ext_resource type="Texture2D" path="res://assets/textures/hotel_map.jpg" id="8_map"]
 [ext_resource type="PackedScene" uid="uid://table_123" path="res://entities/props/table.tscn" id="table"]
@@ -467,6 +468,20 @@ transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 2.99, 
 mesh = SubResource("QuadMesh_map")
 
 [node name="InteractableObjects" type="Node3D" parent="."]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_coca"]
+albedo_texture = ExtResource("coca_cola_tex")
+roughness = 0.5
+uv1_scale = Vector3(1, 1, 1)
+
+[sub_resource type="QuadMesh" id="QuadMesh_coca"]
+material = SubResource("StandardMaterial3D_coca")
+size = Vector2(2, 3)
+
+[node name="CocaColaPlaque" type="MeshInstance3D" parent="InteractableObjects"]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -3.49, 2, -7)
+mesh = SubResource("QuadMesh_coca")
+
 [node name="RoomLightL_1" type="OmniLight3D" parent="InteractableObjects"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 3.5, -12.5)
 light_color = Color(0.9, 0.8, 0.6, 1)
