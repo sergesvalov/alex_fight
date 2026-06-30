@@ -94,11 +94,16 @@ pipeline {
                                     zipalign -v -p 4 build/alex_fight.apk build/alex_fight-aligned.apk
                                     apksigner sign --ks release.keystore --ks-pass pass:YOUR_PASSWORD_HERE --out build/alex_fight-release.apk build/alex_fight-aligned.apk
                                     rm build/alex_fight.apk build/alex_fight-aligned.apk
-                                elif [ -f "debug.keystore" ]; then
-                                    echo "Файл release.keystore не найден. Выполняем ручную подпись debug.keystore..."
+                                else
+                                    echo "Файл release.keystore не найден. Выполняем подпись с помощью debug.keystore..."
+                                    if [ ! -f "debug.keystore" ]; then
+                                        echo "Генерируем временный debug.keystore..."
+                                        keytool -keyalg RSA -genkeypair -alias androiddebugkey -keypass android -keystore debug.keystore -storepass android -dname "CN=Android Debug,O=Android,C=US" -validity 9999
+                                    fi
                                     zipalign -v -p 4 build/alex_fight.apk build/alex_fight-aligned.apk
                                     apksigner sign --ks debug.keystore --ks-pass pass:android --ks-key-alias androiddebugkey --key-pass pass:android --out build/alex_fight-signed.apk build/alex_fight-aligned.apk
                                     rm build/alex_fight.apk build/alex_fight-aligned.apk
+                                    mv build/alex_fight-signed.apk build/alex_fight.apk
                                 fi
                             fi
                             '''
