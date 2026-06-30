@@ -80,6 +80,9 @@ func _input(event: InputEvent) -> void:
         camera_x_rotation -= event.relative.y * look_factor
         camera_x_rotation = clamp(camera_x_rotation, -CAMERA_X_LIMIT, CAMERA_X_LIMIT)
         camera_rig.rotation.x = camera_x_rotation
+        
+    if event is InputEventScreenTouch and event.pressed and event.double_tap:
+        shoot()
 
 func _on_left_joystick_changed(vector: Vector2) -> void:
     move_input = vector
