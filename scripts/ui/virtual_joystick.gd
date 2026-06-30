@@ -1,5 +1,5 @@
 # scripts/ui/virtual_joystick.gd
-class_name VirtualJoystick
+class_name MobileVirtualJoystick
 extends Control
 
 signal input_vector_changed(vector: Vector2)

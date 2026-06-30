@@ -74,7 +74,7 @@ pipeline {
                         stage('Run Autotests') {
                             echo "Запуск headless автотестов Godot..."
                             sh '''
-                            godot --headless -s tests/test_runner.gd || {
+                            godot --headless tests/test_runner.tscn || {
                                 echo '❌ АВТОТЕСТЫ ПРОВАЛЕНЫ!'
                                 exit 1
                             }

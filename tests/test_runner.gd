@@ -1,6 +1,6 @@
-extends SceneTree
+extends Node
 
-func _init() -> void:
+func _ready() -> void:
     print("===============================")
     print("  СТАРТ АВТОТЕСТОВ GODOT  ")
     print("===============================")
@@ -14,7 +14,7 @@ func _init() -> void:
     var scenes_to_test = [
         "res://scenes/levels/hotel_siberia/hotel_level.tscn",
         "res://entities/player/player.tscn",
-        "res://entities/enemies/cerberus.tscn",
+        "res://entities/enemies/cerberus/cerberus.tscn",
         "res://hud/hud.tscn"
     ]
     
@@ -43,8 +43,7 @@ func _init() -> void:
     var pistol_res = load("res://entities/weapons/laser_pistol.tscn")
     if pistol_res:
         var pistol = pistol_res.instantiate()
-        var root = Node.new()
-        root.add_child(pistol)
+        add_child(pistol)
         
         # Симулируем 7 выстрелов подряд (каждый дает +15 heat, 7 * 15 = 105)
         for i in range(7):
@@ -59,7 +58,7 @@ func _init() -> void:
         else:
             print("[OK] LaserPistol корректно перегревается")
             
-        root.free()
+        pistol.queue_free()
     else:
         print("[FAILED] Не удалось загрузить LaserPistol для тестов")
         passed = false
