@@ -15,7 +15,7 @@
 [ext_resource type="PackedScene" uid="uid://chair_123" path="res://entities/props/chair.tscn" id="chair"]
 [ext_resource type="PackedScene" uid="uid://bed_123" path="res://entities/props/bed.tscn" id="bed"]
 [ext_resource type="PackedScene" uid="uid://wardrobe_123" path="res://entities/props/wardrobe.tscn" id="wardrobe"]
-[ext_resource type="PackedScene" uid="uid://mirror_prop" path="res://entities/props/mirror.tscn" id="10_mirror"]
+[ext_resource type="PackedScene" path="res://entities/props/screen.tscn" id="10_mirror"]
 [ext_resource type="Script" path="res://scripts/levels/seamless_teleporter.gd" id="stair_script"]
 [ext_resource type="PackedScene" path="res://scenes/levels/hotel_siberia/rooms/double_room.tscn" id="double_room"]
 [ext_resource type="PackedScene" path="res://scenes/levels/hotel_siberia/rooms/single_room.tscn" id="single_room"]

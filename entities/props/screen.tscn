@@ -1,0 +1,27 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Texture2D" path="res://assets/textures/propaganda.jpg" id="1_tex"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_screen"]
+albedo_texture = ExtResource("1_tex")
+shading_mode = 0
+
+[sub_resource type="QuadMesh" id="QuadMesh_screen"]
+material = SubResource("StandardMaterial3D_screen")
+size = Vector2(2, 3)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_screen"]
+size = Vector3(2, 3, 0.1)
+
+[node name="PropagandaScreen" type="Node3D"]
+
+[node name="Surface" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+mesh = SubResource("QuadMesh_screen")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="."]
+collision_layer = 2
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="StaticBody3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, -0.05)
+shape = SubResource("BoxShape3D_screen")
