@@ -24,13 +24,11 @@ script = ExtResource("1_script")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
 mesh = SubResource("QuadMesh_mirror")
 
-[node name="ReflectionProbe" type="ReflectionProbe" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0.1)
-update_mode = 1
-size = Vector3(20, 10, 40)
-origin_offset = Vector3(0, 0, 2)
-box_projection = true
-enable_shadows = true
+[node name="SubViewport" type="SubViewport" parent="."]
+size = Vector2i(512, 1024)
+render_target_update_mode = 4
+
+[node name="Camera3D" type="Camera3D" parent="SubViewport"]
 
 [node name="StaticBody3D" type="StaticBody3D" parent="."]
 collision_layer = 2
