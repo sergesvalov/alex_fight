@@ -21,6 +21,9 @@ func _ready() -> void:
     player.floor_max_angle = deg_to_rad(45)
     player.floor_snap_length = 0.1
 
+var time_since_last_step: float = 0.0
+var footstep_sound = preload("res://assets/audio/sfx/footstep.wav")
+
 func process_movement(delta: float) -> void:
     if GameStateManager.current_state == GameStateManager.GameState.READING:
         return
@@ -35,10 +38,10 @@ func process_movement(delta: float) -> void:
             current_input = current_input.normalized()
     
     _apply_gravity(delta)
-    _apply_movement(current_input)
+    _apply_movement(current_input, delta)
     player.move_and_slide()
 
-func _apply_movement(input: Vector2) -> void:
+func _apply_movement(input: Vector2, delta: float) -> void:
     var speed: float = sprint_speed if is_sprinting else walk_speed
     var direction: Vector3 = (
         player.transform.basis.x * input.x +
@@ -47,6 +50,15 @@ func _apply_movement(input: Vector2) -> void:
     
     player.velocity.x = direction.x * speed
     player.velocity.z = direction.z * speed
+    
+    if player.is_on_floor() and input.length() > 0.1:
+        time_since_last_step += delta
+        var interval = 0.25 if is_sprinting else 0.4
+        if time_since_last_step >= interval:
+            AudioManager.play_sfx(footstep_sound, player.global_position)
+            time_since_last_step = 0.0
+    else:
+        time_since_last_step = 0.4 # play immediately on next step
 
 func _apply_gravity(delta: float) -> void:
     if not player.is_on_floor():

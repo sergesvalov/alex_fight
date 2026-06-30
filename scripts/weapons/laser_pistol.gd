@@ -36,10 +36,14 @@ func _process(delta: float) -> void:
             is_overheated = false
         heat_changed.emit(heat)
 
+var shoot_sound = preload("res://assets/audio/sfx/shoot.wav")
+
 func shoot() -> void:
     if is_overheated:
         return
         
+    AudioManager.play_sfx(shoot_sound, global_position)
+    
     # Heat up
     heat += heat_per_shot
     if heat >= 100.0:
