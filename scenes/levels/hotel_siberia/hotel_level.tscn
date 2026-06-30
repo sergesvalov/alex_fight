@@ -4,24 +4,16 @@
 [ext_resource type="PackedScene" uid="uid://blablahud222" path="res://hud/hud.tscn" id="2_hud"]
 [ext_resource type="PackedScene" uid="uid://tape123" path="res://entities/interactables/vhs_tape.tscn" id="3_tape"]
 [ext_resource type="Script" path="res://scripts/levels/hotel_level.gd" id="4_level"]
+[ext_resource type="Texture2D" path="res://assets/textures/hotel_carpet.png" id="5_carpet"]
+[ext_resource type="Texture2D" path="res://assets/textures/hotel_wallpaper.png" id="6_wallpaper"]
 
 [sub_resource type="NavigationMesh" id="NavigationMesh_nav"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_floor"]
 size = Vector3(40, 0.5, 40)
 
-[sub_resource type="FastNoiseLite" id="FastNoiseLite_floor"]
-noise_type = 3
-frequency = 0.05
-fractal_type = 2
-
-[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_floor"]
-seamless = true
-noise = SubResource("FastNoiseLite_floor")
-
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_floor"]
-albedo_color = Color(0.25, 0.3, 0.35, 1)
-albedo_texture = SubResource("NoiseTexture2D_floor")
+albedo_texture = ExtResource("5_carpet")
 uv1_scale = Vector3(10, 10, 10)
 
 [sub_resource type="BoxMesh" id="BoxMesh_floor"]
@@ -29,7 +21,8 @@ material = SubResource("StandardMaterial3D_floor")
 size = Vector3(40, 0.5, 40)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wall"]
-albedo_color = Color(0.65, 0.58, 0.5, 1)
+albedo_texture = ExtResource("6_wallpaper")
+uv1_scale = Vector3(20, 2, 2)
 roughness = 0.9
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_wall"]
