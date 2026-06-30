@@ -1,0 +1,99 @@
+
+[node name="L1_Bed1" parent="InteractableObjects" instance=ExtResource("bed")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, -10.5, 0, -15.5)
+
+[node name="L1_Bed2" parent="InteractableObjects" instance=ExtResource("bed")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, -10.5, 0, -9.5)
+
+[node name="L1_Wardrobe" parent="InteractableObjects" instance=ExtResource("wardrobe")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, -11, 0, -12.5)
+
+[node name="L1_Table" parent="InteractableObjects" instance=ExtResource("table")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, -6, 0, -12.5)
+
+[node name="L1_Chair1" parent="InteractableObjects" instance=ExtResource("chair")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, -5, 0, -12.5)
+
+[node name="L1_Chair2" parent="InteractableObjects" instance=ExtResource("chair")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, -7, 0, -13.0)
+
+[node name="L1_Chair3" parent="InteractableObjects" instance=ExtResource("chair")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, -7, 0, -12.0)
+
+[node name="L2_Bed1" parent="InteractableObjects" instance=ExtResource("bed")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, -10.5, 0, -28.0)
+
+[node name="L2_Bed2" parent="InteractableObjects" instance=ExtResource("bed")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, -10.5, 0, -22.0)
+
+[node name="L2_Wardrobe" parent="InteractableObjects" instance=ExtResource("wardrobe")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, -11, 0, -25.0)
+
+[node name="L2_Table" parent="InteractableObjects" instance=ExtResource("table")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, -6, 0, -25.0)
+
+[node name="L2_Chair1" parent="InteractableObjects" instance=ExtResource("chair")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, -5, 0, -25.0)
+
+[node name="L2_Chair2" parent="InteractableObjects" instance=ExtResource("chair")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, -7, 0, -25.5)
+
+[node name="L2_Chair3" parent="InteractableObjects" instance=ExtResource("chair")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, -7, 0, -24.5)
+
+[node name="L3_Bed1" parent="InteractableObjects" instance=ExtResource("bed")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, -10.5, 0, -40.5)
+
+[node name="L3_Bed2" parent="InteractableObjects" instance=ExtResource("bed")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, -10.5, 0, -34.5)
+
+[node name="L3_Wardrobe" parent="InteractableObjects" instance=ExtResource("wardrobe")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, -11, 0, -37.5)
+
+[node name="L3_Table" parent="InteractableObjects" instance=ExtResource("table")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, -6, 0, -37.5)
+
+[node name="L3_Chair1" parent="InteractableObjects" instance=ExtResource("chair")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, -5, 0, -37.5)
+
+[node name="L3_Chair2" parent="InteractableObjects" instance=ExtResource("chair")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, -7, 0, -38.0)
+
+[node name="L3_Chair3" parent="InteractableObjects" instance=ExtResource("chair")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, -7, 0, -37.0)
+
+[node name="R1_Bed" parent="InteractableObjects" instance=ExtResource("bed")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 8.5, 0, -14.0)
+
+[node name="R1_Table" parent="InteractableObjects" instance=ExtResource("table")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 6, 0, -11.0)
+
+[node name="R1_Chair1" parent="InteractableObjects" instance=ExtResource("chair")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 5, 0, -11.0)
+
+[node name="R1_Chair2" parent="InteractableObjects" instance=ExtResource("chair")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 7, 0, -11.0)
+
+[node name="R2_Bed" parent="InteractableObjects" instance=ExtResource("bed")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 8.5, 0, -26.5)
+
+[node name="R2_Table" parent="InteractableObjects" instance=ExtResource("table")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 6, 0, -23.5)
+
+[node name="R2_Chair1" parent="InteractableObjects" instance=ExtResource("chair")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 5, 0, -23.5)
+
+[node name="R2_Chair2" parent="InteractableObjects" instance=ExtResource("chair")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 7, 0, -23.5)
+
+[node name="R3_Bed" parent="InteractableObjects" instance=ExtResource("bed")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 8.5, 0, -39.0)
+
+[node name="R3_Table" parent="InteractableObjects" instance=ExtResource("table")]
+transform = Transform3D(1.0, 0, 0.0, 0, 1, 0, -0.0, 0, 1.0, 6, 0, -36.0)
+
+[node name="R3_Chair1" parent="InteractableObjects" instance=ExtResource("chair")]
+transform = Transform3D(0.0, 0, -1.0, 0, 1, 0, 1.0, 0, 0.0, 5, 0, -36.0)
+
+[node name="R3_Chair2" parent="InteractableObjects" instance=ExtResource("chair")]
+transform = Transform3D(0.0, 0, 1.0, 0, 1, 0, -1.0, 0, 0.0, 7, 0, -36.0)

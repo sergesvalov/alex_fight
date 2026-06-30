@@ -1,0 +1,266 @@
+
+[node name="CorrWallW1" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.5, 2, -8)
+use_collision = true
+collision_layer = 2
+size = Vector3(1, 4, 6)
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="CorrWallW2" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.5, 2, -18.75)
+use_collision = true
+collision_layer = 2
+size = Vector3(1, 4, 9.5)
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="CorrWallW3" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.5, 2, -31.25)
+use_collision = true
+collision_layer = 2
+size = Vector3(1, 4, 9.5)
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="CorrWallW4" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.5, 2, -42)
+use_collision = true
+collision_layer = 2
+size = Vector3(1, 4, 6)
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="CorrWallE1" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.5, 2, -8)
+use_collision = true
+collision_layer = 2
+size = Vector3(1, 4, 6)
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="CorrWallE2" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.5, 2, -18.75)
+use_collision = true
+collision_layer = 2
+size = Vector3(1, 4, 9.5)
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="CorrWallE3" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.5, 2, -31.25)
+use_collision = true
+collision_layer = 2
+size = Vector3(1, 4, 9.5)
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="CorrWallE4" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.5, 2, -42)
+use_collision = true
+collision_layer = 2
+size = Vector3(1, 4, 6)
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="RoomL1_Floor" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0, -12.5)
+use_collision = true
+collision_layer = 2
+size = Vector3(8, 0.5, 10)
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="RoomL1_Ceil" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 4.25, -12.5)
+use_collision = true
+collision_layer = 2
+size = Vector3(8, 0.5, 10)
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="RoomL1_WallW" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 2, -12.5)
+use_collision = true
+collision_layer = 2
+size = Vector3(1, 4, 10)
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="RoomL1_WallN" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 2, -17.5)
+use_collision = true
+collision_layer = 2
+size = Vector3(9, 4, 1)
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="RoomL1_WallS" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 2, -7.5)
+use_collision = true
+collision_layer = 2
+size = Vector3(9, 4, 1)
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="RoomL2_Floor" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0, -25.0)
+use_collision = true
+collision_layer = 2
+size = Vector3(8, 0.5, 10)
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="RoomL2_Ceil" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 4.25, -25.0)
+use_collision = true
+collision_layer = 2
+size = Vector3(8, 0.5, 10)
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="RoomL2_WallW" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 2, -25.0)
+use_collision = true
+collision_layer = 2
+size = Vector3(1, 4, 10)
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="RoomL2_WallN" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 2, -30.0)
+use_collision = true
+collision_layer = 2
+size = Vector3(9, 4, 1)
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="RoomL2_WallS" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 2, -20.0)
+use_collision = true
+collision_layer = 2
+size = Vector3(9, 4, 1)
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="RoomL3_Floor" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0, -37.5)
+use_collision = true
+collision_layer = 2
+size = Vector3(8, 0.5, 10)
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="RoomL3_Ceil" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 4.25, -37.5)
+use_collision = true
+collision_layer = 2
+size = Vector3(8, 0.5, 10)
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="RoomL3_WallW" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 2, -37.5)
+use_collision = true
+collision_layer = 2
+size = Vector3(1, 4, 10)
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="RoomL3_WallN" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 2, -42.5)
+use_collision = true
+collision_layer = 2
+size = Vector3(9, 4, 1)
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="RoomL3_WallS" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 2, -32.5)
+use_collision = true
+collision_layer = 2
+size = Vector3(9, 4, 1)
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="RoomR1_Floor" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0, -12.5)
+use_collision = true
+collision_layer = 2
+size = Vector3(6, 0.5, 6)
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="RoomR1_Ceil" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 4.25, -12.5)
+use_collision = true
+collision_layer = 2
+size = Vector3(6, 0.5, 6)
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="RoomR1_WallE" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 2, -12.5)
+use_collision = true
+collision_layer = 2
+size = Vector3(1, 4, 6)
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="RoomR1_WallN" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 2, -15.5)
+use_collision = true
+collision_layer = 2
+size = Vector3(7, 4, 1)
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="RoomR1_WallS" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 2, -9.5)
+use_collision = true
+collision_layer = 2
+size = Vector3(7, 4, 1)
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="RoomR2_Floor" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0, -25.0)
+use_collision = true
+collision_layer = 2
+size = Vector3(6, 0.5, 6)
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="RoomR2_Ceil" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 4.25, -25.0)
+use_collision = true
+collision_layer = 2
+size = Vector3(6, 0.5, 6)
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="RoomR2_WallE" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 2, -25.0)
+use_collision = true
+collision_layer = 2
+size = Vector3(1, 4, 6)
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="RoomR2_WallN" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 2, -28.0)
+use_collision = true
+collision_layer = 2
+size = Vector3(7, 4, 1)
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="RoomR2_WallS" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 2, -22.0)
+use_collision = true
+collision_layer = 2
+size = Vector3(7, 4, 1)
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="RoomR3_Floor" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0, -37.5)
+use_collision = true
+collision_layer = 2
+size = Vector3(6, 0.5, 6)
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="RoomR3_Ceil" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 4.25, -37.5)
+use_collision = true
+collision_layer = 2
+size = Vector3(6, 0.5, 6)
+material = SubResource("StandardMaterial3D_floor")
+
+[node name="RoomR3_WallE" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 2, -37.5)
+use_collision = true
+collision_layer = 2
+size = Vector3(1, 4, 6)
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="RoomR3_WallN" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 2, -40.5)
+use_collision = true
+collision_layer = 2
+size = Vector3(7, 4, 1)
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="RoomR3_WallS" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 2, -34.5)
+use_collision = true
+collision_layer = 2
+size = Vector3(7, 4, 1)
+material = SubResource("StandardMaterial3D_wall")
