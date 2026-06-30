@@ -7,3 +7,5 @@ signal heat_updated(current_heat: float)
 
 # Game Flow
 signal enemy_died(enemy_type: String)
+
+signal narrative_thought_requested(text: String, duration: float)

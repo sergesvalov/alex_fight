@@ -1,6 +1,7 @@
 [gd_scene load_steps=2 format=3 uid="uid://blablahud222"]
 
 [ext_resource type="PackedScene" uid="uid://cx1g6n4f8v5f5" path="res://hud/virtual_joystick.tscn" id="1_vjoy"]
+[ext_resource type="Script" path="res://scripts/ui/narrative_ui.gd" id="narrative_script"]
 [ext_resource type="Script" path="res://scripts/ui/relative_touch_input.gd" id="3_rel_touch"]
 [ext_resource type="Script" path="res://scripts/ui/swipe_look_input.gd" id="4_swipe"]
 

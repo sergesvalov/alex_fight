@@ -51,19 +51,7 @@ func end_narrative() -> void:
     narrative_ended.emit()
 
 func show_thought(text: String, duration: float = 5.0) -> void:
-    var scene = get_tree().current_scene
-    if scene:
-        var hud = scene.find_child("HUD", true, false)
-        if not hud:
-            hud = scene.get_node_or_null("HUD")
-        if hud:
-            var label = hud.find_child("NarrativeText", true, false)
-            if label:
-                label.text = text
-                label.visible = true
-                var tween = create_tween()
-                tween.tween_property(label, "modulate:a", 1.0, 0.5)
-                tween.tween_interval(duration)
-                tween.tween_property(label, "modulate:a", 0.0, 1.0)
+    if EventBus.has_signal("narrative_thought_requested"):
+        EventBus.narrative_thought_requested.emit(text, duration)
                 # await tween.finished
                 # label.visible = false

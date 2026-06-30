@@ -8,8 +8,6 @@ func save_game():
         "tapes_found": GameStateManager.tapes_found,
         "exit_code_known": GameStateManager.exit_code_known,
         "cerberus_spawned": GameStateManager.cerberus_spawned,
-        "shots_in_chamber": InventoryManager.shots_in_chamber,
-        "reserve_ammo": InventoryManager.reserve_ammo
     }
     var file = FileAccess.open(SAVE_PATH, FileAccess.WRITE)
     file.store_string(JSON.stringify(save_dict))
@@ -27,5 +25,3 @@ func load_game():
         GameStateManager.tapes_found = data.get("tapes_found", [])
         GameStateManager.exit_code_known = data.get("exit_code_known", false)
         GameStateManager.cerberus_spawned = data.get("cerberus_spawned", false)
-        InventoryManager.shots_in_chamber = data.get("shots_in_chamber", 2)
-        InventoryManager.reserve_ammo = data.get("reserve_ammo", 8)
