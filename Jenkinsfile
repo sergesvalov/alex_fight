@@ -54,6 +54,20 @@ pipeline {
                         stage('Import Assets') {
                             echo "Импорт ассетов Godot (создание кэша .godot/)..."
                             sh "if [ -f project.godot ]; then godot --headless --editor --quit || true; fi"
+                            
+                            echo "Проверка успешности импорта текстур..."
+                            sh "ls -la .godot/imported/ || echo 'Каталог .godot/imported не найден!'"
+                            sh '''
+                            if ! ls .godot/imported/hotel_carpet*.ctex 1> /dev/null 2>&1; then
+                                echo "ОШИБКА: Текстура ковра не была импортирована!"
+                                exit 1
+                            fi
+                            if ! ls .godot/imported/hotel_wallpaper*.ctex 1> /dev/null 2>&1; then
+                                echo "ОШИБКА: Текстура обоев не была импортирована!"
+                                exit 1
+                            fi
+                            echo "Текстуры успешно импортированы движком!"
+                            '''
                             sh "mkdir -p build"
                         }
 
