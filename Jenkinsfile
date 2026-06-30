@@ -49,31 +49,29 @@ pipeline {
                     // Запускаем контейнер из только что собранного образа
                     docker.image("${BUILDER_IMAGE}:${env.GODOT_VERSION}").inside('-u root') {
                         
-                        stage('Prepare Version') {
-                            echo "Обновляем номер сборки в export_presets.cfg..."
-                            sh "if [ -f export_presets.cfg ]; then sed -i -E 's/version\\/code=[0-9]+/version\\/code=${env.BUILD_NUMBER}/' export_presets.cfg; fi"
-                            sh "if [ -f export_presets.cfg ]; then sed -i -E \"s/version\\/name=\\\".*\\\"/version\\/name=\\\"1.0.${env.BUILD_NUMBER}\\\"/\" export_presets.cfg; fi"
-                        }
+                        // --- Prepare Version ---
+                        echo "Обновляем номер сборки в export_presets.cfg..."
+                        sh "if [ -f export_presets.cfg ]; then sed -i -E 's/version\\/code=[0-9]+/version\\/code=${env.BUILD_NUMBER}/' export_presets.cfg; fi"
+                        sh "if [ -f export_presets.cfg ]; then sed -i -E \"s/version\\/name=\\\".*\\\"/version\\/name=\\\"1.0.${env.BUILD_NUMBER}\\\"/\" export_presets.cfg; fi"
 
-                        stage('Import Assets') {
-                            echo "Импорт ассетов Godot (создание кэша .godot/)..."
-                            sh "if [ -f project.godot ]; then godot --headless --editor --quit || true; fi"
-                            
-                            echo "Проверка успешности импорта текстур..."
-                            sh "ls -la .godot/imported/ || echo 'Каталог .godot/imported не найден!'"
-                            sh '''
-                            if ! ls .godot/imported/hotel_carpet*.ctex 1> /dev/null 2>&1; then
-                                echo "ОШИБКА: Текстура ковра не была импортирована!"
-                                exit 1
-                            fi
-                            if ! ls .godot/imported/hotel_wallpaper*.ctex 1> /dev/null 2>&1; then
-                                echo "ОШИБКА: Текстура обоев не была импортирована!"
-                                exit 1
-                            fi
-                            echo "Текстуры успешно импортированы движком!"
-                            '''
-                            sh "mkdir -p build"
-                        }
+                        // --- Import Assets ---
+                        echo "Импорт ассетов Godot (создание кэша .godot/)..."
+                        sh "if [ -f project.godot ]; then godot --headless --editor --quit || true; fi"
+
+                        echo "Проверка успешности импорта текстур..."
+                        sh "ls -la .godot/imported/ || echo 'Каталог .godot/imported не найден!'"
+                        sh '''
+                        if ! ls .godot/imported/hotel_carpet*.ctex 1> /dev/null 2>&1; then
+                            echo "ОШИБКА: Текстура ковра не была импортирована!"
+                            exit 1
+                        fi
+                        if ! ls .godot/imported/hotel_wallpaper*.ctex 1> /dev/null 2>&1; then
+                            echo "ОШИБКА: Текстура обоев не была импортирована!"
+                            exit 1
+                        fi
+                        echo "Текстуры успешно импортированы движком!"
+                        '''
+                        sh "mkdir -p build"
 
                         stage('Run Autotests') {
                             if (params.RUN_TESTS) {
