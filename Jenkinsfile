@@ -71,6 +71,17 @@ pipeline {
                             sh "mkdir -p build"
                         }
 
+                        stage('Run Autotests') {
+                            echo "Запуск headless автотестов Godot..."
+                            sh '''
+                            godot --headless -s tests/test_runner.gd || {
+                                echo '❌ АВТОТЕСТЫ ПРОВАЛЕНЫ!'
+                                exit 1
+                            }
+                            echo '✅ АВТОТЕСТЫ ПРОЙДЕНЫ!'
+                            '''
+                        }
+
                         stage('Build Android APK') {
                             echo "Запуск экспорта Android-проекта..."
                             sh '''
