@@ -226,13 +226,37 @@ func _generate_north_block() -> void:
     elev_shaft.flip_faces = true
     _create_light("ElevatorLight", Vector3(6.0, 3.5, 7.5), Color(0.9, 0.95, 1, 1))
     
+    # Solid Elevator Doors to block the shaft
+    var elev_doors = CSGBox3D.new()
+    elev_doors.name = "ElevatorDoors"
+    elev_doors.size = Vector3(0.2, 2.5, 2.0)
+    elev_doors.transform.origin = Vector3(3.5, 1.25, 7.5)
+    var metal_mat = StandardMaterial3D.new()
+    metal_mat.albedo_color = Color(0.4, 0.4, 0.45)
+    metal_mat.metallic = 0.8
+    metal_mat.roughness = 0.2
+    elev_doors.material = metal_mat
+    elev_doors.use_collision = true
+    add_child(elev_doors)
+    elev_doors.owner = get_tree().edited_scene_root
+    
     # 2. Maintenance (Z: 0.0 to 5.0)
     var maint_wall = _create_csg_box("MaintenanceWallW", Vector3(3.5, 2, 2.5), Vector3(1.2, 4, 5), false, false)
     _create_csg_hole(maint_wall, "MaintenanceDoorHole", Vector3(0, -0.75, 0), Vector3(1.6, 2.5, 2))
     
     var maint_room = _create_csg_box("MaintenanceRoom", Vector3(7.4, 2, 2.5), Vector3(6.6, 4, 5), false, false)
     maint_room.flip_faces = true
+    _create_csg_hole(maint_room, "MaintenanceRoomDoorHole", Vector3(-3.3, -0.75, 0), Vector3(2.0, 2.5, 2.0))
     _create_light("MaintenanceLight", Vector3(7.4, 3.5, 2.5), Color(1.0, 0.9, 0.7, 1))
+    
+    # Maintenance Door
+    var door_scene = preload("res://entities/props/door.tscn")
+    var maint_door = door_scene.instantiate()
+    maint_door.name = "MaintenanceDoor"
+    maint_door.transform.origin = Vector3(3.5, 0, 3.4)
+    maint_door.transform.basis = Basis.from_euler(Vector3(0, -PI/2, 0))
+    add_child(maint_door)
+    maint_door.owner = get_tree().edited_scene_root
     
     # 3. North Stairwell
     var stairwell_scene = preload("res://scenes/levels/hotel_siberia/stairwell.tscn")
@@ -279,7 +303,7 @@ func _generate_north_block() -> void:
 
 func _clear_generated_nodes() -> void:
     var nodes_to_remove = []
-    var clear_names = ["DoubleRoom", "SingleRoom", "CorrWall", "CorridorFloor", "CorridorCeiling", "RoomLabel", "Stairwell_S", "SideCorridorFloor", "SideCorridorCeiling", "ElevatorWallS", "ElevatorShaft", "MaintenanceWallW", "MaintenanceRoom", "ElevatorLight", "MaintenanceLight", "Stairwell_N", "CorrWallNorthEnd", "MapDecal"]
+    var clear_names = ["DoubleRoom", "SingleRoom", "CorrWall", "CorridorFloor", "CorridorCeiling", "RoomLabel", "Stairwell_S", "SideCorridorFloor", "SideCorridorCeiling", "Elevator", "Maintenance", "Stairwell_N", "CorrWallNorthEnd", "MapDecal"]
     for child in get_children():
         var n = child.name
         var should_remove = false
