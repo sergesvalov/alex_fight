@@ -95,6 +95,23 @@ func _generate_level() -> void:
     var last_e_length = prev_z - corridor_end_z
     if last_e_length > 0:
         _create_wall("CorrWallE_End", Vector3(wall_x, 2, (prev_z + corridor_end_z) / 2.0), last_e_length)
+
+    # 5. Generate South Block (Stairwell and End Wall)
+    var stairwell_scene = preload("res://scenes/levels/hotel_siberia/stairwell.tscn")
+    
+    var stair_z = corridor_end_z - 10.0
+    var stair = stairwell_scene.instantiate()
+    stair.name = "Stairwell_S"
+    stair.transform.origin = Vector3(0, 0, stair_z)
+    # Rotate 180 degrees
+    stair.transform.basis = Basis.from_euler(Vector3(0, PI, 0))
+    add_child(stair)
+    stair.owner = get_tree().edited_scene_root
+    
+    _create_wall("CorrWallSouthEnd", Vector3(0, 2, stair_z - 1.5), 1.0)
+    var end_wall = get_node_or_null("CorrWallSouthEnd")
+    if end_wall:
+        end_wall.size = Vector3(6.0, 4.0, 1.0) # Override size for the end wall
         
     print("Level geometry generated.")
 
@@ -128,7 +145,7 @@ func _clear_generated_nodes() -> void:
     var nodes_to_remove = []
     for child in get_children():
         var n = child.name
-        if n.begins_with("DoubleRoom") or n.begins_with("SingleRoom") or n.begins_with("CorrWall") or n == "CorridorFloor" or n == "CorridorCeiling" or n.begins_with("RoomLabel"):
+        if n.begins_with("DoubleRoom") or n.begins_with("SingleRoom") or n.begins_with("CorrWall") or n == "CorridorFloor" or n == "CorridorCeiling" or n.begins_with("RoomLabel") or n == "Stairwell_S":
             nodes_to_remove.append(child)
             
     for child in nodes_to_remove:

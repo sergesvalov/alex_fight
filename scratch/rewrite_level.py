@@ -111,9 +111,7 @@ def process_file():
     out.append('transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 5.0)')
     out.append('')
 
-    out.append('[node name="Stairwell_S" parent="NavigationRegion3D/HotelGeometry" instance=ExtResource("stairwell")]')
-    out.append('transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 0, -65.0)')
-    out.append('')
+
 
     out.append('[node name="CorrWallNorthEnd" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]')
     out.append('transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.5, 2, 5.0)') 
@@ -123,13 +121,7 @@ def process_file():
     out.append('material = SubResource("StandardMaterial3D_wall")')
     out.append('')
 
-    out.append('[node name="CorrWallSouthEnd" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]')
-    out.append('transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, -66.5)') 
-    out.append('use_collision = true')
-    out.append('collision_layer = 2')
-    out.append('size = Vector3(6, 4, 1)')
-    out.append('material = SubResource("StandardMaterial3D_wall")')
-    out.append('')
+
 
     out.append('[node name="MapDecal" type="MeshInstance3D" parent="NavigationRegion3D/HotelGeometry"]')
     out.append('transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 2.99, 2, -10.0)')
@@ -209,7 +201,22 @@ def process_file():
         out.append(f'room_number = "{sngl_labels[i]}"')
         out.append('')
 
-    new_content = before + "\\n".join(out) + after
+    corridor_end_z = min(L_centers[-1], R_centers[-1])
+    stair_z = corridor_end_z - 10.0
+    
+    out.append('[node name="Stairwell_S" parent="NavigationRegion3D/HotelGeometry" instance=ExtResource("stairwell")]')
+    out.append(f'transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 0, {stair_z})')
+    out.append('')
+    
+    out.append('[node name="CorrWallSouthEnd" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]')
+    out.append(f'transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, {stair_z - 1.5})') 
+    out.append('use_collision = true')
+    out.append('collision_layer = 2')
+    out.append('size = Vector3(6, 4, 1)')
+    out.append('material = SubResource("StandardMaterial3D_wall")')
+    out.append('')
+
+    new_content = before + "\n".join(out) + after
     
     # We must ensure there are no lingering RoomLabels!
     # They should all be gone since we completely replace the HotelGeometry block.

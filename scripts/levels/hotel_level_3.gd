@@ -23,8 +23,8 @@ func _ready() -> void:
             
     # 2. Change room labels (4xx -> 3xx)
     for child in hotel_geo.get_children():
-        if child.name.begins_with("DoubleRoom") or child.name.begins_with("SingleRoom"):
-            if "room_number" in child and child.room_number.begins_with("4"):
+        if child is HotelRoom:
+            if child.room_number.begins_with("4"):
                 child.room_number = "3" + child.room_number.substr(1)
                     
     # 3. Swap the map texture
