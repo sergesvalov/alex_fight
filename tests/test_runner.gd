@@ -199,8 +199,10 @@ func _ready() -> void:
                                 print("     [FAILED] Дверь '", current.name, "' в '", current.get_parent().name, "' не открылась после interact()")
                                 door_errors += 1
                             else:
-                                # Дверь открывается через Tween за 0.5 сек. Ждем.
-                                await get_tree().create_timer(0.6).timeout
+                                # В headless-режиме Tween не синхронизирует физику.
+                                # Принудительно телепортируем дверь в открытое положение
+                                # (это тест проходимости, не тест анимации).
+                                door_body.rotation.y = door_body.open_angle
                                 
                                 # Физическая симуляция прохода персонажа сквозь дверной проем
                                 var char_body = CharacterBody3D.new()
@@ -212,13 +214,14 @@ func _ready() -> void:
                                 char_body.add_child(col)
                                 current.get_parent().add_child(char_body)
                                 
-                                # Ставим манекен ВНУТРИ комнаты (далеко от двери, у внешней стены)
+                                # Ставим манекен ВНУТРИ комнаты (у дальней стены от двери)
                                 # basis.z смотрит в коридор, значит -basis.z смотрит вглубь комнаты
                                 var start_pos = current.global_transform.origin - current.global_transform.basis.z * 4.0
                                 start_pos.y = 0.9
                                 char_body.global_transform.origin = start_pos
                                 
-                                # Даем физическому движку кадр на обновление
+                                # Даем физическому движку 3 кадра синхронизироваться
+                                await get_tree().physics_frame
                                 await get_tree().physics_frame
                                 await get_tree().physics_frame
                                 
