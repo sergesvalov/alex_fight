@@ -146,20 +146,23 @@ def process_file():
     out.append('mesh = SubResource("QuadMesh_map")')
     out.append('')
 
+    corridor_length = abs(corridor_end_z) + 10.0
+    corridor_center_z = (10.0 + corridor_end_z) / 2.0
+
     # NOW THE PROCEDURAL STUFF
     out.append('[node name="CorridorFloor" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]')
-    out.append('transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -22.5)')
+    out.append(f'transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, {corridor_center_z})')
     out.append('use_collision = true')
     out.append('collision_layer = 2')
-    out.append('size = Vector3(7, 0.5, 65)') # From +10 to -55
+    out.append(f'size = Vector3({corridor_width}, 0.5, {corridor_length})')
     out.append('material = SubResource("StandardMaterial3D_floor")')
     out.append('')
     
     out.append('[node name="CorridorCeiling" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]')
-    out.append('transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.25, -22.5)')
+    out.append(f'transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, {corridor_height}, {corridor_center_z})')
     out.append('use_collision = true')
     out.append('collision_layer = 2')
-    out.append('size = Vector3(7, 0.5, 65)')
+    out.append(f'size = Vector3({corridor_width}, 0.5, {corridor_length})')
     out.append('material = SubResource("StandardMaterial3D_floor")')
     out.append('')
 
@@ -171,8 +174,6 @@ def process_file():
         out.append(f'size = Vector3(1, 4, {size_z})')
         out.append('material = SubResource("StandardMaterial3D_wall")')
         out.append('')
-
-    L_centers = [ -5.0 - i*10.0 for i in range(6) ] 
     
     prev_z = 0.0
     for i, c in enumerate(L_centers):
@@ -184,12 +185,11 @@ def process_file():
             add_wall(f"CorrWallW{i+1}", -3.5, 2, center, length)
         prev_z = gap_end
     
-    length = prev_z - (-55.0)
-    center = (prev_z + -55.0) / 2.0
+    length = prev_z - corridor_end_z
+    center = (prev_z + corridor_end_z) / 2.0
     if length > 0:
         add_wall(f"CorrWallW_End", -3.5, 2, center, length)
 
-    R_centers = [ -3.0 - i*6.0 for i in range(9) ]
     prev_z = 0.0
     for i, c in enumerate(R_centers):
         gap_start = c + 1.25
@@ -200,8 +200,8 @@ def process_file():
             add_wall(f"CorrWallE{i+1}", 3.5, 2, center, length)
         prev_z = gap_end
     
-    length = prev_z - (-55.0)
-    center = (prev_z + -55.0) / 2.0
+    length = prev_z - corridor_end_z
+    center = (prev_z + corridor_end_z) / 2.0
     if length > 0:
         add_wall(f"CorrWallE_End", 3.5, 2, center, length)
 
