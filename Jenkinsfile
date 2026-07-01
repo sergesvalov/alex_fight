@@ -3,6 +3,7 @@ pipeline {
 
     parameters {
         booleanParam(name: 'RUN_TESTS', defaultValue: false, description: 'Запускать ли автотесты Godot перед сборкой')
+        booleanParam(name: 'BUILD_MAC', defaultValue: false, description: 'Собирать ли версию для macOS')
     }
 
     environment {
@@ -115,6 +116,26 @@ pipeline {
                                 echo "Пресет 'Windows Desktop' не найден. Сборка под ПК пропущена."
                             fi
                             '''
+                        }
+
+                        stage('Build Mac (macOS)') {
+                            if (params.BUILD_MAC) {
+                                echo "Запуск экспорта macOS-проекта..."
+                                sh '''
+                                if grep -q 'name="macOS"' export_presets.cfg 2>/dev/null; then
+                                    mkdir -p build/mac
+                                    godot --headless --export-release "macOS" build/mac/alex_fight_mac.zip || true
+                                    if [ ! -f "build/mac/alex_fight_mac.zip" ]; then echo 'macOS build failed!'; exit 1; fi
+                                    
+                                    echo "Копируем сборку Mac в корень build..."
+                                    cp build/mac/alex_fight_mac.zip build/
+                                else
+                                    echo "Пресет 'macOS' не найден. Сборка под Mac пропущена."
+                                fi
+                                '''
+                            } else {
+                                echo "Сборка для macOS пропущена (BUILD_MAC = false)"
+                            }
                         }
 
                         stage('Production Sign (Android)') {
