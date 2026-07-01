@@ -165,9 +165,9 @@ func _generate_level() -> void:
     print("Level geometry generated.")
 
 func _create_wall(node_name: String, pos: Vector3, length: float) -> void:
-    _create_csg_box(node_name, pos, Vector3(1.0, 4.0, length), false)
+    _create_csg_box(node_name, pos, Vector3(1.0, 4.0, length), false, true)
 
-func _create_csg_box(node_name: String, pos: Vector3, size: Vector3, is_floor: bool) -> void:
+func _create_csg_box(node_name: String, pos: Vector3, size: Vector3, is_floor: bool, add_occluder: bool = true) -> CSGBox3D:
     var box = CSGBox3D.new()
     box.name = node_name
     box.transform.origin = pos
@@ -190,6 +190,15 @@ func _create_csg_box(node_name: String, pos: Vector3, size: Vector3, is_floor: b
     box.material = material
     add_child(box)
     box.owner = get_tree().edited_scene_root
+    
+    if add_occluder:
+        var occluder_inst = OccluderInstance3D.new()
+        var occ_shape = BoxOccluder3D.new()
+        occ_shape.size = size
+        occluder_inst.occluder = occ_shape
+        box.add_child(occluder_inst)
+        occluder_inst.owner = get_tree().edited_scene_root
+
     return box
 
 func _create_csg_hole(parent: Node, node_name: String, pos: Vector3, size: Vector3) -> CSGBox3D:
@@ -218,18 +227,18 @@ func _generate_north_block() -> void:
     _create_csg_box("SideCorridorCeiling", Vector3(7.5, 4.25, 7.5), Vector3(9, 4, 1), false)
     
     # 2. Elevator
-    var elev_wall = _create_csg_box("ElevatorWallS", Vector3(7.5, 2, 5.5), Vector3(9, 4, 1), false)
+    var elev_wall = _create_csg_box("ElevatorWallS", Vector3(7.5, 2, 5.5), Vector3(9, 4, 1), false, false)
     _create_csg_hole(elev_wall, "ElevatorDoorHole", Vector3(0, -0.75, 0), Vector3(3, 2.5, 2))
     
-    var elev_shaft = _create_csg_box("ElevatorShaft", Vector3(7.5, 2, 2.5), Vector3(6, 4, 5), false)
+    var elev_shaft = _create_csg_box("ElevatorShaft", Vector3(7.5, 2, 2.5), Vector3(6, 4, 5), false, false)
     elev_shaft.flip_faces = true
     _create_light("ElevatorLight", Vector3(7.5, 3.5, 4.0), Color(0.9, 0.95, 1, 1))
     
     # 3. Maintenance
-    var maint_wall = _create_csg_box("MaintenanceWallW", Vector3(12, 2, 7.5), Vector3(1, 4, 5), false)
+    var maint_wall = _create_csg_box("MaintenanceWallW", Vector3(12, 2, 7.5), Vector3(1, 4, 5), false, false)
     _create_csg_hole(maint_wall, "MaintenanceDoorHole", Vector3(0, -0.75, 0), Vector3(2, 2.5, 1.5))
     
-    var maint_room = _create_csg_box("MaintenanceRoom", Vector3(15, 2, 7.5), Vector3(6, 4, 5), false)
+    var maint_room = _create_csg_box("MaintenanceRoom", Vector3(15, 2, 7.5), Vector3(6, 4, 5), false, false)
     maint_room.flip_faces = true
     _create_light("MaintenanceLight", Vector3(15, 3.5, 7.5), Color(1.0, 0.9, 0.7, 1))
     

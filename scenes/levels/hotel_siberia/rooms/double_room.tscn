@@ -18,6 +18,20 @@ albedo_texture = ExtResource("2_wallpaper")
 uv1_scale = Vector3(20, 2, 2)
 roughness = 0.9
 
+[sub_resource type="BoxOccluder3D" id="BoxOccluder3D_WallN"]
+size = Vector3(10.8, 4.0, 1.2)
+
+[sub_resource type="BoxOccluder3D" id="BoxOccluder3D_WallS"]
+size = Vector3(10.8, 4.0, 1.2)
+
+[sub_resource type="BoxOccluder3D" id="BoxOccluder3D_WallW"]
+size = Vector3(1.2, 4.0, 12.0)
+
+[sub_resource type="BoxOccluder3D" id="BoxOccluder3D_Floor"]
+size = Vector3(10.8, 0.5, 12.0)
+
+[sub_resource type="BoxOccluder3D" id="BoxOccluder3D_Ceil"]
+size = Vector3(10.8, 0.5, 12.0)
 [node name="DoubleRoom" type="Node3D"]
 script = ExtResource("1_script")
 
@@ -132,3 +146,18 @@ text = "000"
 font_size = 72
 outline_size = 12
 modulate = Color(0.8, 0.7, 0.2, 1)
+
+[node name="Occluder" type="OccluderInstance3D" parent="WallN"]
+occluder = SubResource("BoxOccluder3D_WallN")
+
+[node name="Occluder" type="OccluderInstance3D" parent="WallS"]
+occluder = SubResource("BoxOccluder3D_WallS")
+
+[node name="Occluder" type="OccluderInstance3D" parent="WallW"]
+occluder = SubResource("BoxOccluder3D_WallW")
+
+[node name="Occluder" type="OccluderInstance3D" parent="Floor"]
+occluder = SubResource("BoxOccluder3D_Floor")
+
+[node name="Occluder" type="OccluderInstance3D" parent="Ceil"]
+occluder = SubResource("BoxOccluder3D_Ceil")
