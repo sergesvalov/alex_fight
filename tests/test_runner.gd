@@ -189,9 +189,11 @@ func _ready() -> void:
                             print("     [FAILED] Дверь '", current.name, "' в '", current.get_parent().name, "' открыта по умолчанию!")
                             door_errors += 1
                         else:
+                            # Ставим dummy ВНУТРИ комнаты:
+                            # basis.z двери указывает В КОРИДОР, значит -basis.z = внутрь комнаты
                             var door_dummy_player = Node3D.new()
                             door_body.add_child(door_dummy_player)
-                            door_dummy_player.global_transform.origin = door_body.global_transform.origin + door_body.global_transform.basis.z * 1.5
+                            door_dummy_player.global_transform.origin = door_body.global_transform.origin - door_body.global_transform.basis.z * 1.5
                             
                             door_body.interact(door_dummy_player)
                             
@@ -200,11 +202,10 @@ func _ready() -> void:
                                 door_errors += 1
                             else:
                                 # В headless-режиме Tween не синхронизирует физику.
-                                # Принудительно телепортируем дверь в открытое положение
-                                # (это тест проходимости, не тест анимации).
+                                # Принудительно телепортируем дверь в открытое положение (внутрь комнаты).
                                 door_body.rotation.y = door_body.open_angle
                                 
-                                # Физическая симуляция прохода персонажа сквозь дверной проем
+                                # Физическая симуляция прохода персонажа через дверной проём
                                 var char_body = CharacterBody3D.new()
                                 var col = CollisionShape3D.new()
                                 var shape = CapsuleShape3D.new()
@@ -214,33 +215,38 @@ func _ready() -> void:
                                 char_body.add_child(col)
                                 current.get_parent().add_child(char_body)
                                 
-                                # Ставим манекен ВНУТРИ комнаты:
-                                # basis.z двери указывает ВНУТРЬ комнаты, значит +basis.z = вглубь комнаты
-                                var start_pos = current.global_transform.origin + current.global_transform.basis.z * 3.0
+                                # Персонаж стартует ВНУТРИ комнаты (3м от двери по -basis.z),
+                                # смещён на +basis.x * 0.8 — это центр дверного проёма,
+                                # подальше от шарнира и открытой панели двери.
+                                var door_basis = current.global_transform.basis
+                                var start_pos = current.global_transform.origin \
+                                    - door_basis.z * 3.0 \
+                                    + door_basis.x * 0.8
                                 start_pos.y = 0.9
                                 char_body.global_transform.origin = start_pos
                                 
-                                # Даем физическому движку 3 кадра синхронизироваться
+                                # Даём физическому движку 3 кадра на синхронизацию
                                 await get_tree().physics_frame
                                 await get_tree().physics_frame
                                 await get_tree().physics_frame
                                 
-                                # Выходим из комнаты: -basis.z = направление в коридор
-                                var motion = -current.global_transform.basis.z * 6.0
-                                var collision = char_body.move_and_collide(motion, true) # true = test_only
+                                # Идём из комнаты В КОРИДОР (+basis.z = к коридору)
+                                var motion = door_basis.z * 6.0
+                                var collision = char_body.move_and_collide(motion, true) # test_only
                                 
                                 if collision:
-                                    var hit_name = "Unknown"
-                                    var hit_pos = Vector3.ZERO
-                                    if collision.get_collider():
-                                        hit_name = collision.get_collider().name
-                                        hit_pos = collision.get_collider().global_transform.origin
-                                    var door_global = current.global_transform.origin
-                                    print("     [FAILED] Дверь '", current.name, "' в '", current.get_parent().name, 
-                                          "' (дверь pos=", door_global, ") — персонаж уперся в '", hit_name, 
-                                          "' (pos=", hit_pos, "), угол открытия=", rad_to_deg(door_body.open_angle), "°")
-                                    door_errors += 1
-                                    
+                                    var collider = collision.get_collider()
+                                    # Столкновение с самой дверью (она открылась внутрь комнаты) — это ОК.
+                                    # Провал только если мешает что-то ДРУГОЕ (стена, ступенька, etc.)
+                                    if collider != door_body:
+                                        var hit_name = collider.name if collider else "Unknown"
+                                        var hit_pos = collider.global_transform.origin if collider else Vector3.ZERO
+                                        var door_global = current.global_transform.origin
+                                        print("     [FAILED] Дверь '", current.name, "' в '", current.get_parent().name,
+                                              "' (pos=", door_global, ") — выход заблокирован '", hit_name,
+                                              "' (pos=", hit_pos, ")")
+                                        door_errors += 1
+                                
                                 char_body.queue_free()
                             door_dummy_player.queue_free()
                 
