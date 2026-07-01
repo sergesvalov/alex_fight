@@ -2,7 +2,7 @@ class_name PlayerInteraction
 extends Node
 
 @onready var player: CharacterBody3D = get_parent()
-@onready var ray_interact: RayCast3D = get_parent().get_node("RayCast3D")
+@onready var ray_interact: RayCast3D = get_parent().get_node("CameraRig/Camera3D/RayCast3D")
 
 var tapes_collected: int = 0
 var max_tapes: int = 3
