@@ -32,7 +32,7 @@ size = Vector3(10.2, 0.5, 12.0)
 
 [sub_resource type="BoxOccluder3D" id="BoxOccluder3D_Ceil"]
 size = Vector3(10.2, 0.5, 12.0)
-[node name="DoubleRoom" type="Node3D"]
+[node name="DoubleRoom" type="CSGCombiner3D"]
 script = ExtResource("1_script")
 
 [node name="Floor" type="CSGBox3D" parent="."]

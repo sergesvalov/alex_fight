@@ -62,17 +62,21 @@ func _generate_level() -> void:
     _clear_generated_nodes()
     
     # 1. Main floor
-    var main_parent = Node3D.new()
+    var main_parent = CSGCombiner3D.new()
     main_parent.name = "GeneratedFloor_Main"
     main_parent.transform.origin.y = 0.0
+    main_parent.use_collision = true
+    main_parent.collision_layer = 2
     add_child(main_parent)
     main_parent.owner = get_tree().edited_scene_root
     _generate_floor(floor_number, main_parent, true)
     
     # 2. Floor above
-    var above_parent = Node3D.new()
+    var above_parent = CSGCombiner3D.new()
     above_parent.name = "GeneratedFloor_Above"
     above_parent.transform.origin.y = 4.0
+    above_parent.use_collision = true
+    above_parent.collision_layer = 2
     add_child(above_parent)
     above_parent.owner = get_tree().edited_scene_root
     if ResourceLoader.exists("res://scenes/levels/hotel_siberia/hotel_level_" + str(floor_number + 1) + ".tscn"):
@@ -81,9 +85,11 @@ func _generate_level() -> void:
         _generate_floor(floor_number, above_parent, false)
         
     # 3. Floor below
-    var below_parent = Node3D.new()
+    var below_parent = CSGCombiner3D.new()
     below_parent.name = "GeneratedFloor_Below"
     below_parent.transform.origin.y = -4.0
+    below_parent.use_collision = true
+    below_parent.collision_layer = 2
     add_child(below_parent)
     below_parent.owner = get_tree().edited_scene_root
     if ResourceLoader.exists("res://scenes/levels/hotel_siberia/hotel_level_" + str(floor_number - 1) + ".tscn"):

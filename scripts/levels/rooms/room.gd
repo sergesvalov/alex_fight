@@ -1,5 +1,5 @@
 @tool
-extends Node3D
+extends CSGCombiner3D
 class_name HotelRoom
 
 @export var room_number: String = "":
