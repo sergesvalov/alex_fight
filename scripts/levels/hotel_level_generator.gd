@@ -305,14 +305,11 @@ func _generate_north_block(parent: Node) -> void:
     parent.add_child(stair)
     stair.owner = get_tree().edited_scene_root
     
-    # 6. Map Decals
+    # 6. Map Decals (Only 2 maps on the floor, between the first double room and the second one)
+    var map_z = 4.0 - double_room_step / 2.0
     var decal_positions = [
-        Vector3(-2.99, 2.0, -2.0),
-        Vector3(-2.99, 2.0, -26.0),
-        Vector3(-2.99, 2.0, -38.0),
-        Vector3(2.99, 2.0, -14.4),
-        Vector3(2.99, 2.0, -28.8),
-        Vector3(2.99, 2.0, -43.2)
+        Vector3(-2.99, 2.0, map_z), # Left wall
+        Vector3(2.99, 2.0, map_z)   # Right wall
     ]
     for i in range(decal_positions.size()):
         var pos = decal_positions[i]
