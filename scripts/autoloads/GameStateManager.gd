@@ -4,6 +4,7 @@ extends Node
 signal state_changed(new_state: GameState)
 signal tape_collected(tape_id: int)
 signal enemy_spawned
+signal all_tapes_collected
 
 enum GameState {
     EXPLORING,      # Исследование
@@ -29,7 +30,9 @@ func collect_tape(tape_id: int) -> void:
         # Кассета #3 даёт код выхода
         if tape_id == 2:
             exit_code_known = true
-        # После кассеты #3 — спауним Цербера
-        if tapes_found.size() == 3 and not cerberus_spawned:
-            cerberus_spawned = true
-            enemy_spawned.emit()
+        # После сбора 3 кассет
+        if tapes_found.size() == 3:
+            all_tapes_collected.emit()
+            if not cerberus_spawned:
+                cerberus_spawned = true
+                enemy_spawned.emit()
