@@ -32,6 +32,8 @@ def process_file():
     out.append('single_room_step = 6.0')
     out.append('corridor_width = 7.0')
     out.append('corridor_height = 4.25')
+    out.append('floor_number = 4')
+    out.append('carpet_color = Color(1, 1, 1, 1)')
     out.append('')
 
     # Re-insert the static elements

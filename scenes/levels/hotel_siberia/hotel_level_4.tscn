@@ -5,3 +5,6 @@
 
 [node name="HotelLevel" instance=ExtResource("1_base")]
 script = ExtResource("2_script")
+
+[node name="HotelGeometry" parent="NavigationRegion3D" index="0"]
+floor_number = 4

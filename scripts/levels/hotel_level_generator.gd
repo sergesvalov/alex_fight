@@ -14,8 +14,43 @@ class_name HotelLevelGenerator
 @export var corridor_width: float = 7.0
 @export var corridor_height: float = 4.25
 
+@export_group("Stylization")
+@export var floor_number: int = 4
+@export var carpet_color: Color = Color.WHITE
+@export var map_texture: Texture2D
+
 var double_room_scene = preload("res://scenes/levels/hotel_siberia/rooms/double_room.tscn")
 var single_room_scene = preload("res://scenes/levels/hotel_siberia/rooms/single_room.tscn")
+
+func _ready() -> void:
+    if not Engine.is_editor_hint():
+        _apply_stylization()
+
+func _apply_stylization() -> void:
+    # Apply to CorridorFloor
+    if has_node("CorridorFloor"):
+        var cf = get_node("CorridorFloor")
+        if cf is CSGBox3D:
+            var material = StandardMaterial3D.new()
+            material.albedo_texture = preload("res://assets/textures/hotel_carpet.jpg")
+            material.albedo_color = carpet_color
+            material.uv1_scale = Vector3(10, 10, 10)
+            cf.material = material
+            
+    # Apply to Rooms
+    for child in get_children():
+        if child is HotelRoom:
+            child.room_number = str(floor_number) + child.room_number.substr(1)
+            child.carpet_color = carpet_color
+            
+    # Apply to Map
+    if map_texture and has_node("MapDecal"):
+        var map_node = get_node("MapDecal")
+        if map_node is MeshInstance3D:
+            var map_mat = StandardMaterial3D.new()
+            map_mat.albedo_texture = map_texture
+            map_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+            map_node.set_surface_override_material(0, map_mat)
 
 func _generate_level() -> void:
     pass
@@ -37,7 +72,7 @@ func _generate_level() -> void:
     _create_csg_box("CorridorCeiling", Vector3(0, corridor_height, corridor_center_z), Vector3(corridor_width, 0.5, corridor_length), true)
     
     # 3. Generate Double Rooms (Left side)
-    var dbl_labels = ["401", "402", "403", "405", "406", "408", "409", "410", "411"]
+    var dbl_suffixes = ["01", "02", "03", "05", "06", "08", "09", "10", "11"]
     var prev_z = 0.0
     var wall_x = -corridor_width / 2.0
     
@@ -50,10 +85,10 @@ func _generate_level() -> void:
         room.transform.origin = Vector3(-7.5, 0, c_z)
         add_child(room)
         room.owner = get_tree().edited_scene_root
-        if room.has_method("set_room_number"):
-            room.room_number = dbl_labels[i % dbl_labels.size()]
-        elif "room_number" in room:
-            room.room_number = dbl_labels[i % dbl_labels.size()]
+        if "room_number" in room:
+            room.room_number = str(floor_number) + dbl_suffixes[i % dbl_suffixes.size()]
+        if "carpet_color" in room:
+            room.carpet_color = carpet_color
             
         # Wall segment before this room
         var gap_start = c_z + 1.25
@@ -69,7 +104,7 @@ func _generate_level() -> void:
         _create_wall("CorrWallW_End", Vector3(wall_x, 2, (prev_z + corridor_end_z) / 2.0), last_w_length)
         
     # 4. Generate Single Rooms (Right side)
-    var sngl_labels = ["410", "411", "412", "413", "415", "416", "417", "420", "421", "422", "423"]
+    var sngl_suffixes = ["10", "11", "12", "13", "15", "16", "17", "20", "21", "22", "23"]
     prev_z = 0.0
     wall_x = corridor_width / 2.0
     
@@ -83,7 +118,9 @@ func _generate_level() -> void:
         add_child(room)
         room.owner = get_tree().edited_scene_root
         if "room_number" in room:
-            room.room_number = sngl_labels[i % sngl_labels.size()]
+            room.room_number = str(floor_number) + sngl_suffixes[i % sngl_suffixes.size()]
+        if "carpet_color" in room:
+            room.carpet_color = carpet_color
             
         # Wall segment
         var gap_start = c_z + 1.25
@@ -133,6 +170,7 @@ func _create_csg_box(node_name: String, pos: Vector3, size: Vector3, is_floor: b
     var material = StandardMaterial3D.new()
     if is_floor:
         material.albedo_texture = preload("res://assets/textures/hotel_carpet.jpg")
+        material.albedo_color = carpet_color
         material.uv1_scale = Vector3(10, 10, 10)
     else:
         material.albedo_texture = preload("res://assets/textures/hotel_wallpaper.jpg")
@@ -195,6 +233,24 @@ func _generate_north_block() -> void:
     
     # 5. Front Wall
     _create_csg_box("CorrWallNorthEnd", Vector3(-3.5, 2, 5.0), Vector3(1, 4, 10), false)
+    
+    # 6. Map Decal
+    var map_decal = MeshInstance3D.new()
+    map_decal.name = "MapDecal"
+    map_decal.transform.origin = Vector3(2.99, 2.0, -10.0)
+    map_decal.transform.basis = Basis.from_euler(Vector3(0, -PI/2, 0))
+    var quad = QuadMesh.new()
+    quad.size = Vector2(2, 2)
+    var map_mat = StandardMaterial3D.new()
+    if map_texture:
+        map_mat.albedo_texture = map_texture
+    else:
+        map_mat.albedo_texture = preload("res://assets/textures/hotel_map.jpg")
+    map_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+    quad.material = map_mat
+    map_decal.mesh = quad
+    add_child(map_decal)
+    map_decal.owner = get_tree().edited_scene_root
 
 func _clear_generated_nodes() -> void:
     var nodes_to_remove = []

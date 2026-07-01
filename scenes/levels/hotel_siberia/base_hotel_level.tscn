@@ -125,6 +125,8 @@ double_room_step = 10.0
 single_room_step = 6.0
 corridor_width = 7.0
 corridor_height = 4.25
+floor_number = 4
+carpet_color = Color(1, 1, 1, 1)
 
 [node name="SideCorridorFloor" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.5, 0, 7.5)
