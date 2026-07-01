@@ -188,15 +188,8 @@ func _generate_floor(f_num: int, parent: Node3D, is_main: bool) -> void:
     var stair = stairwell_scene.instantiate()
     stair.name = "Stairwell_S"
     stair.transform.origin = Vector3(0, 0, stair_z)
-    # Rotate 180 degrees
-    stair.transform.basis = Basis.from_euler(Vector3(0, PI, 0))
     parent.add_child(stair)
     stair.owner = get_tree().edited_scene_root
-    
-    _create_wall(parent, "CorrWallSouthEnd", Vector3(0, 2, stair_z - 1.5), 1.0)
-    var end_wall = parent.get_node_or_null("CorrWallSouthEnd")
-    if end_wall:
-        end_wall.size = Vector3(6.0, 4.0, 1.0) # Override size for the end wall
         
     print("Level geometry generated for floor " + str(f_num))
 
@@ -348,8 +341,8 @@ func _generate_entities(end_z: float) -> void:
     # 1. Move the Player to the last double room (Z = end_z + double_room_step / 2 roughly)
     var player = get_node_or_null("../../Player")
     if player:
-        # Put player roughly in the middle of the last double room
-        player.transform.origin = Vector3(-7.5, 2, end_z + 5.0)
+        # Put player roughly in the middle of the first double room
+        player.transform.origin = Vector3(-7.5, 2, 4.0)
 
     # 2. Update Enemy Spawner & Cerberus
     var enemies_node = get_node_or_null("../../Enemies")
