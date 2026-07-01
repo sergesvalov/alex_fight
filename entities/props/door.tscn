@@ -23,7 +23,7 @@ size = Vector3(1.0, 2.5, 0.1)
 
 [node name="AnimatableBody3D" type="AnimatableBody3D" parent="Hinge"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 1.25, 0)
-collision_layer = 3
+collision_layer = 7
 collision_mask = 0
 script = ExtResource("1_script")
 

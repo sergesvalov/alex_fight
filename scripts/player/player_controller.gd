@@ -30,6 +30,17 @@ func _input(event: InputEvent) -> void:
         
     if event is InputEventScreenTouch and event.pressed and event.double_tap:
         weapon.shoot()
+        
+    if camera_comp.is_desktop and event is InputEventKey and event.pressed and not event.echo:
+        if event.keycode == KEY_E:
+            interaction.try_interact()
+        elif event.keycode == KEY_I:
+            var hud = get_tree().current_scene.find_child("HUD", true, false)
+            if not hud: hud = get_node_or_null("../HUD")
+            if hud:
+                var inv_ui = hud.find_child("InventoryUI", true, false)
+                if inv_ui and inv_ui.has_method("open"):
+                    inv_ui.open()
 
 func _physics_process(delta: float) -> void:
     if Input.is_action_just_pressed("shoot") and camera_comp.is_desktop:
