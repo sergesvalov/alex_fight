@@ -17,7 +17,7 @@ func _on_body_entered(body: Node3D) -> void:
         GameStateManager.stair_spawn_position = body.global_position + teleport_offset
         GameStateManager.stair_spawn_rotation = body.rotation
         GameStateManager.reset_floor(4)
-        get_tree().change_scene_to_file("res://scenes/levels/hotel_siberia/hotel_level.tscn")
+        get_tree().change_scene_to_file("res://scenes/levels/hotel_siberia/hotel_level_4.tscn")
     elif GameStateManager.current_floor == 4 and not is_going_up:
         GameStateManager.entered_from_stairs = true
         GameStateManager.stair_spawn_position = body.global_position + teleport_offset

@@ -71,27 +71,7 @@ func _ready() -> void:
             var r = available_rooms.pop_back()
             get_node("Enemies/Cerberus").global_position = r.global_position + Vector3(0, 1.0, 0)
             
-        # Change carpet color for the 3rd floor (dark red tint)
-        var floor_mat = StandardMaterial3D.new()
-        var original_tex = preload("res://assets/textures/hotel_carpet.jpg")
-        floor_mat.albedo_texture = original_tex
-        floor_mat.albedo_color = Color(0.6, 0.2, 0.2, 1)
-        floor_mat.uv1_scale = Vector3(10, 10, 10)
-        
-        # Apply to corridor
-        if has_node("NavigationRegion3D/HotelGeometry/CorridorFloor/MeshInstance3D"):
-            var cf = get_node("NavigationRegion3D/HotelGeometry/CorridorFloor/MeshInstance3D")
-            # override material
-            cf.set_surface_override_material(0, floor_mat)
-                
-        # Apply to rooms
-        for r in rooms:
-            if r.has_node("Floor"):
-                r.get_node("Floor").material = floor_mat
-            if r.has_node("Ceil"):
-                # don't color ceiling red unless desired, but usually just floor
-                pass
-
+        # Specific floor logic should be handled by extending scripts
 func _on_all_tapes_collected() -> void:
     # Pick a random room
     var rooms = []

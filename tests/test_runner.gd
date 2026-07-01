@@ -12,7 +12,7 @@ func _ready() -> void:
     # ---------------------------------------------------------
     print("\n[1] Запуск Smoke-тестов сцен...")
     var scenes_to_test = [
-        "res://scenes/levels/hotel_siberia/hotel_level.tscn",
+        "res://scenes/levels/hotel_siberia/hotel_level_4.tscn",
         "res://entities/player/player.tscn",
         "res://entities/enemies/cerberus/cerberus.tscn",
         "res://hud/hud.tscn"
