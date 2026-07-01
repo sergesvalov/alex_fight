@@ -1,9 +1,8 @@
 extends AnimatableBody3D
 class_name InteractiveDoor
 
-@onready var hinge: Node3D = $".."
-@onready var sfx_open: AudioStreamPlayer3D = $"../../SfxOpen"
-@onready var sfx_close: AudioStreamPlayer3D = $"../../SfxClose"
+@onready var sfx_open: AudioStreamPlayer3D = $"../SfxOpen"
+@onready var sfx_close: AudioStreamPlayer3D = $"../SfxClose"
 
 var is_open: bool = false
 var is_moving: bool = false
@@ -33,5 +32,5 @@ func interact(player: Node) -> void:
         sfx_close.play()
         
     var tween = create_tween()
-    tween.tween_property(hinge, "rotation:y", target_rot, 0.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+    tween.tween_property(self, "rotation:y", target_rot, 0.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
     tween.tween_callback(func(): is_moving = false)

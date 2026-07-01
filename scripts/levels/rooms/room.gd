@@ -19,9 +19,9 @@ func _ready() -> void:
         _attach_label_to_door()
 
 func _attach_label_to_door() -> void:
-    if has_node("RoomLabel") and has_node("MainDoor/Hinge/AnimatableBody3D"):
+    if has_node("RoomLabel") and has_node("MainDoor/AnimatableBody3D"):
         var label = get_node("RoomLabel")
-        var door_body = get_node("MainDoor/Hinge/AnimatableBody3D")
+        var door_body = get_node("MainDoor/AnimatableBody3D")
         
         # Calculate local transform relative to door_body
         var global_trans = label.global_transform
@@ -37,7 +37,7 @@ func _attach_label_to_door() -> void:
 func _update_label() -> void:
     var label = get_node_or_null("RoomLabel")
     if not label:
-        label = get_node_or_null("MainDoor/Hinge/AnimatableBody3D/RoomLabel")
+        label = get_node_or_null("MainDoor/AnimatableBody3D/RoomLabel")
         
     if label and label is Label3D:
         label.text = room_number
