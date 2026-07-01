@@ -1,4 +1,4 @@
-extends StaticBody3D
+extends AnimatableBody3D
 class_name InteractiveDoor
 
 @onready var hinge: Node3D = $".."
@@ -7,16 +7,25 @@ class_name InteractiveDoor
 
 var is_open: bool = false
 var is_moving: bool = false
+var open_angle: float = -PI / 2.0
 
 func interact(player: Node) -> void:
     if is_moving:
         return
         
     is_moving = true
+    
+    if not is_open:
+        var to_player = player.global_position - global_position
+        var forward = global_transform.basis.z
+        if to_player.dot(forward) > 0:
+            open_angle = -PI / 2.0
+        else:
+            open_angle = PI / 2.0
+            
     is_open = !is_open
     
-    # 90 degrees open
-    var target_rot = -PI / 2.0 if is_open else 0.0
+    var target_rot = open_angle if is_open else 0.0
     
     if is_open:
         sfx_open.play()

@@ -117,4 +117,7 @@ func _spawn_exit_door(room: Node3D, silent: bool = false) -> void:
     audio.volume_db = 15.0
     door.add_child(audio)
     if not silent:
+        audio.finished.connect(audio.queue_free)
         audio.play()
+    else:
+        audio.queue_free()

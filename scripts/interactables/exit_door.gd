@@ -1,7 +1,7 @@
-extends StaticBody3D
+extends AnimatableBody3D
 
-@onready var animation_player = $AnimationPlayer
-@onready var audio_player = $AudioStreamPlayer3D
+@onready var hinge: Node3D = $".."
+@onready var sfx_open: AudioStreamPlayer3D = $"../../SfxOpen"
 
 var is_open = false
 
@@ -10,12 +10,18 @@ func interact(player):
         return
         
     is_open = true
-    animation_player.play("open")
-    audio_player.play()
+    sfx_open.play()
     
-    # Wait for the sound/animation briefly or immediately transition
-    await get_tree().create_timer(0.5).timeout
+    var to_player = player.global_position - global_position
+    var forward = global_transform.basis.z
+    var open_angle = -PI / 2.0
+    if to_player.dot(forward) <= 0:
+        open_angle = PI / 2.0
+        
+    var tween = create_tween()
+    tween.tween_property(hinge, "rotation:y", open_angle, 0.5).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
     
+    await tween.finished
     GameStateManager.entered_from_outer_door = true
     var target_scene = ""
     if GameStateManager.current_floor == 4:
