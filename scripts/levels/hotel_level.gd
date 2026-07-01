@@ -109,24 +109,26 @@ func _spawn_exit_door(room: Node3D, silent: bool = false) -> void:
     var wall_name = "WallW" if is_double else "WallE"
     var wall = room.get_node(wall_name)
     
-    # 1. Create a hole in the wall using CSGBox3D with subtraction
     var hole = CSGBox3D.new()
     hole.operation = CSGShape3D.OPERATION_SUBTRACTION
-    hole.size = Vector3(2, 2.5, 1.2)
-    hole.position = Vector3(0, -0.75, 0.0)
-    wall.add_child(hole)
     
     # 2. Spawn the exit door
     var door = exit_door_scene.instantiate()
     room.add_child(door)
     if is_double:
-        # Facing +X
+        # Facing +X, door spans Z from 0 to -1
         var basis = Basis(Vector3(0, 1, 0), PI/2)
         door.transform = Transform3D(basis, Vector3(-4.0, 0.25, 0.0))
+        hole.size = Vector3(2.0, 2.5, 1.0)
+        hole.position = Vector3(0, -0.75, -0.5)
     else:
-        # Facing -X
+        # Facing -X, door spans Z from 0 to +1
         var basis = Basis(Vector3(0, 1, 0), -PI/2)
         door.transform = Transform3D(basis, Vector3(3.0, 0.25, 0.0))
+        hole.size = Vector3(2.0, 2.5, 1.0)
+        hole.position = Vector3(0, -0.75, 0.5)
+        
+    wall.add_child(hole)
         
     # 3. Play rumble sound
     var audio = AudioStreamPlayer3D.new()
