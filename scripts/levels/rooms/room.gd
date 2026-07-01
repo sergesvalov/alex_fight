@@ -30,9 +30,9 @@ func _attach_label_to_door() -> void:
         door_body.add_child(label)
         
         # Position label on the corridor-facing side of the door
-        # door_body's -Z axis faces the corridor.
-        label.transform = Transform3D().rotated(Vector3.UP, PI)
-        label.transform.origin = Vector3(0, 0.8, -0.06)
+        # door_body's +Z axis faces the corridor.
+        label.transform.basis = Basis.IDENTITY
+        label.transform.origin = Vector3(0.75, 1.5, 0.06)
 
 func _update_label() -> void:
     var label = get_node_or_null("RoomLabel")
