@@ -33,9 +33,10 @@ def process_file():
     corridor_width = 7.0
     corridor_height = 4.25
 
-    max_double_z = -5.0 - (num_double_rooms - 1) * double_room_step - 5.0
-    max_single_z = -3.0 - (num_single_rooms - 1) * single_room_step - 3.0
-    corridor_end_z = min(max_double_z, max_single_z)
+    L_centers = [ -5.0 - i*10.0 for i in range(6) ]
+    R_centers = [ -3.0 - i*6.0 for i in range(9) ]
+
+    corridor_end_z = min(L_centers[-1] - 5.0, R_centers[-1] - 3.0)
 
     out = []
     out.append('[node name="HotelGeometry" type="Node3D" parent="NavigationRegion3D"]')
