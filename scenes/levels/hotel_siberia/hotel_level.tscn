@@ -440,6 +440,111 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.5, 0, -67)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.5, 0, -75)
 
 
+[node name="RoomLabel_401" type="Label3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -3.49, 2.2, -10.70)
+text = "401"
+font_size = 72
+outline_size = 12
+modulate = Color(0.8, 0.7, 0.2, 1)
+
+[node name="RoomLabel_402" type="Label3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -3.49, 2.2, -23.20)
+text = "402"
+font_size = 72
+outline_size = 12
+modulate = Color(0.8, 0.7, 0.2, 1)
+
+[node name="RoomLabel_403" type="Label3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -3.49, 2.2, -35.70)
+text = "403"
+font_size = 72
+outline_size = 12
+modulate = Color(0.8, 0.7, 0.2, 1)
+
+[node name="RoomLabel_405" type="Label3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -3.49, 2.2, -48.20)
+text = "405"
+font_size = 72
+outline_size = 12
+modulate = Color(0.8, 0.7, 0.2, 1)
+
+[node name="RoomLabel_406" type="Label3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -3.49, 2.2, -60.70)
+text = "406"
+font_size = 72
+outline_size = 12
+modulate = Color(0.8, 0.7, 0.2, 1)
+
+[node name="RoomLabel_408" type="Label3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -3.49, 2.2, -73.20)
+text = "408"
+font_size = 72
+outline_size = 12
+modulate = Color(0.8, 0.7, 0.2, 1)
+
+[node name="RoomLabel_410" type="Label3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 3.49, 2.2, -9.80)
+text = "410"
+font_size = 72
+outline_size = 12
+modulate = Color(0.8, 0.7, 0.2, 1)
+
+[node name="RoomLabel_411" type="Label3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 3.49, 2.2, -17.80)
+text = "411"
+font_size = 72
+outline_size = 12
+modulate = Color(0.8, 0.7, 0.2, 1)
+
+[node name="RoomLabel_412" type="Label3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 3.49, 2.2, -25.80)
+text = "412"
+font_size = 72
+outline_size = 12
+modulate = Color(0.8, 0.7, 0.2, 1)
+
+[node name="RoomLabel_413" type="Label3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 3.49, 2.2, -33.80)
+text = "413"
+font_size = 72
+outline_size = 12
+modulate = Color(0.8, 0.7, 0.2, 1)
+
+[node name="RoomLabel_415" type="Label3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 3.49, 2.2, -41.80)
+text = "415"
+font_size = 72
+outline_size = 12
+modulate = Color(0.8, 0.7, 0.2, 1)
+
+[node name="RoomLabel_416" type="Label3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 3.49, 2.2, -49.80)
+text = "416"
+font_size = 72
+outline_size = 12
+modulate = Color(0.8, 0.7, 0.2, 1)
+
+[node name="RoomLabel_417" type="Label3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 3.49, 2.2, -57.80)
+text = "417"
+font_size = 72
+outline_size = 12
+modulate = Color(0.8, 0.7, 0.2, 1)
+
+[node name="RoomLabel_420" type="Label3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 3.49, 2.2, -65.80)
+text = "420"
+font_size = 72
+outline_size = 12
+modulate = Color(0.8, 0.7, 0.2, 1)
+
+[node name="RoomLabel_421" type="Label3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 3.49, 2.2, -73.80)
+text = "421"
+font_size = 72
+outline_size = 12
+modulate = Color(0.8, 0.7, 0.2, 1)
+
 [node name="MapDecal" type="MeshInstance3D" parent="NavigationRegion3D/HotelGeometry"]
 transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 2.99, 2, -10)
 mesh = SubResource("QuadMesh_map")
