@@ -38,6 +38,7 @@ size = Vector3(0.6, 4.0, 2.4)
 script = ExtResource("1_script")
 
 [node name="Floor" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, 0)
 use_collision = true
 collision_layer = 2
 size = Vector3(8.4, 0.5, 7.2)
