@@ -55,13 +55,17 @@ func _ready() -> void:
         
         var tapes = []
         for i in range(1, 4):
-            if has_node("VhsTape_" + str(i)):
-                tapes.append(get_node("VhsTape_" + str(i)))
+            var tape_path = "InteractableObjects/VhsTape_" + str(i)
+            if has_node(tape_path):
+                tapes.append(get_node(tape_path))
                 
         for tape in tapes:
             if available_rooms.size() > 0:
                 var r = available_rooms.pop_back()
-                tape.global_position = r.global_position + Vector3(0, 1.0, 0)
+                var is_double = r.name.begins_with("DoubleRoom")
+                var local_pos = Vector3(0.5, 0.87, 4.5) if is_double else Vector3(2.0, 0.87, -2.5)
+                tape.global_position = r.to_global(local_pos)
+                tape.global_rotation = r.global_rotation
                 
         if has_node("Enemies/Cerberus") and available_rooms.size() > 0:
             var r = available_rooms.pop_back()
