@@ -18,6 +18,8 @@ var current_state: GameState = GameState.EXPLORING
 var tapes_found: Array[int] = []         # [0, 1, 2] — ID найденных кассет
 var exit_code_known: bool = false
 var cerberus_spawned: bool = false
+var current_floor: int = 4
+var entered_from_outer_door: bool = false
 
 func change_state(new_state: GameState) -> void:
     current_state = new_state
@@ -36,3 +38,10 @@ func collect_tape(tape_id: int) -> void:
             if not cerberus_spawned:
                 cerberus_spawned = true
                 enemy_spawned.emit()
+
+func reset_floor(new_floor: int) -> void:
+    current_floor = new_floor
+    tapes_found.clear()
+    cerberus_spawned = false
+    exit_code_known = false
+    current_state = GameState.EXPLORING
