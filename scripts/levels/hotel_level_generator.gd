@@ -9,8 +9,8 @@ class_name HotelLevelGenerator
 
 @export var num_double_rooms: int = 6
 @export var num_single_rooms: int = 9
-@export var double_room_step: float = 10.0
-@export var single_room_step: float = 6.0
+@export var double_room_step: float = 12.0
+@export var single_room_step: float = 7.2
 @export var corridor_width: float = 7.0
 @export var corridor_height: float = 4.25
 
@@ -24,7 +24,17 @@ var single_room_scene = preload("res://scenes/levels/hotel_siberia/rooms/single_
 
 func _ready() -> void:
     if not Engine.is_editor_hint():
+        _generate_level()
         _apply_stylization()
+        
+        # Await two physics frames to let CSG operations finish baking
+        await get_tree().physics_frame
+        await get_tree().physics_frame
+        
+        # Bake navmesh at runtime
+        var nav_region = get_parent()
+        if nav_region is NavigationRegion3D:
+            nav_region.bake_navigation_mesh()
 
 func _apply_stylization() -> void:
     # Apply to CorridorFloor
@@ -53,16 +63,14 @@ func _apply_stylization() -> void:
             map_node.set_surface_override_material(0, map_mat)
 
 func _generate_level() -> void:
-    pass
-        
     print("Generating hotel level geometry...")
     _clear_generated_nodes()
     
     _generate_north_block()
     
     # 1. Calculate corridor length based on the farthest room
-    var max_double_z = -5.0 - (num_double_rooms - 1) * double_room_step - 5.0
-    var max_single_z = -3.0 - (num_single_rooms - 1) * single_room_step - 3.0
+    var max_double_z = -6.0 - (num_double_rooms - 1) * double_room_step - 6.0
+    var max_single_z = -3.6 - (num_single_rooms - 1) * single_room_step - 3.6
     var corridor_end_z = min(max_double_z, max_single_z)
     var corridor_length = abs(corridor_end_z) + 10.0 # From +10 to end
     var corridor_center_z = (10.0 + corridor_end_z) / 2.0
@@ -79,12 +87,12 @@ func _generate_level() -> void:
     var wall_x = -corridor_width / 2.0
     
     for i in range(num_double_rooms):
-        var c_z = -5.0 - i * double_room_step
+        var c_z = -6.0 - i * double_room_step
         
         # Room instance
         var room = double_room_scene.instantiate()
         room.name = "DoubleRoomL" + str(i + 1)
-        room.transform.origin = Vector3(-7.5, 0, c_z)
+        room.transform.origin = Vector3(-8.3, 0, c_z)
         add_child(room)
         room.owner = get_tree().edited_scene_root
         if "room_number" in room:
@@ -93,8 +101,8 @@ func _generate_level() -> void:
             room.carpet_color = carpet_color
             
         # Wall segment before this room
-        var gap_start = c_z + 1.25
-        var gap_end = c_z - 0.25
+        var gap_start = c_z + 1.5
+        var gap_end = c_z - 0.3
         var length = prev_z - gap_start
         var center = (prev_z + gap_start) / 2.0
         if length > 0:
@@ -111,12 +119,12 @@ func _generate_level() -> void:
     wall_x = corridor_width / 2.0
     
     for i in range(num_single_rooms):
-        var c_z = -3.0 - i * single_room_step
+        var c_z = -3.6 - i * single_room_step
         
         # Room instance
         var room = single_room_scene.instantiate()
         room.name = "SingleRoomR" + str(i + 1)
-        room.transform.origin = Vector3(6.5, 0, c_z)
+        room.transform.origin = Vector3(7.1, 0, c_z)
         add_child(room)
         room.owner = get_tree().edited_scene_root
         if "room_number" in room:
@@ -125,8 +133,8 @@ func _generate_level() -> void:
             room.carpet_color = carpet_color
             
         # Wall segment
-        var gap_start = c_z + 1.25
-        var gap_end = c_z - 0.25
+        var gap_start = c_z + 1.5
+        var gap_end = c_z - 0.3
         var length = prev_z - gap_start
         var center = (prev_z + gap_start) / 2.0
         if length > 0:
