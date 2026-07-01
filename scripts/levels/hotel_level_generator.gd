@@ -67,6 +67,8 @@ func _generate_level() -> void:
     var corridor_length = abs(corridor_end_z) + 10.0 # From +10 to end
     var corridor_center_z = (10.0 + corridor_end_z) / 2.0
     
+    _generate_entities(corridor_end_z)
+    
     # 2. Generate Floors and Ceilings
     _create_csg_box("CorridorFloor", Vector3(0, 0, corridor_center_z), Vector3(corridor_width, 0.5, corridor_length), true)
     _create_csg_box("CorridorCeiling", Vector3(0, corridor_height, corridor_center_z), Vector3(corridor_width, 0.5, corridor_length), true)
@@ -268,3 +270,54 @@ func _clear_generated_nodes() -> void:
     for child in nodes_to_remove:
         remove_child(child)
         child.queue_free()
+
+func _generate_entities(end_z: float) -> void:
+    # 1. Move the Player to the last double room (Z = end_z + double_room_step / 2 roughly)
+    var player = get_node_or_null("../../Player")
+    if player:
+        # Put player roughly in the middle of the last double room
+        player.transform.origin = Vector3(-7.5, 2, end_z + 5.0)
+
+    # 2. Update Enemy Spawner & Cerberus
+    var enemies_node = get_node_or_null("../../Enemies")
+    if enemies_node:
+        if "spawn_position" in enemies_node:
+            enemies_node.spawn_position = Vector3(0, 1, end_z + 10.0)
+            
+        var cerberus = enemies_node.get_node_or_null("Cerberus")
+        if cerberus:
+            cerberus.transform.origin = Vector3(0, 1, end_z + 10.0)
+            
+        # 3. Generate Patrol Points
+        var patrol_points = enemies_node.get_node_or_null("PatrolPoints")
+        if patrol_points:
+            # Clear existing points
+            for child in patrol_points.get_children():
+                patrol_points.remove_child(child)
+                child.queue_free()
+                
+            # Create new points every 20 meters from -20 down to end_z
+            var points_array = []
+            var current_z = -20.0
+            var idx = 1
+            while current_z > end_z + 5.0:
+                var marker = Marker3D.new()
+                marker.name = "Point" + str(idx)
+                marker.transform.origin = Vector3(0, 0, current_z)
+                patrol_points.add_child(marker)
+                marker.owner = get_tree().edited_scene_root
+                points_array.append(NodePath("../PatrolPoints/" + str(marker.name)))
+                current_z -= 20.0
+                idx += 1
+                
+            # Fallback if corridor is too short
+            if points_array.size() == 0:
+                var marker = Marker3D.new()
+                marker.name = "Point1"
+                marker.transform.origin = Vector3(0, 0, min(-5.0, end_z / 2.0))
+                patrol_points.add_child(marker)
+                marker.owner = get_tree().edited_scene_root
+                points_array.append(NodePath("../PatrolPoints/Point1"))
+                
+            if cerberus and "patrol_points" in cerberus:
+                cerberus.patrol_points = points_array

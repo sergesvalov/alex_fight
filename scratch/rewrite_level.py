@@ -21,6 +21,21 @@ def process_file():
 
     before = content[:start_idx]
     after = content[end_idx:]
+    
+    enemies_idx = after.find('[node name="Enemies"')
+    if enemies_idx != -1:
+        after = after[:enemies_idx]
+
+    num_double_rooms = 6
+    num_single_rooms = 9
+    double_room_step = 10.0
+    single_room_step = 6.0
+    corridor_width = 7.0
+    corridor_height = 4.25
+
+    max_double_z = -5.0 - (num_double_rooms - 1) * double_room_step - 5.0
+    max_single_z = -3.0 - (num_single_rooms - 1) * single_room_step - 3.0
+    corridor_end_z = min(max_double_z, max_single_z)
 
     out = []
     out.append('[node name="HotelGeometry" type="Node3D" parent="NavigationRegion3D"]')
@@ -203,22 +218,59 @@ def process_file():
         out.append(f'room_number = "{sngl_labels[i]}"')
         out.append('')
 
-    corridor_end_z = min(L_centers[-1], R_centers[-1])
+    # Now generate the south stairwell using corridor_end_z computed at the top
     stair_z = corridor_end_z - 10.0
-    
     out.append('[node name="Stairwell_S" parent="NavigationRegion3D/HotelGeometry" instance=ExtResource("stairwell")]')
-    out.append(f'transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 0, {stair_z})')
+    out.append('transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 0, %s)' % stair_z)
     out.append('')
-    
     out.append('[node name="CorrWallSouthEnd" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]')
-    out.append(f'transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, {stair_z - 1.5})') 
+    out.append('transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.5, 2, %s)' % (stair_z - 1.5))
     out.append('use_collision = true')
     out.append('collision_layer = 2')
     out.append('size = Vector3(6, 4, 1)')
     out.append('material = SubResource("StandardMaterial3D_wall")')
     out.append('')
+    
+    # ------------------ DYNAMIC ENTITIES ------------------
+    after_out = []
+    after_out.append('[node name="Enemies" type="Node3D" parent="."]')
+    after_out.append('script = ExtResource("spawner_script")')
+    after_out.append('enemy_scene = ExtResource("cerberus_scene")')
+    after_out.append(f'spawn_position = Vector3(0, 1, {corridor_end_z + 10.0})')
+    after_out.append('')
+    after_out.append('[node name="PatrolPoints" type="Node3D" parent="Enemies"]')
+    after_out.append('')
+    
+    points_array = []
+    current_z = -20.0
+    idx = 1
+    while current_z > corridor_end_z + 5.0:
+        after_out.append(f'[node name="Point{idx}" type="Marker3D" parent="Enemies/PatrolPoints"]')
+        after_out.append(f'transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, {current_z})')
+        after_out.append('')
+        points_array.append(f'NodePath("../PatrolPoints/Point{idx}")')
+        current_z -= 20.0
+        idx += 1
+        
+    if not points_array:
+        after_out.append(f'[node name="Point1" type="Marker3D" parent="Enemies/PatrolPoints"]')
+        after_out.append(f'transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, {min(-5.0, corridor_end_z / 2.0)})')
+        after_out.append('')
+        points_array.append('NodePath("../PatrolPoints/Point1")')
+        
+    patrol_array_str = ", ".join(points_array)
+        
+    after_out.append('[node name="Cerberus" parent="Enemies" node_paths=PackedStringArray("patrol_points") instance=ExtResource("7_cerb")]')
+    after_out.append(f'transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, {corridor_end_z + 10.0})')
+    after_out.append(f'patrol_points = [{patrol_array_str}]')
+    after_out.append('')
+    after_out.append('[node name="Player" parent="." instance=ExtResource("1_player")]')
+    after_out.append(f'transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.5, 2, {corridor_end_z + 5.0})')
+    after_out.append('')
+    after_out.append('[node name="HUD" parent="." instance=ExtResource("2_hud")]')
+    after_out.append('')
 
-    new_content = before + "\n".join(out) + after
+    new_content = before + "\n".join(out) + after + "\n".join(after_out)
     
     # We must ensure there are no lingering RoomLabels!
     # They should all be gone since we completely replace the HotelGeometry block.
