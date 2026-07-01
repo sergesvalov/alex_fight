@@ -193,10 +193,10 @@ func _ready() -> void:
                         print("     [FAILED] Дверь '", current.name, "' в '", current.get_parent().name, "' открыта по умолчанию!")
                         door_errors += 1
                     else:
-                        var dummy_player = Node3D.new()
-                        door_body.add_child(dummy_player)
-                        dummy_player.global_transform.origin = door_body.global_transform.origin + door_body.global_transform.basis.z * 1.5
-                        door_body.interact(dummy_player)
+                        var door_dummy_player = Node3D.new()
+                        door_body.add_child(door_dummy_player)
+                        door_dummy_player.global_transform.origin = door_body.global_transform.origin + door_body.global_transform.basis.z * 1.5
+                        door_body.interact(door_dummy_player)
                         if not door_body.is_open:
                             print("     [FAILED] Дверь '", current.name, "' в '", current.get_parent().name, "' не открылась после interact()")
                             door_errors += 1
@@ -234,7 +234,7 @@ func _ready() -> void:
                                 door_errors += 1
                                 
                             char_body.queue_free()
-                        dummy_player.queue_free()
+                        door_dummy_player.queue_free()
                 
                 for child in current.get_children():
                     nodes_to_check.append(child)
