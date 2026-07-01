@@ -216,24 +216,24 @@ func _ready() -> void:
                                 var start_pos = current.global_transform.origin + current.global_transform.basis.z * 1.5
                                 start_pos.y = 0.9
                                 char_body.global_transform.origin = start_pos
-                            
-                            # Даем физическому движку кадр на обновление
-                            await get_tree().physics_frame
-                            await get_tree().physics_frame
-                            
-                            # Пытаемся пройти на 3 метра вперед (сквозь дверной проем)
-                            var motion = -door_body.global_transform.basis.z * 3.0
-                            var collision = char_body.move_and_collide(motion, true) # true = test_only
-                            
-                            if collision:
-                                var hit_name = "Unknown"
-                                if collision.get_collider():
-                                    hit_name = collision.get_collider().name
-                                print("     [FAILED] Выход заблокирован! Персонаж уперся в: ", hit_name)
-                                door_errors += 1
                                 
-                            char_body.queue_free()
-                        door_dummy_player.queue_free()
+                                # Даем физическому движку кадр на обновление
+                                await get_tree().physics_frame
+                                await get_tree().physics_frame
+                                
+                                # Пытаемся пройти на 3 метра вперед (сквозь дверной проем)
+                                var motion = -door_body.global_transform.basis.z * 3.0
+                                var collision = char_body.move_and_collide(motion, true) # true = test_only
+                                
+                                if collision:
+                                    var hit_name = "Unknown"
+                                    if collision.get_collider():
+                                        hit_name = collision.get_collider().name
+                                    print("     [FAILED] Выход заблокирован! Персонаж уперся в: ", hit_name)
+                                    door_errors += 1
+                                    
+                                char_body.queue_free()
+                            door_dummy_player.queue_free()
                 
                 for child in current.get_children():
                     nodes_to_check.append(child)
