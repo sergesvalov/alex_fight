@@ -17,6 +17,13 @@ func _ready() -> void:
         if child.name.begins_with("DoubleRoom") or child.name.begins_with("SingleRoom"):
             rooms.append(child)
             
+    if GameStateManager.entered_from_stairs:
+        GameStateManager.entered_from_stairs = false
+        var player = get_node_or_null("Player")
+        if player:
+            player.global_position = GameStateManager.stair_spawn_position
+            player.rotation = GameStateManager.stair_spawn_rotation
+            
     if GameStateManager.entered_from_outer_door:
         GameStateManager.entered_from_outer_door = false
         if rooms.size() > 0:

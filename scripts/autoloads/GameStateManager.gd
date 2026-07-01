@@ -20,6 +20,9 @@ var exit_code_known: bool = false
 var cerberus_spawned: bool = false
 var current_floor: int = 4
 var entered_from_outer_door: bool = false
+var entered_from_stairs: bool = false
+var stair_spawn_position: Vector3 = Vector3.ZERO
+var stair_spawn_rotation: Vector3 = Vector3.ZERO
 
 func change_state(new_state: GameState) -> void:
     current_state = new_state
