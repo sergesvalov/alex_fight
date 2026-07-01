@@ -28,6 +28,7 @@
 size = Vector3(10, 0.5, 10)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_floor"]
+albedo_color = Color(0.6, 0.2, 0.2, 1)
 albedo_texture = ExtResource("5_carpet")
 uv1_scale = Vector3(10, 10, 10)
 
