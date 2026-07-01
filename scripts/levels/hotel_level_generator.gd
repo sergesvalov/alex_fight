@@ -23,6 +23,8 @@ func _generate_level() -> void:
     print("Generating hotel level geometry...")
     _clear_generated_nodes()
     
+    _generate_north_block()
+    
     # 1. Calculate corridor length based on the farthest room
     var max_double_z = -5.0 - (num_double_rooms - 1) * double_room_step - 5.0
     var max_single_z = -3.0 - (num_single_rooms - 1) * single_room_step - 3.0
@@ -140,12 +142,71 @@ func _create_csg_box(node_name: String, pos: Vector3, size: Vector3, is_floor: b
     box.material = material
     add_child(box)
     box.owner = get_tree().edited_scene_root
+    return box
+
+func _create_csg_hole(parent: Node, node_name: String, pos: Vector3, size: Vector3) -> CSGBox3D:
+    var hole = CSGBox3D.new()
+    hole.name = node_name
+    hole.transform.origin = pos
+    hole.size = size
+    hole.operation = CSGShape3D.OPERATION_SUBTRACTION
+    parent.add_child(hole)
+    hole.owner = get_tree().edited_scene_root
+    return hole
+
+func _create_light(node_name: String, pos: Vector3, color: Color) -> OmniLight3D:
+    var light = OmniLight3D.new()
+    light.name = node_name
+    light.transform.origin = pos
+    light.light_color = color
+    light.omni_range = 8.0
+    add_child(light)
+    light.owner = get_tree().edited_scene_root
+    return light
+
+func _generate_north_block() -> void:
+    # 1. Side Corridor
+    _create_csg_box("SideCorridorFloor", Vector3(7.5, 0, 7.5), Vector3(9, 0.5, 4), true)
+    _create_csg_box("SideCorridorCeiling", Vector3(7.5, 4.25, 7.5), Vector3(9, 4, 1), false)
+    
+    # 2. Elevator
+    var elev_wall = _create_csg_box("ElevatorWallS", Vector3(7.5, 2, 5.5), Vector3(9, 4, 1), false)
+    _create_csg_hole(elev_wall, "ElevatorDoorHole", Vector3(0, -0.75, 0), Vector3(3, 2.5, 2))
+    
+    var elev_shaft = _create_csg_box("ElevatorShaft", Vector3(7.5, 2, 2.5), Vector3(6, 4, 5), false)
+    elev_shaft.flip_faces = true
+    _create_light("ElevatorLight", Vector3(7.5, 3.5, 4.0), Color(0.9, 0.95, 1, 1))
+    
+    # 3. Maintenance
+    var maint_wall = _create_csg_box("MaintenanceWallW", Vector3(12, 2, 7.5), Vector3(1, 4, 5), false)
+    _create_csg_hole(maint_wall, "MaintenanceDoorHole", Vector3(0, -0.75, 0), Vector3(2, 2.5, 1.5))
+    
+    var maint_room = _create_csg_box("MaintenanceRoom", Vector3(15, 2, 7.5), Vector3(6, 4, 5), false)
+    maint_room.flip_faces = true
+    _create_light("MaintenanceLight", Vector3(15, 3.5, 7.5), Color(1.0, 0.9, 0.7, 1))
+    
+    # 4. North Stairwell
+    var stairwell_scene = preload("res://scenes/levels/hotel_siberia/stairwell.tscn")
+    var stair = stairwell_scene.instantiate()
+    stair.name = "Stairwell_N"
+    stair.transform.origin = Vector3(0, 0, 5.0)
+    add_child(stair)
+    stair.owner = get_tree().edited_scene_root
+    
+    # 5. Front Wall
+    _create_csg_box("CorrWallNorthEnd", Vector3(-3.5, 2, 5.0), Vector3(1, 4, 10), false)
 
 func _clear_generated_nodes() -> void:
     var nodes_to_remove = []
+    var clear_names = ["DoubleRoom", "SingleRoom", "CorrWall", "CorridorFloor", "CorridorCeiling", "RoomLabel", "Stairwell_S", "SideCorridorFloor", "SideCorridorCeiling", "ElevatorWallS", "ElevatorShaft", "MaintenanceWallW", "MaintenanceRoom", "ElevatorLight", "MaintenanceLight", "Stairwell_N", "CorrWallNorthEnd"]
     for child in get_children():
         var n = child.name
-        if n.begins_with("DoubleRoom") or n.begins_with("SingleRoom") or n.begins_with("CorrWall") or n == "CorridorFloor" or n == "CorridorCeiling" or n.begins_with("RoomLabel") or n == "Stairwell_S":
+        var should_remove = false
+        for c in clear_names:
+            if n.begins_with(c) or n == c:
+                should_remove = true
+                break
+        if should_remove:
             nodes_to_remove.append(child)
             
     for child in nodes_to_remove:
