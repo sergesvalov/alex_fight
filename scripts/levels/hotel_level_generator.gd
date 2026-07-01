@@ -167,7 +167,7 @@ func _generate_level() -> void:
     print("Level geometry generated.")
 
 func _create_wall(node_name: String, pos: Vector3, length: float) -> void:
-    _create_csg_box(node_name, pos, Vector3(1.0, 4.0, length), false, true)
+    _create_csg_box(node_name, pos, Vector3(1.0, 4.0, length), false, false)
 
 func _create_csg_box(node_name: String, pos: Vector3, size: Vector3, is_floor: bool, add_occluder: bool = true) -> CSGBox3D:
     var box = CSGBox3D.new()
@@ -253,7 +253,7 @@ func _generate_north_block() -> void:
     stair.owner = get_tree().edited_scene_root
     
     # 5. Front Wall
-    _create_csg_box("CorrWallNorthEnd", Vector3(-3.5, 2, 5.0), Vector3(1, 4, 10), false)
+    _create_csg_box("CorrWallNorthEnd", Vector3(-3.5, 2, 5.0), Vector3(1, 4, 10), false, false)
     
     # 6. Map Decal
     var map_decal = MeshInstance3D.new()
