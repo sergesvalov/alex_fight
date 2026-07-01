@@ -150,7 +150,7 @@ func _generate_level() -> void:
     # 5. Generate South Block (Stairwell and End Wall)
     var stairwell_scene = preload("res://scenes/levels/hotel_siberia/stairwell.tscn")
     
-    var stair_z = corridor_end_z - 10.0
+    
     var stair = stairwell_scene.instantiate()
     stair.name = "Stairwell_S"
     stair.transform.origin = Vector3(0, 0, stair_z)
