@@ -256,7 +256,7 @@ func _generate_north_block() -> void:
     # 6. Map Decal
     var map_decal = MeshInstance3D.new()
     map_decal.name = "MapDecal"
-    map_decal.transform.origin = Vector3(2.99, 2.0, -10.0)
+    map_decal.transform.origin = Vector3(2.99, 2.0, -6.6)
     map_decal.transform.basis = Basis.from_euler(Vector3(0, -PI/2, 0))
     var quad = QuadMesh.new()
     quad.size = Vector2(2, 2)
