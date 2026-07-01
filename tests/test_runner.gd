@@ -192,8 +192,37 @@ func _ready() -> void:
                             print("     [FAILED] Дверь '", current.name, "' в '", current.get_parent().name, "' не открылась после interact()")
                             door_errors += 1
                         else:
-                            # Симуляция входа персонажа
-                            dummy_player.global_transform.origin = current.global_transform.origin - current.global_transform.basis.z * 1.5
+                            # Физическая симуляция прохода персонажа сквозь дверной проем
+                            var char_body = CharacterBody3D.new()
+                            var col = CollisionShape3D.new()
+                            var shape = CapsuleShape3D.new()
+                            shape.radius = 0.3
+                            shape.height = 1.8
+                            col.shape = shape
+                            char_body.add_child(col)
+                            current.get_parent().add_child(char_body)
+                            
+                            # Ставим манекен в коридоре, Y = 0.9 (центр капсулы высотой 1.8)
+                            var start_pos = current.global_transform.origin + current.global_transform.basis.z * 1.5
+                            start_pos.y = 0.9
+                            char_body.global_transform.origin = start_pos
+                            
+                            # Даем физическому движку кадр на обновление
+                            await get_tree().physics_frame
+                            await get_tree().physics_frame
+                            
+                            # Пытаемся пройти на 3 метра вперед (сквозь дверной проем)
+                            var motion = -current.global_transform.basis.z * 3.0
+                            var collision = char_body.move_and_collide(motion, true) # true = test_only
+                            
+                            if collision:
+                                var hit_name = "Unknown"
+                                if collision.get_collider():
+                                    hit_name = collision.get_collider().name
+                                print("     [FAILED] Выход заблокирован! Персонаж уперся в: ", hit_name)
+                                door_errors += 1
+                                
+                            char_body.queue_free()
                 
                 for child in current.get_children():
                     nodes_to_check.append(child)
