@@ -157,7 +157,7 @@ func _generate_floor(f_num: int, parent: Node3D, is_main: bool) -> void:
         # Room instance
         var room = single_room_scene.instantiate()
         room.name = "SingleRoomR" + str(i + 1) + "_F" + str(f_num)
-        room.transform.origin = Vector3(8.3, 0, c_z)
+        room.transform.origin = Vector3(7.1, 0, c_z)
         parent.add_child(room)
         room.owner = get_tree().edited_scene_root
         if "room_number" in room:

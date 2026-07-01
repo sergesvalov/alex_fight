@@ -14,7 +14,7 @@ uv1_scale = Vector3(20, 2, 2)
 roughness = 0.9
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_corridor_floor"]
-size = Vector3(6, 0.5, 40)
+size = Vector3(7, 0.5, 40)
 
 [node name="Stairwell" type="CSGCombiner3D"]
 use_collision = true
@@ -22,56 +22,56 @@ collision_layer = 2
 
 [node name="MainLanding" type="CSGBox3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, -1.5)
-size = Vector3(6, 0.5, 3)
+size = Vector3(7, 0.5, 3)
 material = SubResource("StandardMaterial3D_floor")
 
 [node name="UpperLanding" type="CSGBox3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.75, -1.5)
-size = Vector3(6, 0.5, 3)
+size = Vector3(7, 0.5, 3)
 material = SubResource("StandardMaterial3D_floor")
 
 [node name="LowerLanding" type="CSGBox3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -4.25, -1.5)
-size = Vector3(6, 0.5, 3)
+size = Vector3(7, 0.5, 3)
 material = SubResource("StandardMaterial3D_floor")
 
 [node name="HalfLandingUp" type="CSGBox3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.75, -7.5)
-size = Vector3(6, 0.5, 3)
+size = Vector3(7, 0.5, 3)
 material = SubResource("StandardMaterial3D_floor")
 
 [node name="HalfLandingDown" type="CSGBox3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -2.25, -7.5)
-size = Vector3(6, 0.5, 3)
+size = Vector3(7, 0.5, 3)
 material = SubResource("StandardMaterial3D_floor")
 
 [node name="HalfLandingUp2" type="CSGBox3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.75, -7.5)
-size = Vector3(6, 0.5, 3)
+size = Vector3(7, 0.5, 3)
 material = SubResource("StandardMaterial3D_floor")
 
 [node name="Ramp1_Up" type="CSGPolygon3D" parent="."]
 transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, 0, 0, -3)
 polygon = PackedVector2Array(0, 0, 3, 2, 3, 1.5, 0, -0.5)
-depth = 3.0
+depth = 3.5
 material = SubResource("StandardMaterial3D_floor")
 
 [node name="Ramp2_Up" type="CSGPolygon3D" parent="."]
 transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 0, 2, -6)
 polygon = PackedVector2Array(0, 0, 3, 2, 3, 1.5, 0, -0.5)
-depth = 3.0
+depth = 3.5
 material = SubResource("StandardMaterial3D_floor")
 
 [node name="Ramp1_Down" type="CSGPolygon3D" parent="."]
 transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 0, -2, -6)
 polygon = PackedVector2Array(0, 0, 3, 2, 3, 1.5, 0, -0.5)
-depth = 3.0
+depth = 3.5
 material = SubResource("StandardMaterial3D_floor")
 
 [node name="Ramp2_Down" type="CSGPolygon3D" parent="."]
 transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, 0, -4, -3)
 polygon = PackedVector2Array(0, 0, 3, 2, 3, 1.5, 0, -0.5)
-depth = 3.0
+depth = 3.5
 material = SubResource("StandardMaterial3D_floor")
 
 [node name="StairWallEast" type="CSGBox3D" parent="."]
@@ -89,12 +89,12 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, -9.5)
 size = Vector3(8, 10, 1)
 material = SubResource("StandardMaterial3D_wall")
 
-[node name="StairWallSouthUpper" type="CSGBox3D" parent="."]
+
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5, 0.5)
 size = Vector3(8, 2, 1)
 material = SubResource("StandardMaterial3D_wall")
 
-[node name="StairWallSouthLower" type="CSGBox3D" parent="."]
+
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -3, 0.5)
 size = Vector3(8, 2, 1)
 material = SubResource("StandardMaterial3D_wall")
