@@ -12,13 +12,13 @@ func _on_body_entered(body: Node3D) -> void:
         
     var is_going_up = teleport_offset.y < 0
     
-    if GameStateManager.current_floor == 3 and is_going_up:
+    if GameStateManager.current_floor == 3 and is_going_up and ResourceLoader.exists("res://scenes/levels/hotel_siberia/hotel_level_4.tscn"):
         GameStateManager.entered_from_stairs = true
         GameStateManager.stair_spawn_position = body.global_position + teleport_offset
         GameStateManager.stair_spawn_rotation = body.rotation
         GameStateManager.reset_floor(4)
         get_tree().change_scene_to_file("res://scenes/levels/hotel_siberia/hotel_level_4.tscn")
-    elif GameStateManager.current_floor == 4 and not is_going_up:
+    elif GameStateManager.current_floor == 4 and not is_going_up and false: # Floor 3 is not open yet
         GameStateManager.entered_from_stairs = true
         GameStateManager.stair_spawn_position = body.global_position + teleport_offset
         GameStateManager.stair_spawn_rotation = body.rotation
