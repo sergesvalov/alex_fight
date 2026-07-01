@@ -70,7 +70,8 @@ func _ready() -> void:
         var door = door_res.instantiate()
         add_child(door)
         
-        if door.is_open:
+        var door_body = door.get_node("AnimatableBody3D")
+        if door_body.is_open:
             print("[FAILED] Дверь должна быть закрыта по умолчанию")
             passed = false
         else:
@@ -78,8 +79,8 @@ func _ready() -> void:
             dummy_player.transform.origin = Vector3(0, 0, 2)
             door.add_child(dummy_player)
             
-            door.interact(dummy_player)
-            if not door.is_open:
+            door_body.interact(dummy_player)
+            if not door_body.is_open:
                 print("[FAILED] Дверь не открылась после interact()")
                 passed = false
             else:
@@ -180,15 +181,23 @@ func _ready() -> void:
                         floor_errors += 1
                 
                 # Проверка дверей
+                var door_body = null
                 if "is_open" in current and current.has_method("interact"):
+                    door_body = current
+                elif current.has_node("AnimatableBody3D") and "is_open" in current.get_node("AnimatableBody3D"):
+                    door_body = current.get_node("AnimatableBody3D")
+                    
+                if door_body:
                     checked_doors += 1
-                    if current.is_open:
+                    if door_body.is_open:
                         print("     [FAILED] Дверь '", current.name, "' в '", current.get_parent().name, "' открыта по умолчанию!")
                         door_errors += 1
                     else:
-                        dummy_player.global_transform.origin = current.global_transform.origin + current.global_transform.basis.z * 1.5
-                        current.interact(dummy_player)
-                        if not current.is_open:
+                        var dummy_player = Node3D.new()
+                        door_body.add_child(dummy_player)
+                        dummy_player.global_transform.origin = door_body.global_transform.origin + door_body.global_transform.basis.z * 1.5
+                        door_body.interact(dummy_player)
+                        if not door_body.is_open:
                             print("     [FAILED] Дверь '", current.name, "' в '", current.get_parent().name, "' не открылась после interact()")
                             door_errors += 1
                         else:
@@ -204,6 +213,8 @@ func _ready() -> void:
                             
                             # Ставим манекен в коридоре, Y = 0.9 (центр капсулы высотой 1.8)
                             var start_pos = current.global_transform.origin + current.global_transform.basis.z * 1.5
+                            if current.has_node("AnimatableBody3D"):
+                                start_pos = current.global_transform.origin + door_body.global_transform.basis.z * 1.5
                             start_pos.y = 0.9
                             char_body.global_transform.origin = start_pos
                             
@@ -212,7 +223,7 @@ func _ready() -> void:
                             await get_tree().physics_frame
                             
                             # Пытаемся пройти на 3 метра вперед (сквозь дверной проем)
-                            var motion = -current.global_transform.basis.z * 3.0
+                            var motion = -door_body.global_transform.basis.z * 3.0
                             var collision = char_body.move_and_collide(motion, true) # true = test_only
                             
                             if collision:
@@ -223,6 +234,7 @@ func _ready() -> void:
                                 door_errors += 1
                                 
                             char_body.queue_free()
+                        dummy_player.queue_free()
                 
                 for child in current.get_children():
                     nodes_to_check.append(child)
