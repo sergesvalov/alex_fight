@@ -68,8 +68,8 @@ func _generate_level() -> void:
     var corridor_end_z = min(max_double_z, max_single_z)
     var stair_z = corridor_end_z - 10.0
     var total_corridor_end = stair_z - 1.5
-    var corridor_length = abs(total_corridor_end) + 10.0 # From +10 to end
-    var corridor_center_z = (10.0 + total_corridor_end) / 2.0
+    var corridor_length = abs(total_corridor_end) + 11.0 # From +11 to end
+    var corridor_center_z = (11.0 + total_corridor_end) / 2.0
     
     _generate_entities(corridor_end_z)
     
@@ -218,31 +218,28 @@ func _create_light(node_name: String, pos: Vector3, color: Color) -> OmniLight3D
     return light
 
 func _generate_north_block() -> void:
-    # 1. Side Corridor
-    _create_csg_box("SideCorridorFloor", Vector3(7.5, 0, 7.5), Vector3(9, 0.5, 4), true)
-    _create_csg_box("SideCorridorCeiling", Vector3(7.5, 4.25, 7.5), Vector3(9, 4, 1), false)
+    # 1. Elevator (Z: 5.0 to 10.0)
+    var elev_wall = _create_csg_box("ElevatorWallW", Vector3(3.5, 2, 7.5), Vector3(1.2, 4, 5), false, false)
+    _create_csg_hole(elev_wall, "ElevatorDoorHole", Vector3(0, -0.75, 0), Vector3(1.6, 2.5, 2))
     
-    # 2. Elevator
-    var elev_wall = _create_csg_box("ElevatorWallS", Vector3(7.5, 2, 5.5), Vector3(9, 4, 1), false, false)
-    _create_csg_hole(elev_wall, "ElevatorDoorHole", Vector3(0, -0.75, 0), Vector3(3, 2.5, 2))
-    
-    var elev_shaft = _create_csg_box("ElevatorShaft", Vector3(7.5, 2, 2.5), Vector3(6, 4, 5), false, false)
+    var elev_shaft = _create_csg_box("ElevatorShaft", Vector3(7.4, 2, 7.5), Vector3(6.6, 4, 5), false, false)
     elev_shaft.flip_faces = true
-    _create_light("ElevatorLight", Vector3(7.5, 3.5, 4.0), Color(0.9, 0.95, 1, 1))
+    _create_light("ElevatorLight", Vector3(6.0, 3.5, 7.5), Color(0.9, 0.95, 1, 1))
     
-    # 3. Maintenance
-    var maint_wall = _create_csg_box("MaintenanceWallW", Vector3(12, 2, 7.5), Vector3(1, 4, 5), false, false)
-    _create_csg_hole(maint_wall, "MaintenanceDoorHole", Vector3(0, -0.75, 0), Vector3(2, 2.5, 1.5))
+    # 2. Maintenance (Z: 0.0 to 5.0)
+    var maint_wall = _create_csg_box("MaintenanceWallW", Vector3(3.5, 2, 2.5), Vector3(1.2, 4, 5), false, false)
+    _create_csg_hole(maint_wall, "MaintenanceDoorHole", Vector3(0, -0.75, 0), Vector3(1.6, 2.5, 2))
     
-    var maint_room = _create_csg_box("MaintenanceRoom", Vector3(15, 2, 7.5), Vector3(6, 4, 5), false, false)
+    var maint_room = _create_csg_box("MaintenanceRoom", Vector3(7.4, 2, 2.5), Vector3(6.6, 4, 5), false, false)
     maint_room.flip_faces = true
-    _create_light("MaintenanceLight", Vector3(15, 3.5, 7.5), Color(1.0, 0.9, 0.7, 1))
+    _create_light("MaintenanceLight", Vector3(7.4, 3.5, 2.5), Color(1.0, 0.9, 0.7, 1))
     
-    # 4. North Stairwell
+    # 3. North Stairwell
     var stairwell_scene = preload("res://scenes/levels/hotel_siberia/stairwell.tscn")
     var stair = stairwell_scene.instantiate()
     stair.name = "Stairwell_N"
-    stair.transform.origin = Vector3(0, 0, 5.0)
+    stair.transform.basis = Basis.from_euler(Vector3(0, PI, 0))
+    stair.transform.origin = Vector3(0, 0, 10.5)
     add_child(stair)
     stair.owner = get_tree().edited_scene_root
     
