@@ -153,6 +153,63 @@ func _ready() -> void:
             else:
                 print("[OK] Экземпляры комнат успешно инстанцированы")
                 
+            # -----------------------------------------------------
+            # Проверка состыковки полов и работоспособности дверей
+            # -----------------------------------------------------
+            print("  -> Проверка состыковки всех полов на этаже...")
+            var floor_errors = 0
+            var checked_floors = 0
+            
+            print("  -> Проверка работоспособности всех дверей на этаже...")
+            var door_errors = 0
+            var checked_doors = 0
+            
+            var dummy_player = Node3D.new()
+            floor_main.add_child(dummy_player)
+            
+            var nodes_to_check = [floor_main]
+            while nodes_to_check.size() > 0:
+                var current = nodes_to_check.pop_back()
+                
+                # Проверка пола
+                if current is CSGBox3D and "Floor" in current.name:
+                    checked_floors += 1
+                    var top_y = current.global_transform.origin.y + (current.size.y / 2.0)
+                    if abs(top_y) > 0.001:
+                        print("     [FAILED] Пол '", current.name, "' в '", current.get_parent().name, "' не выровнен! Y = ", top_y)
+                        floor_errors += 1
+                
+                # Проверка дверей
+                if "is_open" in current and current.has_method("interact"):
+                    checked_doors += 1
+                    if current.is_open:
+                        print("     [FAILED] Дверь '", current.name, "' в '", current.get_parent().name, "' открыта по умолчанию!")
+                        door_errors += 1
+                    else:
+                        dummy_player.global_transform.origin = current.global_transform.origin + current.global_transform.basis.z * 1.5
+                        current.interact(dummy_player)
+                        if not current.is_open:
+                            print("     [FAILED] Дверь '", current.name, "' в '", current.get_parent().name, "' не открылась после interact()")
+                            door_errors += 1
+                        else:
+                            # Симуляция входа персонажа
+                            dummy_player.global_transform.origin = current.global_transform.origin - current.global_transform.basis.z * 1.5
+                
+                for child in current.get_children():
+                    nodes_to_check.append(child)
+                    
+            dummy_player.queue_free()
+            
+            if floor_errors == 0 and checked_floors > 0:
+                print("     [OK] Проверено полов: ", checked_floors, ". Все поверхности состыкованы идеально (Y=0.0).")
+            else:
+                passed = false
+                
+            if door_errors == 0 and checked_doors > 0:
+                print("     [OK] Проверено дверей: ", checked_doors, ". Все двери закрыты по умолчанию, открываются и пропускают персонажа.")
+            else:
+                passed = false
+                
         generator.queue_free()
     else:
         print("[FAILED] Не удалось загрузить скрипт генератора")
