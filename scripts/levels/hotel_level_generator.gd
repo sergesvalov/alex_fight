@@ -72,8 +72,10 @@ func _generate_level() -> void:
     var max_double_z = -6.0 - (num_double_rooms - 1) * double_room_step - 6.0
     var max_single_z = -3.6 - (num_single_rooms - 1) * single_room_step - 3.6
     var corridor_end_z = min(max_double_z, max_single_z)
-    var corridor_length = abs(corridor_end_z) + 10.0 # From +10 to end
-    var corridor_center_z = (10.0 + corridor_end_z) / 2.0
+    var stair_z = corridor_end_z - 10.0
+    var total_corridor_end = stair_z - 1.5
+    var corridor_length = abs(total_corridor_end) + 10.0 # From +10 to end
+    var corridor_center_z = (10.0 + total_corridor_end) / 2.0
     
     _generate_entities(corridor_end_z)
     
@@ -101,17 +103,17 @@ func _generate_level() -> void:
             room.carpet_color = carpet_color
             
         # Wall segment before this room
-        var gap_start = c_z + 1.5
-        var gap_end = c_z - 0.3
+        var gap_start = c_z + 1.60
+        var gap_end = c_z - 0.10
         var length = prev_z - gap_start
         var center = (prev_z + gap_start) / 2.0
         if length > 0:
             _create_wall("CorrWallW" + str(i + 1), Vector3(wall_x, 2, center), length)
         prev_z = gap_end
         
-    var last_w_length = prev_z - corridor_end_z
+    var last_w_length = prev_z - total_corridor_end
     if last_w_length > 0:
-        _create_wall("CorrWallW_End", Vector3(wall_x, 2, (prev_z + corridor_end_z) / 2.0), last_w_length)
+        _create_wall("CorrWallW_End", Vector3(wall_x, 2, (prev_z + total_corridor_end) / 2.0), last_w_length)
         
     # 4. Generate Single Rooms (Right side)
     var sngl_suffixes = ["10", "11", "12", "13", "15", "16", "17", "20", "21", "22", "23"]
@@ -133,17 +135,17 @@ func _generate_level() -> void:
             room.carpet_color = carpet_color
             
         # Wall segment
-        var gap_start = c_z + 1.5
-        var gap_end = c_z - 0.3
+        var gap_start = c_z + 1.30
+        var gap_end = c_z - 0.40
         var length = prev_z - gap_start
         var center = (prev_z + gap_start) / 2.0
         if length > 0:
             _create_wall("CorrWallE" + str(i + 1), Vector3(wall_x, 2, center), length)
         prev_z = gap_end
 
-    var last_e_length = prev_z - corridor_end_z
+    var last_e_length = prev_z - total_corridor_end
     if last_e_length > 0:
-        _create_wall("CorrWallE_End", Vector3(wall_x, 2, (prev_z + corridor_end_z) / 2.0), last_e_length)
+        _create_wall("CorrWallE_End", Vector3(wall_x, 2, (prev_z + total_corridor_end) / 2.0), last_e_length)
 
     # 5. Generate South Block (Stairwell and End Wall)
     var stairwell_scene = preload("res://scenes/levels/hotel_siberia/stairwell.tscn")
@@ -194,7 +196,7 @@ func _create_csg_box(node_name: String, pos: Vector3, size: Vector3, is_floor: b
     if add_occluder:
         var occluder_inst = OccluderInstance3D.new()
         var occ_shape = BoxOccluder3D.new()
-        occ_shape.size = size
+        occ_shape.size = Vector3(max(0.1, size.x - 0.1), size.y, max(0.1, size.z - 0.1))
         occluder_inst.occluder = occ_shape
         box.add_child(occluder_inst)
         occluder_inst.owner = get_tree().edited_scene_root
