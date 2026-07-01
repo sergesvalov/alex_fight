@@ -155,15 +155,18 @@ transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -5, 2,
 size = Vector3(6, 0.5, 40)
 material = SubResource("StandardMaterial3D_floor")
 
-[node name="CorridorFloor" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry/CorridorCSG"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -45)
-size = Vector3(7, 0.5, 80)
+[node name="CorridorFloor" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -60)
+use_collision = true
+collision_layer = 2
+size = Vector3(7, 0.5, 110)
 material = SubResource("StandardMaterial3D_floor")
 
-
-[node name="CorridorCeiling" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry/CorridorCSG"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.25, -45)
-size = Vector3(7, 0.5, 80)
+[node name="CorridorCeiling" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.25, -60)
+use_collision = true
+collision_layer = 2
+size = Vector3(7, 0.5, 110)
 material = SubResource("StandardMaterial3D_floor")
 
 
@@ -348,10 +351,73 @@ size = Vector3(1, 4, 6)
 material = SubResource("StandardMaterial3D_wall")
 
 [node name="CorrWallE10" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.5, 2, -80.25)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.5, 2, -78.5)
 use_collision = true
 collision_layer = 2
-size = Vector3(1, 4, 9.5)
+size = Vector3(1, 4, 6)
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="CorrWallE10b" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.5, 2, -84.25)
+use_collision = true
+collision_layer = 2
+size = Vector3(1, 4, 1.5)
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="CorrWallE11" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.5, 2, -87.25)
+use_collision = true
+collision_layer = 2
+size = Vector3(1, 4, 4.5)
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="CorrWallE12" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.5, 2, -94.5)
+use_collision = true
+collision_layer = 2
+size = Vector3(1, 4, 6)
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="CorrWallE13" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.5, 2, -102.5)
+use_collision = true
+collision_layer = 2
+size = Vector3(1, 4, 6)
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="CorrWallE14" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.5, 2, -111.25)
+use_collision = true
+collision_layer = 2
+size = Vector3(1, 4, 7.5)
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="CorrWallNorthEnd" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, -115.5)
+use_collision = true
+collision_layer = 2
+size = Vector3(8, 4, 1)
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="CorrWallW8" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.5, 2, -85.5)
+use_collision = true
+collision_layer = 2
+size = Vector3(1, 4, 1)
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="CorrWallW9" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.5, 2, -93.25)
+use_collision = true
+collision_layer = 2
+size = Vector3(1, 4, 10.5)
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="CorrWallW10" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.5, 2, -107.75)
+use_collision = true
+collision_layer = 2
+size = Vector3(1, 4, 14.5)
 material = SubResource("StandardMaterial3D_wall")
 
 [node name="DoubleRoomL1" parent="NavigationRegion3D/HotelGeometry" instance=ExtResource("double_room")]
@@ -398,6 +464,24 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.5, 0, -67)
 
 [node name="SingleRoomR9" parent="NavigationRegion3D/HotelGeometry" instance=ExtResource("single_room")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.5, 0, -75)
+
+[node name="DoubleRoomL7" parent="NavigationRegion3D/HotelGeometry" instance=ExtResource("double_room")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.5, 0, -87.5)
+
+[node name="DoubleRoomL8" parent="NavigationRegion3D/HotelGeometry" instance=ExtResource("double_room")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.5, 0, -100)
+
+[node name="SingleRoomR10" parent="NavigationRegion3D/HotelGeometry" instance=ExtResource("single_room")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.5, 0, -83)
+
+[node name="SingleRoomR11" parent="NavigationRegion3D/HotelGeometry" instance=ExtResource("single_room")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.5, 0, -91)
+
+[node name="SingleRoomR12" parent="NavigationRegion3D/HotelGeometry" instance=ExtResource("single_room")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.5, 0, -99)
+
+[node name="SingleRoomR13" parent="NavigationRegion3D/HotelGeometry" instance=ExtResource("single_room")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.5, 0, -107)
 
 
 [node name="RoomLabel_401" type="Label3D" parent="NavigationRegion3D/HotelGeometry"]
@@ -504,6 +588,60 @@ text = "421"
 font_size = 72
 outline_size = 12
 modulate = Color(0.8, 0.7, 0.2, 1)
+
+[node name="RoomLabel_407" type="Label3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -3.49, 2.2, -85.7)
+text = "407"
+font_size = 72
+outline_size = 12
+modulate = Color(0.8, 0.7, 0.2, 1)
+
+[node name="RoomLabel_409" type="Label3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -3.49, 2.2, -98.2)
+text = "409"
+font_size = 72
+outline_size = 12
+modulate = Color(0.8, 0.7, 0.2, 1)
+
+[node name="RoomLabel_422" type="Label3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 3.49, 2.2, -81.2)
+text = "422"
+font_size = 72
+outline_size = 12
+modulate = Color(0.8, 0.7, 0.2, 1)
+
+[node name="RoomLabel_423" type="Label3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 3.49, 2.2, -89.2)
+text = "423"
+font_size = 72
+outline_size = 12
+modulate = Color(0.8, 0.7, 0.2, 1)
+
+[node name="RoomLabel_424" type="Label3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 3.49, 2.2, -97.2)
+text = "424"
+font_size = 72
+outline_size = 12
+modulate = Color(0.8, 0.7, 0.2, 1)
+
+[node name="RoomLabel_425" type="Label3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 3.49, 2.2, -105.2)
+text = "425"
+font_size = 72
+outline_size = 12
+modulate = Color(0.8, 0.7, 0.2, 1)
+
+[node name="CorridorLight3" type="OmniLight3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.5, -90)
+light_color = Color(0.85, 0.8, 0.6, 1)
+light_energy = 0.9
+omni_range = 16.0
+
+[node name="CorridorLight4" type="OmniLight3D" parent="NavigationRegion3D/HotelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.5, -108)
+light_color = Color(0.85, 0.8, 0.6, 1)
+light_energy = 0.9
+omni_range = 16.0
 
 [node name="MapDecal" type="MeshInstance3D" parent="NavigationRegion3D/HotelGeometry"]
 transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 2.99, 2, -10)
