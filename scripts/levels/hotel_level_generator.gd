@@ -344,11 +344,11 @@ func _clear_generated_nodes() -> void:
         child.queue_free()
 
 func _generate_entities(end_z: float) -> void:
-    # 1. Move the Player to the last double room (Z = end_z + double_room_step / 2 roughly)
+    # 1. Move the Player to the corridor in front of the first room
     var player = get_node_or_null("../../Player")
     if player:
-        # Put player roughly in the middle of the first double room
-        player.transform.origin = Vector3(-7.5, 2, 4.0)
+        # Put player in the middle of the corridor
+        player.transform.origin = Vector3(0.0, 2.0, 4.0)
 
     # 2. Update Enemy Spawner & Cerberus
     var enemies_node = get_node_or_null("../../Enemies")
