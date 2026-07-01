@@ -222,7 +222,7 @@ func _ready() -> void:
                                 await get_tree().physics_frame
                                 
                                 # Пытаемся пройти на 3 метра вперед (сквозь дверной проем)
-                                var motion = -door_body.global_transform.basis.z * 3.0
+                                var motion = -current.global_transform.basis.z * 3.0
                                 var collision = char_body.move_and_collide(motion, true) # true = test_only
                                 
                                 if collision:
