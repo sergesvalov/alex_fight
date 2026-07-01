@@ -978,7 +978,86 @@ void fragment() {
 
 ---
 
-## 7. 🗺️ Checklist для ИИ-Агента: Порядок Создания
+## 7. 🔧 CI/CD и Автотестирование
+
+### 7.1 Jenkins Pipeline
+
+Сборка запускается автоматически при каждом push в `main`. Этапы:
+
+| Этап | Команда | Описание |
+|------|---------|----------|
+| Checkout | git pull | Получение свежего кода |
+| Test | `godot --headless tests/test_runner.tscn` | Запуск автотестов |
+| Export | `godot --headless --export-release "Android"` | Сборка APK |
+| Archive | `archiveArtifacts` | Сохранение APK в Jenkins |
+
+> [!IMPORTANT]
+> Тест запускается **ДО** экспорта. Если тест падает с `exit code != 0`, сборка прерывается.
+
+### 7.2 Система Автотестов (`tests/test_runner.gd`)
+
+#### Категория 1: Smoke-тесты сцен
+Проверяет, что сцены загружаются без ошибок:
+- `scenes/levels/hotel_siberia/hotel_level_4.tscn`
+- `entities/player/player.tscn`
+- `entities/enemies/cerberus/cerberus.tscn`
+- `hud/hud.tscn`
+
+#### Категория 2: Логические тесты
+- **LaserPistol Heat Mechanics**: оружие корректно перегревается при непрерывной стрельбе
+- **InteractiveDoor State Change**: дверь переходит в состояние `is_open=true` после `interact()`
+
+#### Категория 3: Геометрия уровня
+Генерирует полный этаж (функция `generate_floor()`) и проверяет:
+
+| Проверка | Критерий |
+|----------|----------|
+| Наличие `Stairwell_N` и `Stairwell_S` | обязательны |
+| Y-уровень пола всех комнат | `±0.05 м` от 0.0 |
+| Проходимость каждой двери | `CharacterBody3D (r=0.3, h=1.8)` не блокируется |
+
+**Алгоритм теста проходимости двери:**
+```
+1. Dummy → origin - basis.z * 1.5  (внутри комнаты)
+2. interact() → open_angle = +PI/2  (дверь открывается в комнату)
+3. door_body.rotation.y = open_angle  (принудительная physics sync)
+4. await 3 physics_frame
+5. capsule start = origin - basis.z*3 + basis.x*0.8  (центр проёма)
+6. move_and_collide(basis.z * 6, test_only=true)
+7. PASS если нет коллизии ИЛИ коллайдер == door_body
+8. FAIL если коллайдер — любой другой объект (стена, ступенька)
+```
+
+### 7.3 Известные ограничения Headless-режима
+
+| Ограничение | Описание | Обходной путь |
+|-------------|----------|---------------|
+| **Tween не синхронизирует физику** | `AnimatableBody3D` не двигается без frames | Прямая установка `rotation.y` |
+| **CSG physics без bake** | CSGBox3D не генерирует collision без кадра рендера | Await `physics_frame` ×3 |
+| **PNG → белая текстура** | Headless не импортирует PNG корректно | Все текстуры — только **JPG** |
+| **UID у ext_resource** | Невалидные UID в `.tscn` → warning, путь по text | Не прописывать UID вручную |
+
+### 7.4 Инварианты Координатной Сетки
+
+Следующие значения **не должны изменяться** без обновления всей системы генерации:
+
+| Инвариант | Значение | Файл |
+|-----------|----------|------|
+| Игровой пол Y | `0.0` | все сцены |
+| Ширина коридора (стены) | `7.0 м` (X: ±3.5) | `hotel_level_generator.gd` |
+| Ширина пола коридора | `7.2 м` (X: ±3.6) | генератор `+0.2` overlap |
+| Origin двойных номеров X | `-8.3` | генератор |
+| Origin одиночных номеров X | `+7.1` | генератор |
+| Шаг двойных номеров Z | `12.0 м` | генератор |
+| Шаг одиночных номеров Z | `7.2 м` | генератор |
+| Пол DoubleRoom (Floor) | center X=`-0.3`, size X=`10.2` | `double_room.tscn` |
+| Пол SingleRoom (Floor) | center X=`+0.3`, size X=`7.8` | `single_room.tscn` |
+| `basis.z` двери | **всегда в коридор** | `door.tscn` + логика `door.gd` |
+
+---
+
+## 8. 🗺️ Checklist для ИИ-Агента: Порядок Создания
+
 
 > [!IMPORTANT]
 > Следуй этому порядку строго. Каждый пункт — независимая задача.
