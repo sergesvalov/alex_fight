@@ -231,9 +231,14 @@ func _ready() -> void:
                                 
                                 if collision:
                                     var hit_name = "Unknown"
+                                    var hit_pos = Vector3.ZERO
                                     if collision.get_collider():
                                         hit_name = collision.get_collider().name
-                                    print("     [FAILED] Выход заблокирован! Персонаж уперся в: ", hit_name)
+                                        hit_pos = collision.get_collider().global_transform.origin
+                                    var door_global = current.global_transform.origin
+                                    print("     [FAILED] Дверь '", current.name, "' в '", current.get_parent().name, 
+                                          "' (дверь pos=", door_global, ") — персонаж уперся в '", hit_name, 
+                                          "' (pos=", hit_pos, "), угол открытия=", rad_to_deg(door_body.open_angle), "°")
                                     door_errors += 1
                                     
                                 char_body.queue_free()
