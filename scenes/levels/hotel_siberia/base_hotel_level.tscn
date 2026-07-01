@@ -121,8 +121,8 @@ script = ExtResource("99_generator")
 generate = false
 num_double_rooms = 6
 num_single_rooms = 9
-double_room_step = 10.0
-single_room_step = 6.0
+double_room_step = 12.0
+single_room_step = 7.2
 corridor_width = 7.0
 corridor_height = 4.25
 floor_number = 4
@@ -207,203 +207,203 @@ transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 2.99, 
 mesh = SubResource("QuadMesh_map")
 
 [node name="CorridorFloor" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -25.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -31.0)
 use_collision = true
 collision_layer = 2
-size = Vector3(7.0, 0.5, 70.0)
+size = Vector3(7.0, 0.5, 82.0)
 material = SubResource("StandardMaterial3D_floor")
 
 [node name="CorridorCeiling" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.25, -25.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.25, -31.0)
 use_collision = true
 collision_layer = 2
-size = Vector3(7.0, 0.5, 70.0)
+size = Vector3(7.0, 0.5, 82.0)
 material = SubResource("StandardMaterial3D_floor")
 
 [node name="CorrWallW1" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.5, 2, -1.875)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.5, 2, -2.25)
 use_collision = true
 collision_layer = 2
-size = Vector3(1, 4, 3.75)
+size = Vector3(1, 4, 4.5)
 material = SubResource("StandardMaterial3D_wall")
 
 [node name="CorrWallW2" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.5, 2, -9.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.5, 2, -11.4)
 use_collision = true
 collision_layer = 2
-size = Vector3(1, 4, 8.5)
+size = Vector3(1, 4, 10.2)
 material = SubResource("StandardMaterial3D_wall")
 
 [node name="CorrWallW3" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.5, 2, -19.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.5, 2, -23.4)
 use_collision = true
 collision_layer = 2
-size = Vector3(1, 4, 8.5)
+size = Vector3(1, 4, 10.2)
 material = SubResource("StandardMaterial3D_wall")
 
 [node name="CorrWallW4" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.5, 2, -29.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.5, 2, -35.4)
 use_collision = true
 collision_layer = 2
-size = Vector3(1, 4, 8.5)
+size = Vector3(1, 4, 10.2)
 material = SubResource("StandardMaterial3D_wall")
 
 [node name="CorrWallW5" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.5, 2, -39.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.5, 2, -47.4)
 use_collision = true
 collision_layer = 2
-size = Vector3(1, 4, 8.5)
+size = Vector3(1, 4, 10.200000000000003)
 material = SubResource("StandardMaterial3D_wall")
 
 [node name="CorrWallW6" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.5, 2, -49.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.5, 2, -59.4)
 use_collision = true
 collision_layer = 2
-size = Vector3(1, 4, 8.5)
+size = Vector3(1, 4, 10.200000000000003)
 material = SubResource("StandardMaterial3D_wall")
 
 [node name="CorrWallW_End" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.5, 2, -57.625)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.5, 2, -69.15)
 use_collision = true
 collision_layer = 2
-size = Vector3(1, 4, 4.75)
+size = Vector3(1, 4, 5.700000000000003)
 material = SubResource("StandardMaterial3D_wall")
 
 [node name="CorrWallE1" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.5, 2, -0.875)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.5, 2, -1.05)
 use_collision = true
 collision_layer = 2
-size = Vector3(1, 4, 1.75)
+size = Vector3(1, 4, 2.1)
 material = SubResource("StandardMaterial3D_wall")
 
 [node name="CorrWallE2" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.5, 2, -5.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.5, 2, -6.6000000000000005)
 use_collision = true
 collision_layer = 2
-size = Vector3(1, 4, 4.5)
+size = Vector3(1, 4, 5.4)
 material = SubResource("StandardMaterial3D_wall")
 
 [node name="CorrWallE3" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.5, 2, -11.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.5, 2, -13.8)
 use_collision = true
 collision_layer = 2
-size = Vector3(1, 4, 4.5)
+size = Vector3(1, 4, 5.399999999999999)
 material = SubResource("StandardMaterial3D_wall")
 
 [node name="CorrWallE4" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.5, 2, -17.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.5, 2, -21.0)
 use_collision = true
 collision_layer = 2
-size = Vector3(1, 4, 4.5)
+size = Vector3(1, 4, 5.400000000000002)
 material = SubResource("StandardMaterial3D_wall")
 
 [node name="CorrWallE5" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.5, 2, -23.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.5, 2, -28.200000000000003)
 use_collision = true
 collision_layer = 2
-size = Vector3(1, 4, 4.5)
+size = Vector3(1, 4, 5.399999999999995)
 material = SubResource("StandardMaterial3D_wall")
 
 [node name="CorrWallE6" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.5, 2, -29.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.5, 2, -35.4)
 use_collision = true
 collision_layer = 2
-size = Vector3(1, 4, 4.5)
+size = Vector3(1, 4, 5.400000000000006)
 material = SubResource("StandardMaterial3D_wall")
 
 [node name="CorrWallE7" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.5, 2, -35.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.5, 2, -42.6)
 use_collision = true
 collision_layer = 2
-size = Vector3(1, 4, 4.5)
+size = Vector3(1, 4, 5.400000000000006)
 material = SubResource("StandardMaterial3D_wall")
 
 [node name="CorrWallE8" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.5, 2, -41.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.5, 2, -49.8)
 use_collision = true
 collision_layer = 2
-size = Vector3(1, 4, 4.5)
+size = Vector3(1, 4, 5.399999999999999)
 material = SubResource("StandardMaterial3D_wall")
 
 [node name="CorrWallE9" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.5, 2, -47.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.5, 2, -57.0)
 use_collision = true
 collision_layer = 2
-size = Vector3(1, 4, 4.5)
+size = Vector3(1, 4, 5.400000000000006)
 material = SubResource("StandardMaterial3D_wall")
 
 [node name="CorrWallE_End" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.5, 2, -55.625)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.5, 2, -66.75)
 use_collision = true
 collision_layer = 2
-size = Vector3(1, 4, 8.75)
+size = Vector3(1, 4, 10.5)
 material = SubResource("StandardMaterial3D_wall")
 
 [node name="DoubleRoomL1" parent="NavigationRegion3D/HotelGeometry" instance=ExtResource("double_room")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.5, 0, -5.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.3, 0, -6.0)
 room_number = "401"
 
 [node name="DoubleRoomL2" parent="NavigationRegion3D/HotelGeometry" instance=ExtResource("double_room")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.5, 0, -15.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.3, 0, -18.0)
 room_number = "402"
 
 [node name="DoubleRoomL3" parent="NavigationRegion3D/HotelGeometry" instance=ExtResource("double_room")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.5, 0, -25.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.3, 0, -30.0)
 room_number = "403"
 
 [node name="DoubleRoomL4" parent="NavigationRegion3D/HotelGeometry" instance=ExtResource("double_room")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.5, 0, -35.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.3, 0, -42.0)
 room_number = "405"
 
 [node name="DoubleRoomL5" parent="NavigationRegion3D/HotelGeometry" instance=ExtResource("double_room")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.5, 0, -45.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.3, 0, -54.0)
 room_number = "406"
 
 [node name="DoubleRoomL6" parent="NavigationRegion3D/HotelGeometry" instance=ExtResource("double_room")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.5, 0, -55.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.3, 0, -66.0)
 room_number = "408"
 
 [node name="SingleRoomR1" parent="NavigationRegion3D/HotelGeometry" instance=ExtResource("single_room")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.5, 0, -3.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.1, 0, -3.6)
 room_number = "410"
 
 [node name="SingleRoomR2" parent="NavigationRegion3D/HotelGeometry" instance=ExtResource("single_room")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.5, 0, -9.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.1, 0, -10.8)
 room_number = "411"
 
 [node name="SingleRoomR3" parent="NavigationRegion3D/HotelGeometry" instance=ExtResource("single_room")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.5, 0, -15.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.1, 0, -18.0)
 room_number = "412"
 
 [node name="SingleRoomR4" parent="NavigationRegion3D/HotelGeometry" instance=ExtResource("single_room")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.5, 0, -21.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.1, 0, -25.200000000000003)
 room_number = "413"
 
 [node name="SingleRoomR5" parent="NavigationRegion3D/HotelGeometry" instance=ExtResource("single_room")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.5, 0, -27.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.1, 0, -32.4)
 room_number = "415"
 
 [node name="SingleRoomR6" parent="NavigationRegion3D/HotelGeometry" instance=ExtResource("single_room")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.5, 0, -33.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.1, 0, -39.6)
 room_number = "416"
 
 [node name="SingleRoomR7" parent="NavigationRegion3D/HotelGeometry" instance=ExtResource("single_room")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.5, 0, -39.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.1, 0, -46.800000000000004)
 room_number = "417"
 
 [node name="SingleRoomR8" parent="NavigationRegion3D/HotelGeometry" instance=ExtResource("single_room")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.5, 0, -45.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.1, 0, -54.0)
 room_number = "420"
 
 [node name="SingleRoomR9" parent="NavigationRegion3D/HotelGeometry" instance=ExtResource("single_room")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.5, 0, -51.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.1, 0, -61.2)
 room_number = "421"
 
 [node name="Stairwell_S" parent="NavigationRegion3D/HotelGeometry" instance=ExtResource("stairwell")]
-transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 0, -70.0)
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 0, -82.0)
 
 [node name="CorrWallSouthEnd" type="CSGBox3D" parent="NavigationRegion3D/HotelGeometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.5, 2, -71.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.5, 2, -83.5)
 use_collision = true
 collision_layer = 2
 size = Vector3(6, 4, 1)
@@ -439,7 +439,7 @@ transform = Transform3D(0.866025, 0, 0.5, 0, 1, 0, -0.5, 0, 0.866025, 1.5, 0, -2
 [node name="Enemies" type="Node3D" parent="."]
 script = ExtResource("spawner_script")
 enemy_scene = ExtResource("cerberus_scene")
-spawn_position = Vector3(0, 1, -50.0)
+spawn_position = Vector3(0, 1, -62.0)
 
 [node name="PatrolPoints" type="Node3D" parent="Enemies"]
 
@@ -449,11 +449,14 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -20.0)
 [node name="Point2" type="Marker3D" parent="Enemies/PatrolPoints"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -40.0)
 
+[node name="Point3" type="Marker3D" parent="Enemies/PatrolPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -60.0)
+
 [node name="Cerberus" parent="Enemies" node_paths=PackedStringArray("patrol_points") instance=ExtResource("7_cerb")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, -50.0)
-patrol_points = [NodePath("../PatrolPoints/Point1"), NodePath("../PatrolPoints/Point2")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, -62.0)
+patrol_points = [NodePath("../PatrolPoints/Point1"), NodePath("../PatrolPoints/Point2"), NodePath("../PatrolPoints/Point3")]
 
 [node name="Player" parent="." instance=ExtResource("1_player")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.5, 2, -55.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.5, 2, -67.0)
 
 [node name="HUD" parent="." instance=ExtResource("2_hud")]

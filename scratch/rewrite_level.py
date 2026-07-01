@@ -28,15 +28,15 @@ def process_file():
 
     num_double_rooms = 6
     num_single_rooms = 9
-    double_room_step = 10.0
-    single_room_step = 6.0
+    double_room_step = 12.0
+    single_room_step = 7.2
     corridor_width = 7.0
     corridor_height = 4.25
 
-    L_centers = [ -5.0 - i*10.0 for i in range(6) ]
-    R_centers = [ -3.0 - i*6.0 for i in range(9) ]
+    L_centers = [ -6.0 - i*12.0 for i in range(6) ]
+    R_centers = [ -3.6 - i*7.2 for i in range(9) ]
 
-    corridor_end_z = min(L_centers[-1] - 5.0, R_centers[-1] - 3.0)
+    corridor_end_z = min(L_centers[-1] - 6.0, R_centers[-1] - 3.6)
 
     out = []
     out.append('[node name="HotelGeometry" type="Node3D" parent="NavigationRegion3D"]')
@@ -44,8 +44,8 @@ def process_file():
     out.append('generate = false')
     out.append('num_double_rooms = 6')
     out.append('num_single_rooms = 9')
-    out.append('double_room_step = 10.0')
-    out.append('single_room_step = 6.0')
+    out.append('double_room_step = 12.0')
+    out.append('single_room_step = 7.2')
     out.append('corridor_width = 7.0')
     out.append('corridor_height = 4.25')
     out.append('floor_number = 4')
@@ -177,8 +177,8 @@ def process_file():
     
     prev_z = 0.0
     for i, c in enumerate(L_centers):
-        gap_start = c + 1.25
-        gap_end = c - 0.25
+        gap_start = c + 1.5
+        gap_end = c - 0.3
         length = prev_z - gap_start
         center = (prev_z + gap_start) / 2.0
         if length > 0:
@@ -192,8 +192,8 @@ def process_file():
 
     prev_z = 0.0
     for i, c in enumerate(R_centers):
-        gap_start = c + 1.25
-        gap_end = c - 0.25
+        gap_start = c + 1.5
+        gap_end = c - 0.3
         length = prev_z - gap_start
         center = (prev_z + gap_start) / 2.0
         if length > 0:
@@ -208,14 +208,14 @@ def process_file():
     dbl_labels = ["401", "402", "403", "405", "406", "408"]
     for i, c in enumerate(L_centers):
         out.append(f'[node name="DoubleRoomL{i+1}" parent="NavigationRegion3D/HotelGeometry" instance=ExtResource("double_room")]')
-        out.append(f'transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.5, 0, {c})')
+        out.append(f'transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.3, 0, {c})')
         out.append(f'room_number = "{dbl_labels[i]}"')
         out.append('')
 
     sngl_labels = ["410", "411", "412", "413", "415", "416", "417", "420", "421"]
     for i, c in enumerate(R_centers):
         out.append(f'[node name="SingleRoomR{i+1}" parent="NavigationRegion3D/HotelGeometry" instance=ExtResource("single_room")]')
-        out.append(f'transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.5, 0, {c})')
+        out.append(f'transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.1, 0, {c})')
         out.append(f'room_number = "{sngl_labels[i]}"')
         out.append('')
 
