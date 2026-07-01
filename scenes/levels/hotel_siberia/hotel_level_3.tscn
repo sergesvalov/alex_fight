@@ -10,7 +10,7 @@
 [ext_resource type="Texture2D" path="res://assets/textures/hotel_wallpaper.jpg" id="6_wallpaper"]
 [ext_resource type="Texture2D" path="res://assets/textures/coca_cola.jpg" id="coca_cola_tex"]
 [ext_resource type="PackedScene" uid="uid://cerb123" path="res://entities/enemies/cerberus/cerberus.tscn" id="7_cerb"]
-[ext_resource type="Texture2D" path="res://assets/textures/hotel_map.jpg" id="8_map"]
+[ext_resource type="Texture2D" path="res://assets/textures/hotel_map_3.jpg" id="8_map"]
 [ext_resource type="PackedScene" uid="uid://table_123" path="res://entities/props/table.tscn" id="table"]
 [ext_resource type="PackedScene" uid="uid://chair_123" path="res://entities/props/chair.tscn" id="chair"]
 [ext_resource type="PackedScene" uid="uid://bed_123" path="res://entities/props/bed.tscn" id="bed"]
