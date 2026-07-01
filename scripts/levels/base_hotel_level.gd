@@ -97,13 +97,13 @@ func _spawn_exit_door(room: Node3D, silent: bool = false) -> void:
     room.add_child(door)
     if is_double:
         # Facing +X, door spans Z from 0 to -1
-        var basis = Basis(Vector3(0, 1, 0), PI/2)
+        var basis = Basis.from_euler(Vector3(0, PI/2, 0))
         door.transform = Transform3D(basis, Vector3(-4.0, 0.25, 0.0))
         hole.size = Vector3(2.0, 2.5, 1.0)
         hole.position = Vector3(0, -0.75, -0.5)
     else:
         # Facing -X, door spans Z from 0 to +1
-        var basis = Basis(Vector3(0, 1, 0), -PI/2)
+        var basis = Basis.from_euler(Vector3(0, -PI/2, 0))
         door.transform = Transform3D(basis, Vector3(3.0, 0.25, 0.0))
         hole.size = Vector3(2.0, 2.5, 1.0)
         hole.position = Vector3(0, -0.75, 0.5)
