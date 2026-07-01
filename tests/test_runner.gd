@@ -94,7 +94,7 @@ func _ready() -> void:
     # 3. LEVEL INTEGRITY TESTS (Тесты генератора)
     # ---------------------------------------------------------
     print("\n[3] Запуск тестов генерации уровня...")
-    print("Тест: HotelLevelGenerator Coordinates")
+    print("Тест: HotelLevelGenerator")
     var gen_script = load("res://scripts/levels/hotel_level_generator.gd")
     if gen_script:
         var generator = Node3D.new()
@@ -103,15 +103,22 @@ func _ready() -> void:
         
         # Эмулируем генерацию
         generator._generate_level()
+        # Проверяем, что стилизация работает без ошибок
+        generator._apply_stylization()
         
         var floor_main = generator.get_node_or_null("GeneratedFloor_Main")
-        if not floor_main:
-            print("[FAILED] GeneratedFloor_Main не найден!")
+        var floor_above = generator.get_node_or_null("GeneratedFloor_Above")
+        var floor_below = generator.get_node_or_null("GeneratedFloor_Below")
+        
+        if not floor_main or not floor_above or not floor_below:
+            print("[FAILED] Не все этажи сгенерировались!")
             passed = false
         else:
             var stair_n = floor_main.get_node_or_null("Stairwell_N")
             var stair_s = floor_main.get_node_or_null("Stairwell_S")
             var map_1 = floor_main.get_node_or_null("MapDecal_1")
+            var room_dbl = floor_main.get_node_or_null("DoubleRoomL1_F4")
+            var room_sgl = floor_main.get_node_or_null("SingleRoomR1_F4")
             
             if not stair_n:
                 print("[FAILED] Stairwell_N не сгенерирован")
@@ -139,6 +146,12 @@ func _ready() -> void:
                 passed = false
             else:
                 print("[OK] Карты корректно расположены в начале этажа")
+                
+            if not room_dbl or not room_sgl:
+                print("[FAILED] Комнаты (DoubleRoomL1_F4 или SingleRoomR1_F4) не были сгенерированы")
+                passed = false
+            else:
+                print("[OK] Экземпляры комнат успешно инстанцированы")
                 
         generator.queue_free()
     else:
