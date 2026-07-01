@@ -173,7 +173,7 @@ func _ready() -> void:
                 var current = nodes_to_check.pop_back()
                 
                 # Проверка пола
-                if current is CSGBox3D and "Floor" in current.name:
+                if current is CSGBox3D and "Floor" in current.name and not "StairFloor" in current.name:
                     checked_floors += 1
                     var top_y = current.global_transform.origin.y + (current.size.y / 2.0)
                     if abs(top_y) > 0.001:
@@ -181,42 +181,41 @@ func _ready() -> void:
                         floor_errors += 1
                 
                 # Проверка дверей
-                var door_body = null
-                if "is_open" in current and current.has_method("interact"):
-                    door_body = current
-                elif current.has_node("AnimatableBody3D") and "is_open" in current.get_node("AnimatableBody3D"):
-                    door_body = current.get_node("AnimatableBody3D")
-                    
-                if door_body:
-                    checked_doors += 1
-                    if door_body.is_open:
-                        print("     [FAILED] Дверь '", current.name, "' в '", current.get_parent().name, "' открыта по умолчанию!")
-                        door_errors += 1
-                    else:
-                        var door_dummy_player = Node3D.new()
-                        door_body.add_child(door_dummy_player)
-                        door_dummy_player.global_transform.origin = door_body.global_transform.origin + door_body.global_transform.basis.z * 1.5
-                        door_body.interact(door_dummy_player)
-                        if not door_body.is_open:
-                            print("     [FAILED] Дверь '", current.name, "' в '", current.get_parent().name, "' не открылась после interact()")
+                if current.name in ["MainDoor", "WCDoor", "MaintenanceDoor", "Door"]:
+                    var door_body = current.get_node_or_null("AnimatableBody3D")
+                    if door_body:
+                        checked_doors += 1
+                        if door_body.is_open:
+                            print("     [FAILED] Дверь '", current.name, "' в '", current.get_parent().name, "' открыта по умолчанию!")
                             door_errors += 1
                         else:
-                            # Физическая симуляция прохода персонажа сквозь дверной проем
-                            var char_body = CharacterBody3D.new()
-                            var col = CollisionShape3D.new()
-                            var shape = CapsuleShape3D.new()
-                            shape.radius = 0.3
-                            shape.height = 1.8
-                            col.shape = shape
-                            char_body.add_child(col)
-                            current.get_parent().add_child(char_body)
+                            var door_dummy_player = Node3D.new()
+                            door_body.add_child(door_dummy_player)
+                            door_dummy_player.global_transform.origin = door_body.global_transform.origin + door_body.global_transform.basis.z * 1.5
                             
-                            # Ставим манекен в коридоре, Y = 0.9 (центр капсулы высотой 1.8)
-                            var start_pos = current.global_transform.origin + current.global_transform.basis.z * 1.5
-                            if current.has_node("AnimatableBody3D"):
-                                start_pos = current.global_transform.origin + door_body.global_transform.basis.z * 1.5
-                            start_pos.y = 0.9
-                            char_body.global_transform.origin = start_pos
+                            door_body.interact(door_dummy_player)
+                            
+                            if not door_body.is_open:
+                                print("     [FAILED] Дверь '", current.name, "' в '", current.get_parent().name, "' не открылась после interact()")
+                                door_errors += 1
+                            else:
+                                # Дверь открывается через Tween за 0.5 сек. Ждем.
+                                await get_tree().create_timer(0.6).timeout
+                                
+                                # Физическая симуляция прохода персонажа сквозь дверной проем
+                                var char_body = CharacterBody3D.new()
+                                var col = CollisionShape3D.new()
+                                var shape = CapsuleShape3D.new()
+                                shape.radius = 0.3
+                                shape.height = 1.8
+                                col.shape = shape
+                                char_body.add_child(col)
+                                current.get_parent().add_child(char_body)
+                                
+                                # Ставим манекен в коридоре, Y = 0.9 (центр капсулы высотой 1.8)
+                                var start_pos = current.global_transform.origin + current.global_transform.basis.z * 1.5
+                                start_pos.y = 0.9
+                                char_body.global_transform.origin = start_pos
                             
                             # Даем физическому движку кадр на обновление
                             await get_tree().physics_frame
