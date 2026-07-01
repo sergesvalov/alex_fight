@@ -12,17 +12,17 @@ uv1_scale = Vector3(2, 5, 1)
 
 [sub_resource type="BoxMesh" id="BoxMesh_door"]
 material = SubResource("StandardMaterial3D_door")
-size = Vector3(1.0, 2.5, 0.1)
+size = Vector3(1.5, 2.5, 0.1)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_door"]
-size = Vector3(1.0, 2.5, 0.1)
+size = Vector3(1.5, 2.5, 0.1)
 
 [node name="DoorRoot" type="Node3D"]
 
 [node name="Hinge" type="Node3D" parent="."]
 
 [node name="AnimatableBody3D" type="AnimatableBody3D" parent="Hinge"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 1.25, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.75, 1.25, 0)
 collision_layer = 7
 collision_mask = 0
 script = ExtResource("1_script")
