@@ -212,8 +212,9 @@ func _ready() -> void:
                                 char_body.add_child(col)
                                 current.get_parent().add_child(char_body)
                                 
-                                # Ставим манекен в коридоре, Y = 0.9 (центр капсулы высотой 1.8)
-                                var start_pos = current.global_transform.origin + current.global_transform.basis.z * 1.5
+                                # Ставим манекен ВНУТРИ комнаты (далеко от двери, у внешней стены)
+                                # basis.z смотрит в коридор, значит -basis.z смотрит вглубь комнаты
+                                var start_pos = current.global_transform.origin - current.global_transform.basis.z * 4.0
                                 start_pos.y = 0.9
                                 char_body.global_transform.origin = start_pos
                                 
@@ -221,8 +222,8 @@ func _ready() -> void:
                                 await get_tree().physics_frame
                                 await get_tree().physics_frame
                                 
-                                # Пытаемся пройти на 3 метра вперед (сквозь дверной проем)
-                                var motion = -current.global_transform.basis.z * 3.0
+                                # Пытаемся ВЫЙТИ из номера (движемся вдоль basis.z на 6 метров)
+                                var motion = current.global_transform.basis.z * 6.0
                                 var collision = char_body.move_and_collide(motion, true) # true = test_only
                                 
                                 if collision:
