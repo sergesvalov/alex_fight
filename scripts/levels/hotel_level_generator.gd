@@ -54,13 +54,7 @@ func _apply_stylization() -> void:
             child.carpet_color = carpet_color
             
     # Apply to Map
-    if map_texture and has_node("MapDecal"):
-        var map_node = get_node("MapDecal")
-        if map_node is MeshInstance3D:
-            var map_mat = StandardMaterial3D.new()
-            map_mat.albedo_texture = map_texture
-            map_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-            map_node.set_surface_override_material(0, map_mat)
+    pass
 
 func _generate_level() -> void:
     print("Generating hotel level geometry...")
@@ -69,7 +63,7 @@ func _generate_level() -> void:
     _generate_north_block()
     
     # 1. Calculate corridor length based on the farthest room
-    var max_double_z = -6.0 - (num_double_rooms - 1) * double_room_step - 6.0
+    var max_double_z = 4.0 - (num_double_rooms - 1) * double_room_step - 6.0
     var max_single_z = -3.6 - (num_single_rooms - 1) * single_room_step - 3.6
     var corridor_end_z = min(max_double_z, max_single_z)
     var stair_z = corridor_end_z - 10.0
@@ -85,11 +79,11 @@ func _generate_level() -> void:
     
     # 3. Generate Double Rooms (Left side)
     var dbl_suffixes = ["01", "02", "03", "05", "06", "08", "09", "10", "11"]
-    var prev_z = 0.0
+    var prev_z = 10.0
     var wall_x = -corridor_width / 2.0
     
     for i in range(num_double_rooms):
-        var c_z = -6.0 - i * double_room_step
+        var c_z = 4.0 - i * double_room_step
         
         # Room instance
         var room = double_room_scene.instantiate()
@@ -252,30 +246,43 @@ func _generate_north_block() -> void:
     add_child(stair)
     stair.owner = get_tree().edited_scene_root
     
-    # 5. Front Wall
-    _create_csg_box("CorrWallNorthEnd", Vector3(-3.5, 2, 5.0), Vector3(1, 4, 10), false, false)
+    # 5. (Removed CorrWallNorthEnd as it overlaps with Room 401)
     
-    # 6. Map Decal
-    var map_decal = MeshInstance3D.new()
-    map_decal.name = "MapDecal"
-    map_decal.transform.origin = Vector3(2.99, 2.0, -6.6)
-    map_decal.transform.basis = Basis.from_euler(Vector3(0, -PI/2, 0))
-    var quad = QuadMesh.new()
-    quad.size = Vector2(2, 2)
-    var map_mat = StandardMaterial3D.new()
-    if map_texture:
-        map_mat.albedo_texture = map_texture
-    else:
-        map_mat.albedo_texture = preload("res://assets/textures/hotel_map.jpg")
-    map_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-    quad.material = map_mat
-    map_decal.mesh = quad
-    add_child(map_decal)
-    map_decal.owner = get_tree().edited_scene_root
+    # 6. Map Decals
+    var decal_positions = [
+        Vector3(-2.99, 2.0, -2.0),
+        Vector3(-2.99, 2.0, -26.0),
+        Vector3(-2.99, 2.0, -38.0),
+        Vector3(2.99, 2.0, -14.4),
+        Vector3(2.99, 2.0, -28.8),
+        Vector3(2.99, 2.0, -43.2)
+    ]
+    for i in range(decal_positions.size()):
+        var pos = decal_positions[i]
+        var map_decal = MeshInstance3D.new()
+        map_decal.name = "MapDecal_" + str(i + 1)
+        map_decal.transform.origin = pos
+        if pos.x < 0:
+            map_decal.transform.basis = Basis.from_euler(Vector3(0, PI/2, 0))
+        else:
+            map_decal.transform.basis = Basis.from_euler(Vector3(0, -PI/2, 0))
+            
+        var quad = QuadMesh.new()
+        quad.size = Vector2(2, 2)
+        var map_mat = StandardMaterial3D.new()
+        if map_texture:
+            map_mat.albedo_texture = map_texture
+        else:
+            map_mat.albedo_texture = preload("res://assets/textures/hotel_map.jpg")
+        map_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+        quad.material = map_mat
+        map_decal.mesh = quad
+        add_child(map_decal)
+        map_decal.owner = get_tree().edited_scene_root
 
 func _clear_generated_nodes() -> void:
     var nodes_to_remove = []
-    var clear_names = ["DoubleRoom", "SingleRoom", "CorrWall", "CorridorFloor", "CorridorCeiling", "RoomLabel", "Stairwell_S", "SideCorridorFloor", "SideCorridorCeiling", "ElevatorWallS", "ElevatorShaft", "MaintenanceWallW", "MaintenanceRoom", "ElevatorLight", "MaintenanceLight", "Stairwell_N", "CorrWallNorthEnd"]
+    var clear_names = ["DoubleRoom", "SingleRoom", "CorrWall", "CorridorFloor", "CorridorCeiling", "RoomLabel", "Stairwell_S", "SideCorridorFloor", "SideCorridorCeiling", "ElevatorWallS", "ElevatorShaft", "MaintenanceWallW", "MaintenanceRoom", "ElevatorLight", "MaintenanceLight", "Stairwell_N", "CorrWallNorthEnd", "MapDecal"]
     for child in get_children():
         var n = child.name
         var should_remove = false
