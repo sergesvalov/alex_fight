@@ -8,31 +8,31 @@ use_collision = true
 collision_layer = 2
 
 [node name="Seat" type="CSGBox3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0)
-size = Vector3(0.5, 0.05, 0.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0.675, 0.0)
+size = Vector3(0.75, 0.075, 0.75)
 material = SubResource("StandardMaterial3D_wood")
 
 [node name="Back" type="CSGBox3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, -0.225)
-size = Vector3(0.5, 0.5, 0.05)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 1.05, -0.3375)
+size = Vector3(0.75, 0.75, 0.075)
 material = SubResource("StandardMaterial3D_wood")
 
 [node name="Leg1" type="CSGBox3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.2, 0.225, -0.2)
-size = Vector3(0.05, 0.45, 0.05)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.3, 0.3375, -0.3)
+size = Vector3(0.075, 0.675, 0.075)
 material = SubResource("StandardMaterial3D_wood")
 
 [node name="Leg2" type="CSGBox3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.2, 0.225, -0.2)
-size = Vector3(0.05, 0.45, 0.05)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3, 0.3375, -0.3)
+size = Vector3(0.075, 0.675, 0.075)
 material = SubResource("StandardMaterial3D_wood")
 
 [node name="Leg3" type="CSGBox3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.2, 0.225, 0.2)
-size = Vector3(0.05, 0.45, 0.05)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.3, 0.3375, 0.3)
+size = Vector3(0.075, 0.675, 0.075)
 material = SubResource("StandardMaterial3D_wood")
 
 [node name="Leg4" type="CSGBox3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.2, 0.225, 0.2)
-size = Vector3(0.05, 0.45, 0.05)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3, 0.3375, 0.3)
+size = Vector3(0.075, 0.675, 0.075)
 material = SubResource("StandardMaterial3D_wood")
