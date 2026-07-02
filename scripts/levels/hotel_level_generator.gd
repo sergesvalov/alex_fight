@@ -113,7 +113,7 @@ func _generate_floor(f_num: int, parent: Node3D, is_main: bool) -> void:
         _generate_entities(corridor_end_z)
     
     # 2. Generate Floors and Ceilings
-    _create_csg_box(parent, "CorridorFloor", Vector3(0, -0.25, corridor_center_z), Vector3(corridor_width + 0.2, 0.5, corridor_length), true)
+    _create_csg_box(parent, "CorridorFloor", Vector3(0, -0.45, corridor_center_z), Vector3(corridor_width + 0.2, 0.5, corridor_length), true)
     _create_csg_box(parent, "CorridorCeiling", Vector3(0, corridor_height + 0.25, corridor_center_z), Vector3(corridor_width + 0.2, 0.5, corridor_length), true)
     
     # 3. Generate Double Rooms (Left side)
