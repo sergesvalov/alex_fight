@@ -14,6 +14,10 @@ class_name HotelLevelGenerator
 @export var corridor_width: float = 7.0
 @export var corridor_height: float = 4.25
 
+# --- [ ДОБАВЛЕНО ]: Настройка высоты пола комнат для выравнивания с коридором ---
+@export var room_y_offset: float = 0.15 
+# --------------------------------------------------------------------------------
+
 @export_group("Stylization")
 @export var floor_number: int = 4
 @export var carpet_color: Color = Color.WHITE
@@ -113,7 +117,7 @@ func _generate_floor(f_num: int, parent: Node3D, is_main: bool) -> void:
         _generate_entities(corridor_end_z)
     
     # 2. Generate Floors and Ceilings
-    _create_csg_box(parent, "CorridorFloor", Vector3(0, -0.45, corridor_center_z), Vector3(corridor_width + 0.2, 0.5, corridor_length), true)
+    _create_csg_box(parent, "CorridorFloor", Vector3(0, -0.25, corridor_center_z), Vector3(corridor_width + 0.2, 0.5, corridor_length), true)
     _create_csg_box(parent, "CorridorCeiling", Vector3(0, corridor_height + 0.25, corridor_center_z), Vector3(corridor_width + 0.2, 0.5, corridor_length), true)
     
     # 3. Generate Double Rooms (Left side)
@@ -127,7 +131,11 @@ func _generate_floor(f_num: int, parent: Node3D, is_main: bool) -> void:
         # Room instance
         var room = double_room_scene.instantiate()
         room.name = "DoubleRoomL" + str(i + 1) + "_F" + str(f_num)
-        room.transform.origin = Vector3(-8.3, 0, c_z)
+        
+        # --- [ ИЗМЕНЕНО ]: Применяем смещение по оси Y ---
+        room.transform.origin = Vector3(-8.3, room_y_offset, c_z)
+        # ---------------------------------------------------
+        
         parent.add_child(room)
         room.owner = get_tree().edited_scene_root
         if "room_number" in room:
@@ -163,7 +171,11 @@ func _generate_floor(f_num: int, parent: Node3D, is_main: bool) -> void:
         # Room instance
         var room = single_room_scene.instantiate()
         room.name = "SingleRoomR" + str(i + 1) + "_F" + str(f_num)
-        room.transform.origin = Vector3(7.1, 0, c_z)
+        
+        # --- [ ИЗМЕНЕНО ]: Применяем смещение по оси Y ---
+        room.transform.origin = Vector3(7.1, room_y_offset, c_z)
+        # ---------------------------------------------------
+        
         parent.add_child(room)
         room.owner = get_tree().edited_scene_root
         if "room_number" in room:
