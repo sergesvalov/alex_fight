@@ -1,0 +1,6 @@
+extends Node3D
+# Скрипт для двери, которая уезжает в стену
+func interact():
+    var tween = create_tween()
+    # Уезжает вправо на 2 метра
+    tween.tween_property(self, "position:x", position.x + 2.0, 1.0).set_trans(Tween.TRANS_CUBIC)
