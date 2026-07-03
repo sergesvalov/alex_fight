@@ -37,7 +37,7 @@ size = Vector3(0.6, 4.0, 2.4)
 
 [node name="SingleRoom" type="CSGCombiner3D"]
 script = ExtResource("1_script")
-door_hole_width = 3.68
+door_hole_width = 1.84
 room_label = NodePath("RoomLabel")
 door_body = NodePath("MainDoor/AnimatableBody3D")
 floor_mesh = NodePath("Floor")
