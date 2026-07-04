@@ -47,6 +47,7 @@ var double_room_large_scene = preload("res://scenes/levels/hotel_siberia/rooms/d
 var single_room_scene = preload("res://scenes/levels/hotel_siberia/rooms/single_room.tscn")
 var stairwell_scene = preload("res://scenes/levels/hotel_siberia/stairwell.tscn")
 var door_scene = preload("res://entities/props/door.tscn")
+var elevator_door_scene = preload("res://entities/props/elevator_door.tscn")
 
 func _ready() -> void:
 	if not Engine.is_editor_hint():
@@ -283,16 +284,9 @@ func _generate_north_block(parent: Node, start_z: float) -> void:
 	elev_shaft.flip_faces = true
 	_create_light(parent, "ElevatorLight", Vector3(6.0, 3.5, 3.5), Color(0.9, 0.95, 1, 1))
 	
-	var elev_doors = CSGBox3D.new()
+	var elev_doors = elevator_door_scene.instantiate()
 	elev_doors.name = "ElevatorDoors"
-	elev_doors.size = Vector3(util_door_width, util_door_height, 0.2)
-	elev_doors.transform.origin = Vector3(6.0, util_door_height / 2.0, 3.0)
-	var metal_mat = StandardMaterial3D.new()
-	metal_mat.albedo_color = Color(0.4, 0.4, 0.45)
-	metal_mat.metallic = 0.8
-	metal_mat.roughness = 0.2
-	elev_doors.material = metal_mat
-	elev_doors.use_collision = true
+	elev_doors.transform.origin = Vector3(6.0, 0.0, 3.0)
 	parent.add_child(elev_doors)
 	elev_doors.owner = get_tree().edited_scene_root
 	
