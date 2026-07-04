@@ -312,6 +312,8 @@ func _generate_north_block(parent: Node3D, start_z: float) -> void:
 	stair.transform.origin = Vector3(0, 0, start_z)
 	parent.add_child(stair)
 	stair.owner = get_tree().edited_scene_root
+	
+	_create_csg_box(parent, "NorthFillerRight", Vector3(7.4, 2.0, 9.0), Vector3(7.8, 4.0, 2.0), false, false)
 
 func _generate_south_block(parent: Node3D, stair_z: float) -> void:
 	var stairwell_south_scene = load("res://scenes/levels/hotel_siberia/stairwell_south.tscn")
@@ -322,6 +324,14 @@ func _generate_south_block(parent: Node3D, stair_z: float) -> void:
 		stair_inst.position = Vector3(0, 0, stair_z)
 		parent.add_child(stair_inst)
 		stair_inst.owner = get_tree().edited_scene_root
+		
+	var fill_left_len = -62.0 - stair_z
+	if fill_left_len > 0:
+		_create_csg_box(parent, "SouthFillerLeft", Vector3(-8.6, 2.0, stair_z + fill_left_len/2.0), Vector3(10.2, 4.0, fill_left_len), false, false)
+		
+	var fill_right_len = -64.8 - stair_z
+	if fill_right_len > 0:
+		_create_csg_box(parent, "SouthFillerRight", Vector3(7.4, 2.0, stair_z + fill_right_len/2.0), Vector3(7.8, 4.0, fill_right_len), false, false)
 
 func _generate_elevator_shaft(parent: Node3D) -> void:
 	var wall_y_center = corridor_height / 2.0
