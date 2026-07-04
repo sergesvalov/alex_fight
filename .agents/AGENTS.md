@@ -1,4 +1,4 @@
-﻿# Hotel Level Generator Guide
+# Hotel Level Generator Guide
 
 This file provides architectural guidelines and debugging instructions for AI agents working on the hotel level generator in this project.
 
@@ -20,9 +20,9 @@ If you modify the generation logic, math offsets, or scaling, you must verify th
 
 How to verify:
 1. Run the test suite using Godot headless mode.
-2. The test suite automatically runs the debug_geometry.gd script.
+2. The test suite automatically runs the debug_geometry.gd script. It also validates that entity spawning does not silently fail or crash.
 3. If you want to use the script directly in your own code or tests, you can call:
-   ar mismatches = DebugGeometry.print_room_alignments(generated_floor_node)
-   This will print all Door AABBs and Hole AABBs, and report any mismatches greater than 5cm.
+    var mismatches = DebugGeometry.print_room_alignments(generated_floor_node)
+   This will print all Door AABBs and Hole AABBs, and report any mismatches greater than 5cm on both X and Z axes, as well as floating doors.
 
 WARNING: NEVER blindly multiply door positions by f_scale if they are already anchored or if the generator does not multiply its offsets. Always consult hotel_level_generator.gd to see which base variables (like wall_thickness or room_door_z_offset) are scaled, and ensure the local door logic matches!
