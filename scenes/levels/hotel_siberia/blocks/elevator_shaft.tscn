@@ -9,7 +9,7 @@ uv1_scale = Vector3(20, 2, 2)
 roughness = 0.9
 
 [sub_resource type="BoxOccluder3D" id="BoxOccluder3D_Wall"]
-size = Vector3(5.0, 4.25, 0.6)
+size = Vector3(4.0, 3.5, 0.6)
 
 [node name="ElevatorShaftBlock" type="Node3D"]
 
@@ -18,32 +18,32 @@ use_collision = true
 collision_layer = 2
 
 [node name="SideCorrNorthWall" type="CSGBox3D" parent="ElevatorGeometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.125, 0)
-size = Vector3(5.0, 4.25, 0.6)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.75, 0)
+size = Vector3(4.0, 3.5, 0.6)
 material = SubResource("StandardMaterial3D_wall")
 
 [node name="ElevatorDoorHole" type="CSGBox3D" parent="ElevatorGeometry/SideCorrNorthWall"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.6875, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.65, 0)
 operation = 2
-size = Vector3(2.3, 2.875, 1.0)
+size = Vector3(1.4, 2.2, 1.0)
 
 [node name="ElevatorShaftBox" type="CSGBox3D" parent="ElevatorGeometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.125, 2.5)
-size = Vector3(5.0, 4.25, 5.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.75, 2.0)
+size = Vector3(4.0, 3.5, 4.0)
 material = SubResource("StandardMaterial3D_wall")
 
 [node name="ElevatorHole" type="CSGBox3D" parent="ElevatorGeometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.125, 2.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.75, 2.0)
 operation = 2
-size = Vector3(4.8, 4.25, 4.8)
+size = Vector3(3.8, 3.5, 3.8)
 
 [node name="ElevatorLight" type="OmniLight3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.5, 0.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.75, 0.5)
 light_color = Color(0.9, 0.95, 1, 1)
 omni_range = 8.0
 
 [node name="ElevatorDoors" parent="." instance=ExtResource("2_elev_doors")]
 
 [node name="OccluderInstance3D" type="OccluderInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.125, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.75, 0)
 occluder = SubResource("BoxOccluder3D_Wall")

@@ -12,13 +12,13 @@ class_name HotelLevelGeneratorBase
 @export_group("Rooms Count & Steps")
 @export var num_double_rooms: int = 6
 @export var num_single_rooms: int = 9
-@export var double_room_step: float = 12.0
-@export var single_room_step: float = 7.2
+@export var double_room_step: float = 10.0
+@export var single_room_step: float = 6.0
 
 @export_group("Layout & Dimensions")
-@export var corridor_width: float = 7.0
-@export var corridor_height: float = 4.25
-@export var floor_height: float = 5.0
+@export var corridor_width: float = 5.5
+@export var corridor_height: float = 3.5
+@export var floor_height: float = 4.0
 @export var floor_thickness: float = 0.5
 @export var wall_thickness: float = 0.6
 @export var stairwell_south_offset: float = 10.0
@@ -34,22 +34,22 @@ class_name HotelLevelGeneratorBase
 @export var elev_light_z_offset: float = 0.5
 
 @export_subgroup("Double Rooms Position")
-@export var double_room_x: float = -8.3
+@export var double_room_x: float = -7.0
 @export var double_room_start_z: float = 4.0
 @export var double_room_wall_len: float = 6.6
 
 @export_subgroup("Single Rooms Position")
-@export var single_room_x: float = 7.1
+@export var single_room_x: float = 6.0
 @export var single_room_start_z: float = -3.6
 @export var single_room_wall_len: float = 2.8
 
 @export_group("Doors & Openings")
 @export var room_y_offset: float = 0.15
-@export var room_door_width: float = 1.84
+@export var room_door_width: float = 1.0
 @export var room_door_z_offset: float = 0.5
-@export var room_door_opening_width: float = 2.0
-@export var util_door_width: float = 2.3
-@export var util_door_height: float = 2.875
+@export var room_door_opening_width: float = 1.2
+@export var util_door_width: float = 1.4
+@export var util_door_height: float = 2.2
 @export var util_door_scale: float = 1.15
 @export var door_hole_width_margin: float = 0.4
 @export var maint_door_hole_width_margin: float = 0.8
