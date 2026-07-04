@@ -166,9 +166,9 @@ func _ready() -> void:
             var checked_doors = 0
             
             var dummy_player = Node3D.new()
-            floor_main.add_child(dummy_player)
+            generator.add_child(dummy_player)
             
-            var nodes_to_check = [floor_main]
+            var nodes_to_check = [floor_main, floor_above, floor_below]
             while nodes_to_check.size() > 0:
                 var current = nodes_to_check.pop_back()
                 
