@@ -112,10 +112,14 @@ func _ready() -> void:
         mock_enemies.add_child(mock_cerberus)
         parent_node.add_child(mock_enemies)
         
+        var nav_region = Node3D.new()
+        nav_region.name = "NavigationRegion3D"
+        parent_node.add_child(nav_region)
+        
         var generator = Node3D.new()
         generator.set_script(gen_script)
         generator.name = "HotelGeometry"
-        parent_node.add_child(generator)
+        nav_region.add_child(generator)
         
         # Эмулируем генерацию
         generator._ready() # _ready triggers generation

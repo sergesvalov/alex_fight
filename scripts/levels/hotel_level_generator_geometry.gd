@@ -38,7 +38,7 @@ func _generate_rooms_side(f_num: int, parent: Node3D, is_left: bool, corridor_st
 			HotelDoorGenerator.create_room_wc_door(room, Vector3(1.55, 0, -3.6), true)
 		else:
 			room = single_room_scene.instantiate()
-			HotelDoorGenerator.create_room_main_door(room, Vector3(-2.8, 0, -0.25), false)
+			HotelDoorGenerator.create_room_main_door(room, Vector3(-3.05, 0, -0.25), false)
 			HotelDoorGenerator.create_room_wc_door(room, Vector3(-2.2, 0, -0.25), false)
 			
 		room.name = prefix + str(i + 1) + "_F" + str(f_num)
