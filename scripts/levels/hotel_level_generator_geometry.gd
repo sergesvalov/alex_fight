@@ -77,7 +77,7 @@ func _generate_rooms_side(f_num: int, parent: Node3D, is_left: bool, corridor_st
 			room.carpet_color = carpet_color
 			
 		var flip_mult = -1.0 if is_flipped else 1.0
-		var current_door_offset = (room_door_z_offset * GlobalConfig.get_floor_scale() if is_left else -0.25 * GlobalConfig.get_floor_scale()) * flip_mult
+		var current_door_offset = (room_door_z_offset if is_left else -0.25 * GlobalConfig.get_floor_scale()) * flip_mult
 		var half_opening = room_door_opening_width / 2.0
 		var door_center_z = c_z + current_door_offset
 		var door_top_z = door_center_z + half_opening
