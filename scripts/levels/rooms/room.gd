@@ -36,6 +36,30 @@ func _ready() -> void:
 	_update_floor_color()
 	if not Engine.is_editor_hint():
 		_attach_label_to_door()
+		_setup_lights()
+
+func _setup_lights() -> void:
+	var room_light = get_node_or_null("RoomLight")
+	var wc_light = get_node_or_null("WC_Light")
+	
+	if room_light:
+		room_light.light_energy = 0.0
+	if wc_light:
+		wc_light.light_energy = 0.0
+		
+	var main_door = get_node_or_null("MainDoor/AnimatableBody3D")
+	if main_door and main_door.has_signal("state_changed"):
+		main_door.state_changed.connect(_on_main_door_state_changed)
+
+func _on_main_door_state_changed(is_open: bool) -> void:
+	var room_light = get_node_or_null("RoomLight")
+	var wc_light = get_node_or_null("WC_Light")
+	var tween = create_tween().set_parallel(true)
+	
+	if room_light:
+		tween.tween_property(room_light, "light_energy", 0.5 if is_open else 0.0, 0.5)
+	if wc_light:
+		tween.tween_property(wc_light, "light_energy", 0.6 if is_open else 0.0, 0.5)
 
 func _attach_label_to_door() -> void:
 	var label = _get_label_node()

@@ -9,8 +9,6 @@ var room_layouts = {
 		"bounds_pos_z": 2.4,
 		"bounds_neg_z": -2.4,
 		"props": {
-			"MainDoor": {"pos": Vector3(-2.8, 0.0, -0.25), "anchor_x": 0, "anchor_z": 0},
-			"WCDoor": {"pos": Vector3(-2.2, 0.0, -0.25), "anchor_x": 0, "anchor_z": 0},
 			"Bed": {"pos": Vector3(2.0, 0.0, 2.0), "anchor_x": 1, "anchor_z": 1},
 			"Table": {"pos": Vector3(2.0, 0.0, -2.5), "anchor_x": 1, "anchor_z": -1},
 			"Chair1": {"pos": Vector3(2.0, 0.0, -1.8), "anchor_x": 1, "anchor_z": -1},
@@ -24,8 +22,6 @@ var room_layouts = {
 		"bounds_pos_z": 4.4,
 		"bounds_neg_z": -4.4,
 		"props": {
-			"MainDoor": {"pos": Vector3(4.3, 0.0, 0.5), "anchor_x": 0, "anchor_z": 0},
-			"WCDoor": {"pos": Vector3(1.55, 0.0, -3.6), "anchor_x": 0, "anchor_z": 0},
 			"Bed1": {"pos": Vector3(-2.5, 0.0, -2.0), "anchor_x": -1, "anchor_z": 0},
 			"Bed2": {"pos": Vector3(-2.5, 0.0, 2.0), "anchor_x": -1, "anchor_z": 0},
 			"Table1": {"pos": Vector3(-1.5, 0.0, 4.5), "anchor_x": 0, "anchor_z": 1},

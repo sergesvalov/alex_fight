@@ -1,6 +1,8 @@
 extends AnimatableBody3D
 class_name InteractiveDoor
 
+signal state_changed(is_open: bool)
+
 @onready var sfx_open: AudioStreamPlayer3D = $"../SfxOpen"
 @onready var sfx_close: AudioStreamPlayer3D = $"../SfxClose"
 
@@ -23,6 +25,7 @@ func interact(player: Node) -> void:
             open_angle = PI / 2.0
             
     is_open = !is_open
+    state_changed.emit(is_open)
     
     var target_rot = open_angle if is_open else 0.0
     

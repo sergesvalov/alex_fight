@@ -55,15 +55,16 @@ class_name HotelLevelGeneratorBase
 @export var maint_door_hole_width_margin: float = 0.8
 @export var room_hole_margin: float = 0.2
 
-@export_group("Map Decals")
+@export_group("Map & Ad Decals")
 @export var map_decal_size: Vector2 = Vector2(2.0, 2.0)
 @export var map_decal_y_pos: float = 2.0
 @export var map_decal_wall_offset: float = 0.01
 
-@export_group("Stylization")
+@export_group("Textures")
 @export var floor_number: int = 4
 @export var carpet_color: Color = Color.WHITE
 @export var map_texture: Texture2D
+@export var ad_texture: Texture2D
 @export var light_omni_range: float = 8.0
 
 @export_group("Room Suffixes")
@@ -87,8 +88,6 @@ var single_room_scene = preload("res://scenes/levels/hotel_siberia/rooms/single_
 var stairwell_scene = preload("res://scenes/levels/hotel_siberia/stairwell_north.tscn")
 var elevator_shaft_scene = preload("res://scenes/levels/hotel_siberia/blocks/elevator_shaft.tscn")
 var maintenance_room_scene = preload("res://scenes/levels/hotel_siberia/blocks/maintenance_room.tscn")
-var door_scene = preload("res://entities/props/door.tscn")
-var elevator_door_scene = preload("res://entities/props/elevator_door.tscn")
 
 # endregion
 

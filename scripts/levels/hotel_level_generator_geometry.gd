@@ -34,8 +34,12 @@ func _generate_rooms_side(f_num: int, parent: Node3D, is_left: bool, corridor_st
 		var room
 		if is_left:
 			room = double_room_large_scene.instantiate() if i < 2 else double_room_scene.instantiate()
+			HotelDoorGenerator.create_room_main_door(room, Vector3(4.3 * GlobalConfig.get_floor_scale(), 0, 0.5 * GlobalConfig.get_floor_scale()), true)
+			HotelDoorGenerator.create_room_wc_door(room, Vector3(1.55 * GlobalConfig.get_floor_scale(), 0, -3.6 * GlobalConfig.get_floor_scale()), true)
 		else:
 			room = single_room_scene.instantiate()
+			HotelDoorGenerator.create_room_main_door(room, Vector3(-2.8 * GlobalConfig.get_floor_scale(), 0, -0.25 * GlobalConfig.get_floor_scale()), false)
+			HotelDoorGenerator.create_room_wc_door(room, Vector3(-2.2 * GlobalConfig.get_floor_scale(), 0, -0.25 * GlobalConfig.get_floor_scale()), false)
 			
 		room.name = prefix + str(i + 1) + "_F" + str(f_num)
 		room.transform.origin = Vector3(room_x, room_y_offset, c_z)
@@ -70,19 +74,35 @@ func _generate_map_decals(parent: Node3D) -> void:
 	for i in range(decal_positions.size()):
 		var pos = decal_positions[i]
 		var map_decal = MeshInstance3D.new()
-		map_decal.name = "MapDecal_" + str(i + 1)
+		# i == 0 is the map, i == 1 is the advertisement
+		var is_map = (i == 0)
+		map_decal.name = "MapDecal_" + str(i + 1) if is_map else "AdDecal_" + str(i + 1)
 		map_decal.transform.origin = pos
 		map_decal.transform.basis = Basis.from_euler(Vector3(0, PI/2 if pos.x < 0 else -PI/2, 0))
 			
 		var quad = QuadMesh.new()
 		quad.size = map_decal_size
 		var map_mat = StandardMaterial3D.new()
-		map_mat.albedo_texture = map_texture if map_texture else preload("res://assets/textures/hotel_map.jpg")
+		
+		if is_map:
+			map_mat.albedo_texture = map_texture if map_texture else preload("res://assets/textures/hotel_map.jpg")
+		else:
+			map_mat.albedo_texture = ad_texture if ad_texture else preload("res://assets/textures/coca_cola.jpg")
+			
 		map_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 		quad.material = map_mat
 		map_decal.mesh = quad
 		parent.add_child(map_decal)
 		map_decal.owner = get_tree().edited_scene_root
+
+func _generate_corridor_lights(parent: Node3D, start_z: float, end_z: float) -> void:
+	var z = start_z - (double_room_step / 2.0)
+	var i = 1
+	while z >= end_z:
+		_create_light(parent, "CorridorLight_" + str(i), Vector3(0, corridor_height - 0.5, z), Color(1.0, 0.95, 0.9))
+		z -= double_room_step
+		i += 1
+
 
 # endregion
 
@@ -143,24 +163,12 @@ func _generate_stairwell_junction(parent: Node3D, z_pos: float, is_north: bool) 
 	var hole_width = room_door_opening_width
 	var hole_height = util_door_height
 	var hole_y = hole_height / 2.0
-	
 	_create_csg_hole(wall_node, prefix + "StairwellJunctionHole", Vector3(0, hole_y - (wall_h / 2.0), 0), Vector3(hole_width, hole_height, wall_thick + room_hole_margin))
 	
-	var stair_door = load("res://entities/props/stair_door.tscn")
-	if stair_door:
-		var inst = stair_door.instantiate()
-		inst.name = prefix + "StairwellDoor"
-		inst.transform.origin = Vector3(0, 0, z_pos)
-		if is_north:
-			inst.rotation_degrees.y = 180
-		
-		# Apply dynamic scale based on player size if available
-		if not Engine.is_editor_hint():
-			var p_scale = GlobalConfig.get_player_scale()
-			inst.scale = Vector3(p_scale, p_scale, p_scale)
-			
-		parent.add_child(inst)
+	var inst = HotelDoorGenerator.create_stairwell_door(parent, Vector3(0, 0, z_pos), is_north)
+	if inst and Engine.is_editor_hint() and get_tree().edited_scene_root:
 		inst.owner = get_tree().edited_scene_root
+
 
 func _generate_elevator_shaft(parent: Node3D) -> void:
 	if not elevator_shaft_scene: return
@@ -168,6 +176,7 @@ func _generate_elevator_shaft(parent: Node3D) -> void:
 	var inst = elevator_shaft_scene.instantiate()
 	inst.name = "ElevatorShaftBlock"
 	inst.transform.origin = Vector3(elev_x_center, 0, side_corridor_z_end)
+	HotelDoorGenerator.create_elevator_door(inst, Vector3.ZERO)
 	parent.add_child(inst)
 	inst.owner = get_tree().edited_scene_root
 

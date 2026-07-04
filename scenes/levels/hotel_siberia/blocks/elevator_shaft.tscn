@@ -44,7 +44,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.75, 0.5)
 light_color = Color(0.9, 0.95, 1, 1)
 omni_range = 8.0
 
-[node name="ElevatorDoors" parent="." instance=ExtResource("2_elev_doors")]
 
 [node name="OccluderInstance3D" type="OccluderInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.75, 0)

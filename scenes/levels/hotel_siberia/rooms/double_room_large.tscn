@@ -42,12 +42,6 @@ door_hole_width = 1.0
 room_label = NodePath("RoomLabel")
 door_body = NodePath("MainDoor/AnimatableBody3D")
 
-[node name="MainDoor" parent="." instance=ExtResource("7_door")]
-transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, 4.25, 0.0, 0.5)
-
-[node name="WCDoor" parent="." instance=ExtResource("7_door")]
-transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 1.55, 0.0, -3.6)
-
 [node name="WallW" type="CSGBox3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.75, 1.75, 0.0)
 use_collision = true
