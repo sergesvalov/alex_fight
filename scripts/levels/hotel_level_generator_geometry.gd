@@ -77,7 +77,8 @@ func _generate_rooms_side(f_num: int, parent: Node3D, is_left: bool, corridor_st
 		_create_wall(parent, "CorrWall_" + side_str + "end", Vector3(wall_x, 0, (total_corridor_end + prev_z) / 2.0), prev_z - total_corridor_end)
 
 func _generate_map_decals(parent: Node3D) -> void:
-	var map_z = double_room_start_z - (double_room_step / 2.0)
+	# Place at 1/4th step to avoid SingleRoom doors (which are at 0 and 1/2 step relative to DoubleRoom)
+	var map_z = double_room_start_z - (double_room_step * 0.25)
 	var inner_wall_x = (corridor_width / 2.0) - (wall_thickness / 2.0)
 	var decal_x = inner_wall_x - map_decal_wall_offset
 	
