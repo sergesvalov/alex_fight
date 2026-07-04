@@ -3,11 +3,6 @@ extends CSGCombiner3D
 class_name HotelRoom
 
 @export_group("Room Properties")
-@export var room_number: String = "":
-	set(value):
-		room_number = value
-		_update_label()
-
 # Ширина проема, которую генератор считывает для постройки стен
 @export var door_hole_width: float = 1.84 
 
@@ -21,70 +16,13 @@ class_name HotelRoom
 @export var carpet_uv_scale: Vector3 = Vector3(10, 10, 10)
 
 @export_group("Node References")
-@export var room_label: Label3D
-@export var door_body: Node3D
 @export var floor_mesh: GeometryInstance3D
-
-@export_group("Transforms")
-@export var label_door_offset: Vector3 = Vector3(0.5, 1.5, 0.06)
 
 func _ready() -> void:
 	if not Engine.is_editor_hint():
 		GlobalConfig.apply_dynamic_scale(self)
 		
-	_update_label()
 	_update_floor_color()
-	if not Engine.is_editor_hint():
-		_attach_label_to_door()
-		_setup_lights()
-
-func _setup_lights() -> void:
-	var room_light = get_node_or_null("RoomLight")
-	var wc_light = get_node_or_null("WC_Light")
-	
-	if room_light:
-		room_light.light_energy = 0.0
-	if wc_light:
-		wc_light.light_energy = 0.0
-		
-	var main_door = get_node_or_null("MainDoor/AnimatableBody3D")
-	if main_door and main_door.has_signal("state_changed"):
-		main_door.state_changed.connect(_on_main_door_state_changed)
-
-func _on_main_door_state_changed(is_open: bool) -> void:
-	var room_light = get_node_or_null("RoomLight")
-	var wc_light = get_node_or_null("WC_Light")
-	var tween = create_tween().set_parallel(true)
-	
-	if room_light:
-		tween.tween_property(room_light, "light_energy", 0.5 if is_open else 0.0, 0.5)
-	if wc_light:
-		tween.tween_property(wc_light, "light_energy", 0.6 if is_open else 0.0, 0.5)
-
-func _attach_label_to_door() -> void:
-	var label = _get_label_node()
-	var d_body = get_node_or_null("MainDoor/AnimatableBody3D")
-	
-	if label and d_body:
-		var current_parent = label.get_parent()
-		
-		if current_parent != d_body:
-			current_parent.remove_child(label)
-			d_body.add_child(label)
-			
-			label.transform.basis = Basis.IDENTITY
-			label.transform.origin = label_door_offset
-
-func _get_label_node() -> Label3D:
-	var label = get_node_or_null("RoomLabel")
-	if not label:
-		label = get_node_or_null("MainDoor/AnimatableBody3D/RoomLabel")
-	return label as Label3D
-
-func _update_label() -> void:
-	var label = _get_label_node()
-	if label:
-		label.text = room_number
 
 func _update_floor_color() -> void:
 	var f_mesh = get_node_or_null("Floor")

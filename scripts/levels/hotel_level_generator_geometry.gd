@@ -46,8 +46,20 @@ func _generate_rooms_side(f_num: int, parent: Node3D, is_left: bool, corridor_st
 		parent.add_child(room)
 		room.owner = get_tree().edited_scene_root
 		
-		if "room_number" in room:
-			room.room_number = str(f_num) + suffixes[i % suffixes.size()]
+		var lc = Node.new()
+		lc.name = "RoomLightController"
+		lc.set_script(preload("res://scripts/levels/rooms/room_light_controller.gd"))
+		room.add_child(lc)
+		lc.owner = get_tree().edited_scene_root
+		
+		var lm = Node.new()
+		lm.name = "RoomLabelManager"
+		lm.set_script(preload("res://scripts/levels/rooms/room_label_manager.gd"))
+		room.add_child(lm)
+		lm.owner = get_tree().edited_scene_root
+		
+		lm.room_number = str(f_num) + suffixes[i % suffixes.size()]
+		
 		if "carpet_color" in room:
 			room.carpet_color = carpet_color
 			
