@@ -48,8 +48,8 @@ func _generate_rooms_side(f_num: int, parent: Node3D, is_left: bool, corridor_st
 			room.carpet_color = carpet_color
 			
 		var current_door_offset = room_door_z_offset if is_left else -0.25 * GlobalConfig.get_floor_scale()
-		var door_center_z = c_z + current_door_offset
 		var half_opening = room_door_opening_width / 2.0
+		var door_center_z = c_z + current_door_offset - half_opening if is_left else c_z + current_door_offset + half_opening
 		var door_top_z = door_center_z + half_opening
 		var door_bottom_z = door_center_z - half_opening
 		
