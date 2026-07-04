@@ -200,12 +200,9 @@ func _generate_floor(f_num: int, parent: Node3D, is_main: bool) -> void:
 	if prev_z_right > total_corridor_end:
 		_create_wall(parent, "CorrWall_R_end", Vector3(wall_x_right, 0, (total_corridor_end + prev_z_right) / 2.0), prev_z_right - total_corridor_end)
 
-	# 5. Generate South Block (Stairwell)
-	var stair = stairwell_scene.instantiate()
-	stair.name = "Stairwell_S"
-	stair.transform.origin = Vector3(0, 0, stair_z)
-	parent.add_child(stair)
-	stair.owner = get_tree().edited_scene_root
+	# 5. Generate South Block (Placeholder Wall)
+	var wall_y_center = corridor_height / 2.0
+	_create_csg_box(parent, "SouthPlaceholderWall", Vector3(0, wall_y_center, stair_z), Vector3(corridor_width, corridor_height, 1.0), false, true)
 		
 	print("Level geometry generated for floor " + str(f_num))
 

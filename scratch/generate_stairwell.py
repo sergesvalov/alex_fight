@@ -1,4 +1,6 @@
-[gd_scene load_steps=8 format=3]
+import os
+
+file_content = """[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://scripts/levels/seamless_teleporter.gd" id="1_script"]
 [ext_resource type="Texture2D" path="res://assets/textures/hotel_carpet.jpg" id="2_carpet"]
@@ -103,3 +105,7 @@ omni_range = 10.0
 [node name="LightLower" type="OmniLight3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.75, -2, -1.75)
 omni_range = 10.0
+"""
+
+with open("c:/wndr/repo/alex_fight/scenes/levels/hotel_siberia/stairwell.tscn", "w") as f:
+    f.write(file_content)
