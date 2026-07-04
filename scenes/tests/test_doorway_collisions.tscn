@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://testdoorwaycols"]
+
+[ext_resource type="Script" path="res://scripts/tests/test_doorway_collisions.gd" id="1_script"]
+
+[node name="TestDoorwayCollisions" type="Node3D"]
+script = ExtResource("1_script")
