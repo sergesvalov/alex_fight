@@ -20,7 +20,7 @@ class_name HotelLevelGeneratorBase
 @export var corridor_height: float = 4.25
 @export var floor_height: float = 5.0
 @export var floor_thickness: float = 0.5
-@export var wall_thickness: float = 1.0
+@export var wall_thickness: float = 0.6
 @export var stairwell_south_offset: float = 10.0
 @export var total_corridor_end_margin: float = 1.5
 
@@ -85,6 +85,8 @@ var double_room_scene = preload("res://scenes/levels/hotel_siberia/rooms/double_
 var double_room_large_scene = preload("res://scenes/levels/hotel_siberia/rooms/double_room_large.tscn")
 var single_room_scene = preload("res://scenes/levels/hotel_siberia/rooms/single_room.tscn")
 var stairwell_scene = preload("res://scenes/levels/hotel_siberia/stairwell_north.tscn")
+var elevator_shaft_scene = preload("res://scenes/levels/hotel_siberia/blocks/elevator_shaft.tscn")
+var maintenance_room_scene = preload("res://scenes/levels/hotel_siberia/blocks/maintenance_room.tscn")
 var door_scene = preload("res://entities/props/door.tscn")
 var elevator_door_scene = preload("res://entities/props/elevator_door.tscn")
 

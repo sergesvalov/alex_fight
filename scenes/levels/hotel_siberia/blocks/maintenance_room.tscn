@@ -1,0 +1,55 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Texture2D" path="res://assets/textures/hotel_wallpaper.jpg" id="1_wallpaper"]
+[ext_resource type="PackedScene" path="res://entities/props/door.tscn" id="2_door"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wall"]
+albedo_texture = ExtResource("1_wallpaper")
+uv1_scale = Vector3(20, 2, 2)
+roughness = 0.9
+
+[sub_resource type="BoxOccluder3D" id="BoxOccluder3D_Wall"]
+size = Vector3(0.6, 4.25, 3.0)
+
+[node name="MaintenanceRoomBlock" type="Node3D"]
+
+[node name="MaintenanceGeometry" type="CSGCombiner3D" parent="."]
+use_collision = true
+collision_layer = 2
+
+[node name="SideCorrEastWall" type="CSGBox3D" parent="MaintenanceGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.125, 1.5)
+size = Vector3(0.6, 4.25, 3.0)
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="MaintenanceDoorHole" type="CSGBox3D" parent="MaintenanceGeometry/SideCorrEastWall"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.6875, 0)
+operation = 2
+size = Vector3(1.0, 2.875, 2.3)
+
+[node name="MaintenanceRoomBox" type="CSGBox3D" parent="MaintenanceGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, 2.125, 1.5)
+size = Vector3(5.0, 4.25, 3.0)
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="MaintenanceRoomHole" type="CSGBox3D" parent="MaintenanceGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, 2.125, 1.5)
+operation = 2
+size = Vector3(4.8, 4.25, 2.8)
+
+[node name="MaintenanceRoomDoorHole" type="CSGBox3D" parent="MaintenanceGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4375, 1.5)
+operation = 2
+size = Vector3(1.4, 2.875, 2.3)
+
+[node name="MaintenanceLight" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, 3.5, 1.5)
+light_color = Color(1.0, 0.9, 0.7, 1)
+omni_range = 8.0
+
+[node name="MaintenanceDoor" parent="." instance=ExtResource("2_door")]
+transform = Transform3D(-5.02681e-08, 0, -1.15, 0, 1.15, 0, 1.15, 0, -5.02681e-08, 0, 0, 1.5)
+
+[node name="OccluderInstance3D" type="OccluderInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.125, 1.5)
+occluder = SubResource("BoxOccluder3D_Wall")

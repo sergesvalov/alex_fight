@@ -16,7 +16,8 @@ func _generate_corridor_shell(parent: Node3D, corridor_start_z: float, total_cor
 
 func _generate_rooms_side(f_num: int, parent: Node3D, is_left: bool, corridor_start_z: float, total_corridor_end: float) -> void:
 	var prev_z = corridor_start_z
-	var wall_x = -corridor_width / 2.0 if is_left else corridor_width / 2.0
+	var corridor_wall_shift = wall_thickness / 2.0
+	var wall_x = (-corridor_width / 2.0 + corridor_wall_shift) if is_left else (corridor_width / 2.0 - corridor_wall_shift)
 	var num_rooms = num_double_rooms if is_left else num_single_rooms
 	var start_z = double_room_start_z if is_left else single_room_start_z
 	var step = double_room_step if is_left else single_room_step
@@ -121,54 +122,21 @@ func _generate_south_block(parent: Node3D, stair_z: float) -> void:
 		_create_csg_box(parent, "SouthFillerRight", Vector3(7.4, 2.0, stair_z + fill_right_len/2.0), Vector3(7.8, 4.0, fill_right_len), false, false)
 
 func _generate_elevator_shaft(parent: Node3D) -> void:
-	var wall_y_center = corridor_height / 2.0
-	var hole_y = (util_door_height - corridor_height) / 2.0
-	
+	if not elevator_shaft_scene: return
 	var elev_x_center = (corridor_width / 2.0) + (side_corridor_depth / 2.0)
-	var elev_z_center = side_corridor_z_end + (elev_shaft_depth / 2.0)
-	
-	var side_north_wall = _create_csg_box(parent, "SideCorrNorthWall", Vector3(elev_x_center, wall_y_center, side_corridor_z_end), Vector3(side_corridor_depth, corridor_height, wall_thickness), false, false)
-	_create_csg_hole(side_north_wall, "ElevatorDoorHole", Vector3(0, hole_y, 0), Vector3(util_door_width, util_door_height, wall_thickness + door_hole_width_margin))
-	
-	_create_csg_box(parent, "ElevatorShaft", Vector3(elev_x_center, wall_y_center, elev_z_center), Vector3(side_corridor_depth, corridor_height, elev_shaft_depth), false, false)
-	_create_csg_hole(parent, "ElevatorHole", Vector3(elev_x_center, wall_y_center, elev_z_center), Vector3(side_corridor_depth - room_hole_margin, corridor_height, elev_shaft_depth - room_hole_margin))
-	
-	var light_z = side_corridor_z_end + elev_light_z_offset
-	var light_y = corridor_height - north_block_light_y_offset
-	_create_light(parent, "ElevatorLight", Vector3(elev_x_center, light_y, light_z), Color(0.9, 0.95, 1, 1))
-	
-	var elev_doors = elevator_door_scene.instantiate()
-	elev_doors.name = "ElevatorDoors"
-	elev_doors.transform.origin = Vector3(elev_x_center, 0.0, side_corridor_z_end)
-	parent.add_child(elev_doors)
-	elev_doors.owner = get_tree().edited_scene_root
+	var inst = elevator_shaft_scene.instantiate()
+	inst.name = "ElevatorShaftBlock"
+	inst.transform.origin = Vector3(elev_x_center, 0, side_corridor_z_end)
+	parent.add_child(inst)
+	inst.owner = get_tree().edited_scene_root
 
 func _generate_maintenance_room(parent: Node3D) -> void:
-	var wall_y_center = corridor_height / 2.0
-	var hole_y = (util_door_height - corridor_height) / 2.0
-	
-	var side_corridor_z_len = side_corridor_z_end - side_corridor_z_start
-	var side_corridor_z_center = side_corridor_z_start + (side_corridor_z_len / 2.0)
+	if not maintenance_room_scene: return
 	var east_wall_x = (corridor_width / 2.0) + side_corridor_depth
-	
-	var side_east_wall = _create_csg_box(parent, "SideCorrEastWall", Vector3(east_wall_x, wall_y_center, side_corridor_z_center), Vector3(wall_thickness, corridor_height, side_corridor_z_len), false, false)
-	_create_csg_hole(side_east_wall, "MaintenanceDoorHole", Vector3(0, hole_y, 0), Vector3(wall_thickness + door_hole_width_margin, util_door_height, util_door_width))
-	
-	var maint_x_center = east_wall_x + (maint_room_depth / 2.0)
-	
-	_create_csg_box(parent, "MaintenanceRoom", Vector3(maint_x_center, wall_y_center, side_corridor_z_center), Vector3(maint_room_depth, corridor_height, side_corridor_z_len), false, false)
-	_create_csg_hole(parent, "MaintenanceRoomHole", Vector3(maint_x_center, wall_y_center, side_corridor_z_center), Vector3(maint_room_depth - room_hole_margin, corridor_height, side_corridor_z_len - room_hole_margin))
-	
-	_create_csg_hole(parent, "MaintenanceRoomDoorHole", Vector3(east_wall_x, wall_y_center + hole_y, side_corridor_z_center), Vector3(wall_thickness + maint_door_hole_width_margin, util_door_height, util_door_width))
-	var light_y = corridor_height - north_block_light_y_offset
-	_create_light(parent, "MaintenanceLight", Vector3(maint_x_center, light_y, side_corridor_z_center), Color(1.0, 0.9, 0.7, 1))
-	
-	var maint_door = door_scene.instantiate()
-	maint_door.name = "MaintenanceDoor"
-	maint_door.transform.origin = Vector3(east_wall_x, 0, side_corridor_z_center)
-	maint_door.transform.basis = Basis.from_euler(Vector3(0, -PI/2, 0))
-	maint_door.scale = Vector3(util_door_scale, util_door_scale, util_door_scale) 
-	parent.add_child(maint_door)
-	maint_door.owner = get_tree().edited_scene_root
+	var inst = maintenance_room_scene.instantiate()
+	inst.name = "MaintenanceRoomBlock"
+	inst.transform.origin = Vector3(east_wall_x, 0, side_corridor_z_start)
+	parent.add_child(inst)
+	inst.owner = get_tree().edited_scene_root
 
 # endregion

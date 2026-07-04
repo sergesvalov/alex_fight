@@ -1,4 +1,4 @@
-﻿[gd_scene load_steps=9 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scripts/levels/rooms/room.gd" id="1_script"]
 [ext_resource type="Texture2D" path="res://assets/textures/hotel_carpet.jpg" id="1_carpet"]
@@ -27,6 +27,9 @@ size = Vector3(10.8, 4.0, 1.2)
 [sub_resource type="BoxOccluder3D" id="BoxOccluder3D_WallW"]
 size = Vector3(1.2, 4.0, 12.0)
 
+[sub_resource type="BoxOccluder3D" id="BoxOccluder3D_WallE"]
+size = Vector3(0.6, 4.0, 12.0)
+
 [sub_resource type="BoxOccluder3D" id="BoxOccluder3D_Floor"]
 size = Vector3(10.2, 0.5, 12.0)
 
@@ -53,24 +56,24 @@ size = Vector3(1.2, 4.0, 12.0)
 material = SubResource("StandardMaterial3D_wall")
 
 [node name="WallE_L" type="CSGBox3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.8, 2.0, -2.57)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.5, 2.0, -2.57)
 use_collision = true
 collision_layer = 2
-size = Vector3(1.2, 4.0, 4.46)
+size = Vector3(0.6, 4.0, 4.46)
 material = SubResource("StandardMaterial3D_wall")
 
 [node name="WallE_R" type="CSGBox3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.8, 2.0, 3.15)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.5, 2.0, 3.15)
 use_collision = true
 collision_layer = 2
-size = Vector3(1.2, 4.0, 3.3)
+size = Vector3(0.6, 4.0, 3.3)
 material = SubResource("StandardMaterial3D_wall")
 
 [node name="WallE_Top" type="CSGBox3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.8, 3.4375, 0.58)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.5, 3.4375, 0.58)
 use_collision = true
 collision_layer = 2
-size = Vector3(1.2, 1.125, 1.84)
+size = Vector3(0.6, 1.125, 1.84)
 material = SubResource("StandardMaterial3D_wall")
 
 [node name="WallN" type="CSGBox3D" parent="."]
@@ -155,6 +158,12 @@ occluder = SubResource("BoxOccluder3D_WallS")
 
 [node name="Occluder" type="OccluderInstance3D" parent="WallW"]
 occluder = SubResource("BoxOccluder3D_WallW")
+
+[node name="Occluder2" type="OccluderInstance3D" parent="WallE_L"]
+occluder = SubResource("BoxOccluder3D_WallE")
+
+[node name="Occluder3" type="OccluderInstance3D" parent="WallE_R"]
+occluder = SubResource("BoxOccluder3D_WallE")
 
 
 
