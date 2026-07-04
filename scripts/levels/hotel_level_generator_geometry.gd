@@ -173,6 +173,26 @@ func _generate_north_block(parent: Node3D, start_z: float) -> void:
 	stair.owner = get_tree().edited_scene_root
 	
 	_generate_stairwell_junction(parent, start_z, true)
+	
+	# Fill in missing walls for the alcove on the right
+	var f_scale = GlobalConfig.get_floor_scale()
+	var east_wall_x = (corridor_width / 2.0) + side_corridor_depth
+	var south_wall_z = -48.0 * f_scale
+	var south_wall_x_start = corridor_width / 2.0 - wall_thickness / 2.0
+	var south_wall_length = side_corridor_depth + wall_thickness
+	
+	# Gap 1: South wall of alcove
+	_create_csg_box(parent, "AlcoveSouthWall", Vector3(south_wall_x_start + south_wall_length/2.0, corridor_height / 2.0, south_wall_z), Vector3(south_wall_length, corridor_height, wall_thickness), false, false)
+	
+	# Gap 2: East wall of alcove between Maintenance and Elevator
+	var gap_z_start = -50.5 * f_scale
+	var gap_z_end = -58.0 * f_scale
+	_create_wall(parent, "AlcoveEastWall", Vector3(east_wall_x, 0, (gap_z_start + gap_z_end) / 2.0), gap_z_start - gap_z_end)
+	
+	# Gap 3: East wall of alcove from -48.0 to -47.5
+	var gap2_z_start = -48.0 * f_scale
+	var gap2_z_end = -47.5 * f_scale
+	_create_wall(parent, "AlcoveEastWall_South", Vector3(east_wall_x, 0, (gap2_z_start + gap2_z_end) / 2.0), gap2_z_start - gap2_z_end)
 
 func _generate_south_block(parent: Node3D, stair_z: float) -> void:
 	var stairwell_south_scene = load("res://scenes/levels/hotel_siberia/stairwell_south.tscn")
@@ -180,7 +200,7 @@ func _generate_south_block(parent: Node3D, stair_z: float) -> void:
 		var stair_inst = stairwell_south_scene.instantiate()
 		stair_inst.name = "StairwellSouth"
 		stair_inst.rotation_degrees.y = 90
-		var side_x = (corridor_width / 2.0) + (side_corridor_depth / 2.0)
+		var side_x = (corridor_width / 2.0) + 0.5 * GlobalConfig.get_floor_scale()
 		var stair_z_pos = 12.0 * GlobalConfig.get_floor_scale()
 		stair_inst.position = Vector3(side_x, 0, stair_z_pos)
 		parent.add_child(stair_inst)
@@ -201,7 +221,7 @@ func _generate_south_block(parent: Node3D, stair_z: float) -> void:
 	var wall_w = corridor_width + wall_thickness * 2.0
 	var wall_h = corridor_height
 	var wall_thick = wall_thickness
-	var w_z = 15.0 * GlobalConfig.get_floor_scale() + (wall_thick / 2.0)
+	var w_z = 13.05 * GlobalConfig.get_floor_scale() + (wall_thick / 2.0)
 	_create_csg_box(parent, "SouthEndWall", Vector3(0, wall_h / 2.0, w_z), Vector3(wall_w, wall_h, wall_thick), false, false)
 
 func _generate_stairwell_junction(parent: Node3D, z_pos: float, is_north: bool) -> void:
@@ -227,7 +247,7 @@ func _generate_stairwell_junction(parent: Node3D, z_pos: float, is_north: bool) 
 
 func _generate_elevator_shaft(parent: Node3D) -> void:
 	if not elevator_shaft_scene: return
-	var elev_z = -55.5 * GlobalConfig.get_floor_scale()
+	var elev_z = -58.0 * GlobalConfig.get_floor_scale()
 	var elev_x_center = (corridor_width / 2.0) + (side_corridor_depth / 2.0)
 	var inst = elevator_shaft_scene.instantiate()
 	inst.name = "ElevatorShaftBlock"

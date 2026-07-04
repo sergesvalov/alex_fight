@@ -102,15 +102,16 @@ func _create_floor_group(name: String, y_pos: float, is_main: bool) -> void:
 
 func _generate_floor(f_num: int, parent: Node3D, is_main: bool) -> void:
 	var f_scale = GlobalConfig.get_floor_scale()
-	var corridor_start_z = 15.0 * f_scale
+	var corridor_start_z = 13.05 * f_scale
 	var total_corridor_end = -58.0 * f_scale
 	
 	_generate_corridor_shell(parent, corridor_start_z, total_corridor_end)
 	_generate_north_block(parent, total_corridor_end)
-	_generate_south_block(parent, corridor_start_z)
 	
 	_generate_rooms_side(f_num, parent, true, corridor_start_z, total_corridor_end)
 	_generate_rooms_side(f_num, parent, false, corridor_start_z, total_corridor_end)
+	
+	_generate_south_block(parent, corridor_start_z)
 	
 	_generate_map_decals(parent)
 	_generate_corridor_lights(parent, corridor_start_z, total_corridor_end, f_num)
