@@ -32,6 +32,7 @@ func _ready() -> void:
 		
 		# Door and hole variables strictly follow player height
 		room_door_width *= p_scale
+		room_door_height *= p_scale
 		room_door_opening_width *= p_scale
 		util_door_width *= p_scale
 		util_door_height *= p_scale

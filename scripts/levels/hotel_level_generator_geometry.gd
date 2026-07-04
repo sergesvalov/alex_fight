@@ -99,6 +99,12 @@ func _generate_rooms_side(f_num: int, parent: Node3D, is_left: bool, corridor_st
 		
 		if prev_z > door_top_z:
 			_create_wall(parent, "CorrWall_" + side_str + str(i), Vector3(wall_x, 0, (prev_z + door_top_z) / 2.0), prev_z - door_top_z)
+			
+		var lintel_height = corridor_height - room_door_height
+		if lintel_height > 0.01:
+			var lintel_y = room_door_height + lintel_height / 2.0
+			_create_csg_box(parent, "CorrWall_" + side_str + "Lintel_" + str(i), Vector3(wall_x, lintel_y, door_center_z), Vector3(wall_thickness, lintel_height, room_door_opening_width), false, false)
+
 		prev_z = door_bottom_z
 		
 	var end_wall_z = total_corridor_end
