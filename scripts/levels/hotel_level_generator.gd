@@ -105,20 +105,39 @@ func _ready() -> void:
 			nav_region.bake_navigation_mesh()
 
 func _apply_stylization() -> void:
+	var orig_carpet = carpet_color
+	var orig_map = map_texture
+	
 	for floor_node in get_children():
 		if floor_node.name.begins_with("GeneratedFloor"):
-			if floor_node.has_node("CorridorFloor"):
-				var cf = floor_node.get_node("CorridorFloor")
-				if cf is CSGBox3D:
-					var material = StandardMaterial3D.new()
-					material.albedo_texture = preload("res://assets/textures/hotel_carpet.jpg")
-					material.albedo_color = carpet_color
-					material.uv1_scale = Vector3(10, 10, 10)
-					cf.material = material
+			var f_num = floor_number
+			if floor_node.name.ends_with("_Above"):
+				f_num += 1
+			elif floor_node.name.ends_with("_Below"):
+				f_num -= 1
+				
+			if f_num != floor_number:
+				_apply_external_styles(f_num)
+			else:
+				carpet_color = orig_carpet
+				map_texture = orig_map
+				
+			for node_name in ["CorridorFloor", "CorridorCeiling"]:
+				if floor_node.has_node(node_name):
+					var cf = floor_node.get_node(node_name)
+					if cf is CSGBox3D:
+						var material = StandardMaterial3D.new()
+						material.albedo_texture = preload("res://assets/textures/hotel_carpet.jpg")
+						material.albedo_color = carpet_color
+						material.uv1_scale = Vector3(10, 10, 10)
+						cf.material = material
 			
 			for child in floor_node.get_children():
 				if child is HotelRoom:
 					child.carpet_color = carpet_color
+					
+	carpet_color = orig_carpet
+	map_texture = orig_map
 
 # endregion
 
