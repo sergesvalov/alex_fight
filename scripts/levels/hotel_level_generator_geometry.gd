@@ -5,14 +5,15 @@ class_name HotelLevelGeneratorGeometry
 # region Corridor Shell & Rooms
 
 func _generate_corridor_shell(parent: Node3D, corridor_start_z: float, total_corridor_end: float) -> void:
-	var corridor_length = corridor_start_z - total_corridor_end
-	var corridor_center_z = (corridor_start_z + total_corridor_end) / 2.0
+	var f_scale = GlobalConfig.get_floor_scale()
+	var corridor_length = 60.0 * f_scale
+	var corridor_center_z = 0.0 * f_scale
 	
 	var floor_y = -floor_thickness / 2.0
 	var ceil_y = corridor_height + (floor_thickness / 2.0)
 	
-	var hotel_width = 22.35 * GlobalConfig.get_floor_scale()
-	var hotel_center_x = -0.175 * GlobalConfig.get_floor_scale()
+	var hotel_width = 22.35 * f_scale
+	var hotel_center_x = -0.175 * f_scale
 	
 	_create_csg_box(parent, "CorridorFloor", Vector3(hotel_center_x, floor_y, corridor_center_z), Vector3(hotel_width, floor_thickness, corridor_length), true)
 	_create_csg_box(parent, "CorridorCeiling", Vector3(hotel_center_x, ceil_y, corridor_center_z), Vector3(hotel_width, floor_thickness, corridor_length), true)
@@ -21,10 +22,8 @@ func _generate_outer_shell(parent: Node3D) -> void:
 	var f_scale = GlobalConfig.get_floor_scale()
 	var left_x = -10.75 * f_scale
 	var right_x = 10.75 * f_scale
-	# North stairs extend to -69.5
-	var top_z = -69.5 * f_scale
-	# South stairs end at 13.05 + 11.5 = 24.55
-	var bottom_z = 24.55 * f_scale
+	var top_z = -30.0 * f_scale
+	var bottom_z = 30.0 * f_scale
 	
 	var width = right_x - left_x
 	var length = bottom_z - top_z
@@ -105,10 +104,8 @@ func _generate_rooms_side(f_num: int, parent: Node3D, is_left: bool, corridor_st
 
 		prev_z = door_bottom_z
 		
-	var end_wall_z = total_corridor_end
-	if not is_left:
-		# The right side has a side corridor (alcove) for Maintenance and Elevator
-		end_wall_z = HotelLevelCoordinates.get_alcove_south_wall_z()
+	var f_scale = GlobalConfig.get_floor_scale()
+	var end_wall_z = -30.0 * f_scale if is_left else -20.0 * f_scale
 		
 	if prev_z > end_wall_z:
 		_create_wall(parent, "CorrWall_" + side_str + "end", Vector3(wall_x, 0, (end_wall_z + prev_z) / 2.0), prev_z - end_wall_z)
@@ -160,65 +157,53 @@ func _generate_corridor_lights(parent: Node3D, start_z: float, end_z: float, f_n
 # region Block Generators
 
 func _generate_north_block(parent: Node3D, start_z: float) -> void:
+	var f_scale = GlobalConfig.get_floor_scale()
+	
 	_generate_elevator_shaft(parent)
 	_generate_maintenance_room(parent)
 		
 	var stair = stairwell_scene.instantiate()
 	stair.name = "Stairwell_N"
 	stair.transform.basis = Basis.from_euler(Vector3(0, PI, 0))
-	stair.transform.origin = Vector3(0, 0, start_z)
+	var stair_z = -27.5 * f_scale
+	stair.transform.origin = Vector3(0, 0, stair_z)
 	parent.add_child(stair)
 	stair.owner = get_tree().edited_scene_root
 	
-	_generate_stairwell_junction(parent, start_z, true)
+	# Cap the North Stairs (between stairs and Horiz Corridor)
+	_generate_stairwell_junction(parent, -25.0 * f_scale, true)
 	
-	# Fill in missing walls for the alcove on the right
-	var east_wall_x = (corridor_width / 2.0) + side_corridor_depth
-	var south_wall_z = HotelLevelCoordinates.get_alcove_south_wall_z()
-	var south_wall_x_start = corridor_width / 2.0 - wall_thickness / 2.0
-	var south_wall_length = side_corridor_depth + wall_thickness
-	
-	# Gap 1: South wall of alcove
-	_create_csg_box(parent, "AlcoveSouthWall", Vector3(south_wall_x_start + south_wall_length/2.0, corridor_height / 2.0, south_wall_z), Vector3(south_wall_length, corridor_height, wall_thickness), false, false)
-	
-	# Gap 2: East wall of alcove between Maintenance and Elevator
-	var gap_z_start = HotelLevelCoordinates.get_alcove_east_wall_gap1_z_start()
-	var gap_z_end = HotelLevelCoordinates.get_alcove_east_wall_gap1_z_end()
-	_create_wall(parent, "AlcoveEastWall", Vector3(east_wall_x, 0, (gap_z_start + gap_z_end) / 2.0), gap_z_start - gap_z_end)
-	
-	# Gap 3: East wall of alcove from -48.0 to -47.5
-	var gap2_z_start = HotelLevelCoordinates.get_alcove_east_wall_gap2_z_start()
-	var gap2_z_end = HotelLevelCoordinates.get_alcove_east_wall_gap2_z_end()
-	_create_wall(parent, "AlcoveEastWall_South", Vector3(east_wall_x, 0, (gap2_z_start + gap2_z_end) / 2.0), gap2_z_start - gap2_z_end)
+	# Horiz Corridor Top Wall (Separating Elevator and Horiz Corridor)
+	# Spans from X = 3.0 to Maintenance room at X = 7.75
+	var elev_w_start = 3.0 * f_scale
+	var elev_w_end = 8.0 * f_scale
+	var elev_w_center = (elev_w_start + elev_w_end) / 2.0
+	_create_csg_box(parent, "ElevatorSouthWall", Vector3(elev_w_center, corridor_height / 2.0, -25.0 * f_scale - wall_thickness/2.0), Vector3(elev_w_end - elev_w_start, corridor_height, wall_thickness), false, false)
 
 func _generate_south_block(parent: Node3D, stair_z: float) -> void:
-	# First, generate the solid wall closing the corridor, which also cuts the door hole at X=0
-	_generate_stairwell_junction(parent, stair_z, false)
+	var f_scale = GlobalConfig.get_floor_scale()
+	
+	# Cap the vertical corridor at Z = 25.0
+	_generate_stairwell_junction(parent, 25.0 * f_scale, false)
 	
 	var stairwell_south_scene = load("res://scenes/levels/hotel_siberia/stairwell_south.tscn")
 	if stairwell_south_scene:
 		var stair_inst = stairwell_south_scene.instantiate()
 		stair_inst.name = "StairwellSouth"
-		# Place it slightly to the right (near 421), but its open side still covers X=0 for the door
-		stair_inst.position = Vector3(2.0, 0, stair_z)
+		# Place it shifted right to cover both the corridor and room 421 space
+		stair_inst.position = Vector3(3.875 * f_scale, 0, 27.5 * f_scale)
 		parent.add_child(stair_inst)
 		stair_inst.owner = get_tree().edited_scene_root
 		
-		var inst = HotelDoorGenerator.create_stairwell_door(parent, Vector3(0, 0, stair_z), 0, false)
+		# Generate the door into the south stairwell
+		var inst = HotelDoorGenerator.create_stairwell_door(parent, Vector3(0, 0, 25.0 * f_scale), 0, false)
 		if inst and Engine.is_editor_hint() and get_tree().edited_scene_root:
 			inst.owner = get_tree().edited_scene_root
-
-	# Cap the south end of the corridor with a solid wall
-	var wall_w = corridor_width + wall_thickness * 2.0
-	var wall_h = corridor_height
-	var wall_thick = wall_thickness
-	var w_z = 13.05 * GlobalConfig.get_floor_scale() + (wall_thick / 2.0)
-	_create_csg_box(parent, "SouthEndWall", Vector3(0, wall_h / 2.0, w_z), Vector3(wall_w, wall_h, wall_thick), false, false)
 
 func _generate_stairwell_junction(parent: Node3D, z_pos: float, is_north: bool) -> void:
 	var prefix = "North" if is_north else "South"
 	
-	var wall_w = 7.0
+	var wall_w = corridor_width + wall_thickness * 2.0
 	var wall_h = corridor_height
 	var wall_thick = wall_thickness
 	
@@ -231,9 +216,10 @@ func _generate_stairwell_junction(parent: Node3D, z_pos: float, is_north: bool) 
 	var hole_y = hole_height / 2.0
 	_create_csg_hole(wall_node, prefix + "StairwellJunctionHole", Vector3(0, hole_y - (wall_h / 2.0), 0), Vector3(hole_width, hole_height, wall_thick + room_hole_margin))
 	
-	var inst = HotelDoorGenerator.create_stairwell_door(parent, Vector3(0, 0, z_pos), PI if is_north else 0.0, is_north)
-	if inst and Engine.is_editor_hint() and get_tree().edited_scene_root:
-		inst.owner = get_tree().edited_scene_root
+	if is_north:
+		var inst = HotelDoorGenerator.create_stairwell_door(parent, Vector3(0, 0, z_pos), PI, true)
+		if inst and Engine.is_editor_hint() and get_tree().edited_scene_root:
+			inst.owner = get_tree().edited_scene_root
 
 
 func _generate_elevator_shaft(parent: Node3D) -> void:
@@ -242,7 +228,8 @@ func _generate_elevator_shaft(parent: Node3D) -> void:
 	var inst = elevator_shaft_scene.instantiate()
 	inst.name = "ElevatorShaftBlock"
 	inst.rotation_degrees.y = 180
-	inst.transform.origin = Vector3(5.75 * GlobalConfig.get_floor_scale(), 0, elev_z)
+	# Placed in the space between North Stairs and Maint Room
+	inst.transform.origin = Vector3(5.5 * GlobalConfig.get_floor_scale(), 0, elev_z)
 	HotelDoorGenerator.create_elevator_door(inst, Vector3.ZERO)
 	parent.add_child(inst)
 	inst.owner = get_tree().edited_scene_root
@@ -250,10 +237,10 @@ func _generate_elevator_shaft(parent: Node3D) -> void:
 func _generate_maintenance_room(parent: Node3D) -> void:
 	if not maintenance_room_scene: return
 	var maint_z = HotelLevelCoordinates.get_maintenance_z()
-	var east_wall_x = (corridor_width / 2.0) + side_corridor_depth
 	var inst = maintenance_room_scene.instantiate()
 	inst.name = "MaintenanceRoomBlock"
-	inst.transform.origin = Vector3(east_wall_x, 0, maint_z)
+	# Placed on the far right edge
+	inst.transform.origin = Vector3(9.25 * GlobalConfig.get_floor_scale(), 0, maint_z)
 	parent.add_child(inst)
 	inst.owner = get_tree().edited_scene_root
 

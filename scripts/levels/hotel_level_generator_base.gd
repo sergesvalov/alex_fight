@@ -13,7 +13,7 @@ class_name HotelLevelGeneratorBase
 @export var num_double_rooms: int = 6
 @export var num_single_rooms: int = 9
 @export var double_room_step: float = 10.0
-@export var single_room_step: float = 6.0
+@export var single_room_step: float = 5.0
 
 @export_group("Layout & Dimensions")
 @export var corridor_width: float = 6.0
