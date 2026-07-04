@@ -269,17 +269,24 @@ func _generate_north_block(parent: Node, start_z: float) -> void:
 	var wall_y_center = corridor_height / 2.0
 	var hole_y = (util_door_height - corridor_height) / 2.0
 
-	var elev_wall = _create_csg_box(parent, "ElevatorWallW", Vector3(3.5, wall_y_center, 7.5), Vector3(1.2, corridor_height, 5), false, false)
-	_create_csg_hole(elev_wall, "ElevatorDoorHole", Vector3(0, hole_y, 0), Vector3(1.6, util_door_height, util_door_width))
+	# 1. Main corridor right wall (Z=3.0 to start_z)
+	var main_wall_len = start_z - 3.0
+	if main_wall_len > 0:
+		_create_csg_box(parent, "MainCorrRightWall", Vector3(3.5, wall_y_center, 3.0 + main_wall_len / 2.0), Vector3(1.2, corridor_height, main_wall_len), false, false)
+		
+	# 2. Side corridor North wall (Z=3.0, X from 3.5 to 8.5)
+	var side_north_wall = _create_csg_box(parent, "SideCorrNorthWall", Vector3(6.0, wall_y_center, 3.0), Vector3(5.0, corridor_height, 1.2), false, false)
+	_create_csg_hole(side_north_wall, "ElevatorDoorHole", Vector3(0, hole_y, 0), Vector3(util_door_width, util_door_height, 1.6))
 	
-	var elev_shaft = _create_csg_box(parent, "ElevatorShaft", Vector3(7.4, wall_y_center, 7.5), Vector3(6.6, corridor_height, 5), false, false)
+	# 3. Elevator Shaft and Doors (Z > 3.0)
+	var elev_shaft = _create_csg_box(parent, "ElevatorShaft", Vector3(6.0, wall_y_center, 5.5), Vector3(5.0, corridor_height, 5.0), false, false)
 	elev_shaft.flip_faces = true
-	_create_light(parent, "ElevatorLight", Vector3(6.0, 3.5, 7.5), Color(0.9, 0.95, 1, 1))
+	_create_light(parent, "ElevatorLight", Vector3(6.0, 3.5, 3.5), Color(0.9, 0.95, 1, 1))
 	
 	var elev_doors = CSGBox3D.new()
 	elev_doors.name = "ElevatorDoors"
-	elev_doors.size = Vector3(0.2, util_door_height, util_door_width)
-	elev_doors.transform.origin = Vector3(3.5, util_door_height / 2.0, 7.5)
+	elev_doors.size = Vector3(util_door_width, util_door_height, 0.2)
+	elev_doors.transform.origin = Vector3(6.0, util_door_height / 2.0, 3.0)
 	var metal_mat = StandardMaterial3D.new()
 	metal_mat.albedo_color = Color(0.4, 0.4, 0.45)
 	metal_mat.metallic = 0.8
@@ -289,26 +296,23 @@ func _generate_north_block(parent: Node, start_z: float) -> void:
 	parent.add_child(elev_doors)
 	elev_doors.owner = get_tree().edited_scene_root
 	
-	var maint_wall = _create_csg_box(parent, "MaintenanceWallW", Vector3(3.5, wall_y_center, 2.5), Vector3(1.2, corridor_height, 5), false, false)
-	_create_csg_hole(maint_wall, "MaintenanceDoorHole", Vector3(0, hole_y, 0), Vector3(1.6, util_door_height, util_door_width))
+	# 4. Side corridor East wall (X=8.5, Z from 0.0 to 3.0)
+	var side_east_wall = _create_csg_box(parent, "SideCorrEastWall", Vector3(8.5, wall_y_center, 1.5), Vector3(1.2, corridor_height, 3.0), false, false)
+	_create_csg_hole(side_east_wall, "MaintenanceDoorHole", Vector3(0, hole_y, 0), Vector3(1.6, util_door_height, util_door_width))
 	
-	var maint_room = _create_csg_box(parent, "MaintenanceRoom", Vector3(7.4, wall_y_center, 2.5), Vector3(6.6, corridor_height, 5), false, false)
+	# 5. Maintenance Room (X > 8.5)
+	var maint_room = _create_csg_box(parent, "MaintenanceRoom", Vector3(11.0, wall_y_center, 1.5), Vector3(5.0, corridor_height, 3.0), false, false)
 	maint_room.flip_faces = true
-	_create_csg_hole(maint_room, "MaintenanceRoomDoorHole", Vector3(-3.3, hole_y, 0), Vector3(2.0, util_door_height, util_door_width))
-	_create_light(parent, "MaintenanceLight", Vector3(7.4, 3.5, 2.5), Color(1.0, 0.9, 0.7, 1))
+	_create_csg_hole(maint_room, "MaintenanceRoomDoorHole", Vector3(-2.5, hole_y, 0), Vector3(2.0, util_door_height, util_door_width))
+	_create_light(parent, "MaintenanceLight", Vector3(11.0, 3.5, 1.5), Color(1.0, 0.9, 0.7, 1))
 	
 	var maint_door = door_scene.instantiate()
 	maint_door.name = "MaintenanceDoor"
-	maint_door.transform.origin = Vector3(3.5, 0, 3.4)
+	maint_door.transform.origin = Vector3(8.5, 0, 1.5)
 	maint_door.transform.basis = Basis.from_euler(Vector3(0, -PI/2, 0))
 	maint_door.scale = Vector3(util_door_scale, util_door_scale, util_door_scale) 
 	parent.add_child(maint_door)
 	maint_door.owner = get_tree().edited_scene_root
-	
-	# Угловая стена на правой стороне (от лифта до Северной лестницы)
-	var corner_len = start_z - 10.0
-	if corner_len > 0:
-		_create_csg_box(parent, "NorthRightCorner", Vector3(3.5, wall_y_center, 10.0 + corner_len / 2.0), Vector3(1.2, corridor_height, corner_len), false, false)
 	
 	# Северная лестница выровнена по самому верху коридора
 	var stair = stairwell_scene.instantiate()
