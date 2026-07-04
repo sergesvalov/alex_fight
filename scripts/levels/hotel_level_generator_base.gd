@@ -21,12 +21,12 @@ class_name HotelLevelGeneratorBase
 @export var floor_height: float = 4.0
 @export var floor_thickness: float = 0.5
 @export var wall_thickness: float = 0.6
-@export var stairwell_south_offset: float = 10.0
+@export var stairwell_south_offset: float = 2.0
 @export var total_corridor_end_margin: float = 1.5
 
 @export_group("North Block Layout")
-@export var side_corridor_z_start: float = 0.0
-@export var side_corridor_z_end: float = 3.0
+@export var side_corridor_z_start: float = 4.0
+@export var side_corridor_z_end: float = 10.0
 @export var side_corridor_depth: float = 5.0
 @export var elev_shaft_depth: float = 5.0
 @export var maint_room_depth: float = 5.0
@@ -35,13 +35,13 @@ class_name HotelLevelGeneratorBase
 
 @export_subgroup("Double Rooms Position")
 @export var double_room_x: float = -7.0
-@export var double_room_start_z: float = 4.0
-@export var double_room_wall_len: float = 6.6
+@export var double_room_start_z: float = 5.0
+@export var double_room_wall_len: float = 5.0
 
 @export_subgroup("Single Rooms Position")
 @export var single_room_x: float = 6.0
-@export var single_room_start_z: float = -3.6
-@export var single_room_wall_len: float = 2.8
+@export var single_room_start_z: float = 1.0
+@export var single_room_wall_len: float = 3.0
 
 @export_group("Doors & Openings")
 @export var room_y_offset: float = 0.15
