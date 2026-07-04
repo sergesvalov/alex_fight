@@ -270,6 +270,22 @@ func _ready() -> void:
             else:
                 passed = false
                 
+            # -----------------------------------------------------
+            # [4] Тестирование геометрии отеля (Debug Geometry)
+            # -----------------------------------------------------
+            print("\n[4] Тестирование геометрии отеля (Debug Geometry)...")
+            var DebugGeometry = load("res://scripts/utils/debug_geometry.gd")
+            if DebugGeometry:
+                var mismatches = DebugGeometry.print_room_alignments(floor_main)
+                if mismatches.size() > 0:
+                    print("     [FAILED] Найдено ", mismatches.size(), " несовпадений дверей с проемами!")
+                    passed = false
+                else:
+                    print("     [OK] Все двери идеально выровнены по проемам.")
+            else:
+                print("     [FAILED] Скрипт debug_geometry.gd не найден.")
+                passed = false
+                
         generator.queue_free()
     else:
         print("[FAILED] Не удалось загрузить скрипт генератора")
