@@ -19,9 +19,10 @@ func _generate_corridor_shell(parent: Node3D, corridor_start_z: float, total_cor
 
 func _generate_outer_shell(parent: Node3D) -> void:
 	var f_scale = GlobalConfig.get_floor_scale()
-	var left_x = -13.75 * f_scale
-	var right_x = 9.25 * f_scale
-	var top_z = -58.0 * f_scale
+	var left_x = -10.75 * f_scale
+	var right_x = 10.75 * f_scale
+	# North stairs extend to -69.5
+	var top_z = -69.5 * f_scale
 	# South stairs end at 13.05 + 11.5 = 24.55
 	var bottom_z = 24.55 * f_scale
 	
@@ -238,10 +239,10 @@ func _generate_stairwell_junction(parent: Node3D, z_pos: float, is_north: bool) 
 func _generate_elevator_shaft(parent: Node3D) -> void:
 	if not elevator_shaft_scene: return
 	var elev_z = HotelLevelCoordinates.get_elevator_z()
-	var elev_x_center = (corridor_width / 2.0) + (side_corridor_depth / 2.0)
 	var inst = elevator_shaft_scene.instantiate()
 	inst.name = "ElevatorShaftBlock"
-	inst.transform.origin = Vector3(elev_x_center, 0, elev_z)
+	inst.rotation_degrees.y = 180
+	inst.transform.origin = Vector3(5.75 * GlobalConfig.get_floor_scale(), 0, elev_z)
 	HotelDoorGenerator.create_elevator_door(inst, Vector3.ZERO)
 	parent.add_child(inst)
 	inst.owner = get_tree().edited_scene_root

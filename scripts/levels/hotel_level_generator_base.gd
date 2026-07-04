@@ -27,7 +27,7 @@ class_name HotelLevelGeneratorBase
 @export_group("North Block Layout")
 @export var side_corridor_z_start: float = 4.0
 @export var side_corridor_z_end: float = 10.0
-@export var side_corridor_depth: float = 5.0
+@export var side_corridor_depth: float = 3.75
 @export var elev_shaft_depth: float = 5.0
 @export var maint_room_depth: float = 5.0
 @export var north_block_light_y_offset: float = 0.75
