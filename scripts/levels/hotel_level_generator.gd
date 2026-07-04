@@ -284,7 +284,7 @@ func _generate_north_block(parent: Node, start_z: float) -> void:
 	
 	# 3. Elevator Shaft and Doors (Z > 3.0)
 	var elev_shaft = _create_csg_box(parent, "ElevatorShaft", Vector3(6.0, wall_y_center, 5.5), Vector3(5.0, corridor_height, 5.0), false, false)
-	elev_shaft.flip_faces = true
+	_create_csg_hole(parent, "ElevatorHole", Vector3(6.0, wall_y_center, 5.5), Vector3(4.8, corridor_height, 4.8))
 	_create_light(parent, "ElevatorLight", Vector3(6.0, 3.5, 3.5), Color(0.9, 0.95, 1, 1))
 	
 	var elev_doors = elevator_door_scene.instantiate()
@@ -299,8 +299,8 @@ func _generate_north_block(parent: Node, start_z: float) -> void:
 	
 	# 5. Maintenance Room (X > 8.5)
 	var maint_room = _create_csg_box(parent, "MaintenanceRoom", Vector3(11.0, wall_y_center, 1.5), Vector3(5.0, corridor_height, 3.0), false, false)
-	maint_room.flip_faces = true
-	_create_csg_hole(maint_room, "MaintenanceRoomDoorHole", Vector3(-2.5, hole_y, 0), Vector3(2.0, util_door_height, util_door_width))
+	_create_csg_hole(parent, "MaintenanceRoomHole", Vector3(11.0, wall_y_center, 1.5), Vector3(4.8, corridor_height, 2.8))
+	_create_csg_hole(parent, "MaintenanceRoomDoorHole", Vector3(8.5, wall_y_center + hole_y, 1.5), Vector3(2.0, util_door_height, util_door_width))
 	_create_light(parent, "MaintenanceLight", Vector3(11.0, 3.5, 1.5), Color(1.0, 0.9, 0.7, 1))
 	
 	var maint_door = door_scene.instantiate()
