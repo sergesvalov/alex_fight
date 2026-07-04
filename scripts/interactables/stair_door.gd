@@ -22,8 +22,14 @@ func interact(player: Node) -> void:
 			# Переход на новый этаж
 			GameStateManager.entered_from_stairs = true
 			GameStateManager.reset_floor(3)
-			GameStateManager.stair_spawn_position = Vector3(0, 0, 8.5) # Возле двери на 3 этаже
-			GameStateManager.stair_spawn_rotation = Vector3(0, 0, 0)
+			if global_position.z > 0:
+				GameStateManager.stair_spawn_position = Vector3(0, 0, 8.5) # Возле северной двери
+				GameStateManager.stair_spawn_rotation = Vector3(0, 0, 0)
+			else:
+				# Возле южной двери. Z координата двери - это stair_z.
+				GameStateManager.stair_spawn_position = Vector3(0, 0, global_position.z + 1.5)
+				GameStateManager.stair_spawn_rotation = Vector3(0, -PI, 0) # Смотрим на юг
+			
 			get_tree().change_scene_to_file("res://scenes/levels/hotel_siberia/hotel_level_3.tscn")
 		else:
 			# Запрещено: телепортируемся обратно на текущий этаж (Loop)

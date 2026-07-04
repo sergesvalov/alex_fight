@@ -200,9 +200,14 @@ func _generate_floor(f_num: int, parent: Node3D, is_main: bool) -> void:
 	if prev_z_right > total_corridor_end:
 		_create_wall(parent, "CorrWall_R_end", Vector3(wall_x_right, 0, (total_corridor_end + prev_z_right) / 2.0), prev_z_right - total_corridor_end)
 
-	# 5. Generate South Block (Placeholder Wall)
-	var wall_y_center = corridor_height / 2.0
-	_create_csg_box(parent, "SouthPlaceholderWall", Vector3(0, wall_y_center, stair_z), Vector3(corridor_width, corridor_height, 1.0), false, true)
+	# 5. Generate South Block (South Stairwell)
+	var stairwell_south_scene = load("res://scenes/levels/hotel_siberia/stairwell_south.tscn")
+	if stairwell_south_scene:
+		var stair_inst = stairwell_south_scene.instantiate()
+		stair_inst.name = "StairwellSouth"
+		# Positioned exactly at the end of the corridor, facing South (no rotation)
+		stair_inst.position = Vector3(0, 0, stair_z)
+		parent.add_child(stair_inst)
 		
 	print("Level geometry generated for floor " + str(f_num))
 
