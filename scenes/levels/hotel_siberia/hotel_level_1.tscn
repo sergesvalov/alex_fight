@@ -1,0 +1,13 @@
+﻿[gd_scene load_steps=4 format=3 uid="uid://hotel_level_1"]
+
+[ext_resource type="PackedScene" uid="uid://level123" path="res://scenes/levels/hotel_siberia/base_hotel_level.tscn" id="1_base"]
+[ext_resource type="Script" path="res://scripts/levels/hotel_level_1.gd" id="2_script"]
+[ext_resource type="Texture2D" path="res://assets/textures/hotel_map_3.jpg" id="3_map"]
+
+[node name="HotelLevel" instance=ExtResource("1_base")]
+script = ExtResource("2_script")
+
+[node name="HotelGeometry" parent="NavigationRegion3D" index="0"]
+floor_number = 1
+carpet_color = Color(0.8, 0.7, 0.2, 1)
+map_texture = ExtResource("3_map")

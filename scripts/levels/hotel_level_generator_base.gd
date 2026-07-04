@@ -16,7 +16,7 @@ class_name HotelLevelGeneratorBase
 @export var single_room_step: float = 6.0
 
 @export_group("Layout & Dimensions")
-@export var corridor_width: float = 5.5
+@export var corridor_width: float = 6.0
 @export var corridor_height: float = 3.5
 @export var floor_height: float = 4.0
 @export var floor_thickness: float = 0.5
@@ -39,7 +39,7 @@ class_name HotelLevelGeneratorBase
 @export var double_room_wall_len: float = 5.0
 
 @export_subgroup("Single Rooms Position")
-@export var single_room_x: float = 6.0
+@export var single_room_x: float = 5.75
 @export var single_room_start_z: float = 1.0
 @export var single_room_wall_len: float = 3.0
 

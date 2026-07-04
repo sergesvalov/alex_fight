@@ -26,7 +26,7 @@ class_name HotelRoom
 @export var floor_mesh: GeometryInstance3D
 
 @export_group("Transforms")
-@export var label_door_offset: Vector3 = Vector3(0.75, 1.5, 0.06)
+@export var label_door_offset: Vector3 = Vector3(0.5, 1.5, 0.06)
 
 func _ready() -> void:
 	if not Engine.is_editor_hint():

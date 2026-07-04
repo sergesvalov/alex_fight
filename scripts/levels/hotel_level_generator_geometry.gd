@@ -47,7 +47,8 @@ func _generate_rooms_side(f_num: int, parent: Node3D, is_left: bool, corridor_st
 		if "carpet_color" in room:
 			room.carpet_color = carpet_color
 			
-		var door_center_z = c_z + room_door_z_offset
+		var current_door_offset = room_door_z_offset if is_left else -0.25
+		var door_center_z = c_z + current_door_offset
 		var half_opening = room_door_opening_width / 2.0
 		var door_top_z = door_center_z + half_opening
 		var door_bottom_z = door_center_z - half_opening
@@ -94,7 +95,7 @@ func _generate_north_block(parent: Node3D, start_z: float) -> void:
 	var main_wall_len = start_z - side_corridor_z_end
 	if main_wall_len > 0:
 		var center_z = side_corridor_z_end + (main_wall_len / 2.0)
-		var center_x = corridor_width / 2.0
+		var center_x = corridor_width / 2.0 - wall_thickness / 2.0
 		_create_csg_box(parent, "MainCorrRightWall", Vector3(center_x, corridor_height / 2.0, center_z), Vector3(wall_thickness, corridor_height, main_wall_len), false, false)
 		
 	var stair = stairwell_scene.instantiate()
