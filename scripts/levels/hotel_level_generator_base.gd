@@ -44,7 +44,7 @@ class_name HotelLevelGeneratorBase
 @export var single_room_wall_len: float = 3.0
 
 @export_group("Doors & Openings")
-@export var room_y_offset: float = 0.15
+@export var room_y_offset: float = 0.0
 @export var room_door_width: float = 1.0
 @export var room_door_z_offset: float = 0.5
 @export var room_door_opening_width: float = 1.2
