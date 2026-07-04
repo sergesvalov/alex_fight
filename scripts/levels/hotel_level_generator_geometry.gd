@@ -101,8 +101,13 @@ func _generate_rooms_side(f_num: int, parent: Node3D, is_left: bool, corridor_st
 			_create_wall(parent, "CorrWall_" + side_str + str(i), Vector3(wall_x, 0, (prev_z + door_top_z) / 2.0), prev_z - door_top_z)
 		prev_z = door_bottom_z
 		
-	if prev_z > total_corridor_end:
-		_create_wall(parent, "CorrWall_" + side_str + "end", Vector3(wall_x, 0, (total_corridor_end + prev_z) / 2.0), prev_z - total_corridor_end)
+	var end_wall_z = total_corridor_end
+	if not is_left:
+		# The right side has a side corridor (alcove) from -48.0 to -56.0 for Maintenance and Elevator
+		end_wall_z = -48.0 * GlobalConfig.get_floor_scale()
+		
+	if prev_z > end_wall_z:
+		_create_wall(parent, "CorrWall_" + side_str + "end", Vector3(wall_x, 0, (end_wall_z + prev_z) / 2.0), prev_z - end_wall_z)
 
 func _generate_map_decals(parent: Node3D) -> void:
 	# Place near the elevator (North end, Z=-42.5) where it's a solid wall on both sides
@@ -154,9 +159,10 @@ func _generate_north_block(parent: Node3D, start_z: float) -> void:
 	_generate_elevator_shaft(parent)
 	_generate_maintenance_room(parent)
 	
-	var main_wall_len = start_z - side_corridor_z_end
+	var side_corr_z_end = -56.0 * GlobalConfig.get_floor_scale()
+	var main_wall_len = side_corr_z_end - start_z
 	if main_wall_len > 0:
-		var center_z = side_corridor_z_end + (main_wall_len / 2.0)
+		var center_z = start_z + (main_wall_len / 2.0)
 		var center_x = corridor_width / 2.0 - wall_thickness / 2.0
 		_create_csg_box(parent, "MainCorrRightWall", Vector3(center_x, corridor_height / 2.0, center_z), Vector3(wall_thickness, corridor_height, main_wall_len), false, false)
 		
@@ -166,8 +172,6 @@ func _generate_north_block(parent: Node3D, start_z: float) -> void:
 	stair.transform.origin = Vector3(0, 0, start_z)
 	parent.add_child(stair)
 	stair.owner = get_tree().edited_scene_root
-	
-	_create_csg_box(parent, "NorthFillerRight", Vector3(7.4, 2.0, 9.0), Vector3(7.8, 4.0, 2.0), false, false)
 	
 	_generate_stairwell_junction(parent, start_z, true)
 
@@ -232,12 +236,6 @@ func _generate_elevator_shaft(parent: Node3D) -> void:
 	HotelDoorGenerator.create_elevator_door(inst, Vector3.ZERO)
 	parent.add_child(inst)
 	inst.owner = get_tree().edited_scene_root
-	
-	var w_x = corridor_width / 2.0 - wall_thickness / 2.0
-	var hole_width = 1.4 # Same as ElevatorDoorHole in elevator_shaft.tscn
-	var hole_height = 2.2 # Same as ElevatorDoorHole
-	var hole_y = hole_height / 2.0
-	_create_csg_hole(parent, "ElevatorCorrHole", Vector3(w_x, hole_y, elev_z), Vector3(wall_thickness + room_hole_margin, hole_height, hole_width))
 
 func _generate_maintenance_room(parent: Node3D) -> void:
 	if not maintenance_room_scene: return
@@ -248,11 +246,5 @@ func _generate_maintenance_room(parent: Node3D) -> void:
 	inst.transform.origin = Vector3(east_wall_x, 0, maint_z)
 	parent.add_child(inst)
 	inst.owner = get_tree().edited_scene_root
-	
-	var w_x = corridor_width / 2.0 - wall_thickness / 2.0
-	var hole_width = util_door_width
-	var hole_height = util_door_height
-	var hole_y = hole_height / 2.0
-	_create_csg_hole(parent, "MaintenanceCorrHole", Vector3(w_x, hole_y, maint_z), Vector3(wall_thickness + room_hole_margin, hole_height, hole_width))
 
 # endregion
