@@ -34,12 +34,12 @@ func _generate_rooms_side(f_num: int, parent: Node3D, is_left: bool, corridor_st
 		var room
 		if is_left:
 			room = double_room_large_scene.instantiate() if i < 2 else double_room_scene.instantiate()
-			HotelDoorGenerator.create_room_main_door(room, Vector3(4.3 * GlobalConfig.get_floor_scale(), 0, 0.5 * GlobalConfig.get_floor_scale()), true)
-			HotelDoorGenerator.create_room_wc_door(room, Vector3(1.55 * GlobalConfig.get_floor_scale(), 0, -3.6 * GlobalConfig.get_floor_scale()), true)
+			HotelDoorGenerator.create_room_main_door(room, Vector3(4.3, 0, 0.5), true)
+			HotelDoorGenerator.create_room_wc_door(room, Vector3(1.55, 0, -3.6), true)
 		else:
 			room = single_room_scene.instantiate()
-			HotelDoorGenerator.create_room_main_door(room, Vector3(-2.8 * GlobalConfig.get_floor_scale(), 0, -0.25 * GlobalConfig.get_floor_scale()), false)
-			HotelDoorGenerator.create_room_wc_door(room, Vector3(-2.2 * GlobalConfig.get_floor_scale(), 0, -0.25 * GlobalConfig.get_floor_scale()), false)
+			HotelDoorGenerator.create_room_main_door(room, Vector3(-2.8, 0, -0.25), false)
+			HotelDoorGenerator.create_room_wc_door(room, Vector3(-2.2, 0, -0.25), false)
 			
 		room.name = prefix + str(i + 1) + "_F" + str(f_num)
 		room.transform.origin = Vector3(room_x, room_y_offset, c_z)
@@ -53,7 +53,7 @@ func _generate_rooms_side(f_num: int, parent: Node3D, is_left: bool, corridor_st
 			
 		var current_door_offset = room_door_z_offset if is_left else -0.25 * GlobalConfig.get_floor_scale()
 		var half_opening = room_door_opening_width / 2.0
-		var door_center_z = c_z + current_door_offset - half_opening if is_left else c_z + current_door_offset + half_opening
+		var door_center_z = c_z + current_door_offset
 		var door_top_z = door_center_z + half_opening
 		var door_bottom_z = door_center_z - half_opening
 		
