@@ -11,8 +11,8 @@ func _generate_corridor_shell(parent: Node3D, corridor_start_z: float, total_cor
 	var floor_y = -floor_thickness / 2.0
 	var ceil_y = corridor_height + (floor_thickness / 2.0)
 	
-	var hotel_width = 22.35
-	var hotel_center_x = -0.175
+	var hotel_width = 22.35 * GlobalConfig.get_floor_scale()
+	var hotel_center_x = -0.175 * GlobalConfig.get_floor_scale()
 	
 	_create_csg_box(parent, "CorridorFloor", Vector3(hotel_center_x, floor_y, corridor_center_z), Vector3(hotel_width, floor_thickness, corridor_length), true)
 	_create_csg_box(parent, "CorridorCeiling", Vector3(hotel_center_x, ceil_y, corridor_center_z), Vector3(hotel_width, floor_thickness, corridor_length), true)

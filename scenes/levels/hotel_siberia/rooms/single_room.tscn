@@ -42,7 +42,7 @@ room_label = NodePath("RoomLabel")
 door_body = NodePath("MainDoor/AnimatableBody3D")
 
 [node name="MainDoor" parent="." instance=ExtResource("6_door")]
-transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -3.0, 0.0, -0.25)
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -2.8, 0.0, -0.25)
 
 [node name="WCDoor" parent="." instance=ExtResource("6_door")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.2, 0.0, -0.25)

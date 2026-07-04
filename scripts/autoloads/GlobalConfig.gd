@@ -5,18 +5,18 @@ var room_layouts = {
 	"SingleRoom": {
 		"bounds": Vector3(7.0, 3.5, 6.0),
 		"props": {
-			"MainDoor": {"pos": Vector3(-3.0, 0.0, -0.25), "anchor_x": 0, "anchor_z": 0},
+			"MainDoor": {"pos": Vector3(-2.8, 0.0, -0.25), "anchor_x": 0, "anchor_z": 0},
 			"WCDoor": {"pos": Vector3(-2.2, 0.0, -0.25), "anchor_x": 0, "anchor_z": 0},
 			"Bed": {"pos": Vector3(2.0, 0.0, 2.0), "anchor_x": 1, "anchor_z": 1},
 			"Table": {"pos": Vector3(2.0, 0.0, -2.5), "anchor_x": 1, "anchor_z": -1},
 			"Chair1": {"pos": Vector3(2.0, 0.0, -1.8), "anchor_x": 1, "anchor_z": -1},
-			"RoomLabel": {"pos": Vector3(-3.0, 2.2, 0.5), "anchor_x": 0, "anchor_z": 0}
+			"RoomLabel": {"pos": Vector3(-2.8, 2.2, 0.5), "anchor_x": 0, "anchor_z": 0}
 		}
 	},
 	"DoubleRoom": {
 		"bounds": Vector3(8.9, 3.5, 10.0),
 		"props": {
-			"MainDoor": {"pos": Vector3(4.25, 0.0, 0.5), "anchor_x": 0, "anchor_z": 0},
+			"MainDoor": {"pos": Vector3(4.3, 0.0, 0.5), "anchor_x": 0, "anchor_z": 0},
 			"WCDoor": {"pos": Vector3(1.55, 0.0, -3.6), "anchor_x": 0, "anchor_z": 0},
 			"Bed1": {"pos": Vector3(-2.5, 0.0, -2.0), "anchor_x": -1, "anchor_z": 0},
 			"Bed2": {"pos": Vector3(-2.5, 0.0, 2.0), "anchor_x": -1, "anchor_z": 0},

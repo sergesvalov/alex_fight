@@ -43,7 +43,7 @@ room_label = NodePath("RoomLabel")
 door_body = NodePath("MainDoor/AnimatableBody3D")
 
 [node name="MainDoor" parent="." instance=ExtResource("7_door")]
-transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, 4.25, 0.0, 0.5)
+transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, 4.3, 0.0, 0.5)
 
 [node name="WCDoor" parent="." instance=ExtResource("7_door")]
 transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 1.55, 0.0, -3.6)
@@ -138,12 +138,6 @@ occluder = SubResource("BoxOccluder3D_WallS")
 
 [node name="Occluder" type="OccluderInstance3D" parent="WallW"]
 occluder = SubResource("BoxOccluder3D_WallW")
-
-[node name="Occluder2" type="OccluderInstance3D" parent="WallE_L"]
-occluder = SubResource("BoxOccluder3D_WallE")
-
-[node name="Occluder3" type="OccluderInstance3D" parent="WallE_R"]
-occluder = SubResource("BoxOccluder3D_WallE")
 
 
 
