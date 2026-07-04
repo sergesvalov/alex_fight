@@ -76,7 +76,7 @@ size = Vector3(0.5, 10, 11.5)
 material = SubResource("StandardMaterial3D_wall")
 
 [node name="MainDoor" parent="." instance=ExtResource("3_door")]
-transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 0, 0)
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0.75, 0, 0)
 
 [node name="LightMain" type="OmniLight3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 1.75)
