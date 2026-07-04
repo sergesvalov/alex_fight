@@ -26,3 +26,152 @@ How to verify:
    This will print all Door AABBs and Hole AABBs, and report any mismatches greater than 5cm on both X and Z axes, as well as floating doors.
 
 WARNING: NEVER blindly multiply door positions by f_scale if they are already anchored or if the generator does not multiply its offsets. Always consult hotel_level_generator.gd to see which base variables (like wall_thickness or room_door_z_offset) are scaled, and ensure the local door logic matches!
+
+## Hotel Level Geometry Maps
+
+The following pseudographics show the 4th-floor layout in 3 different horizontal cross-sections, verifying the parallelepiped bounding box and doorway alignment.
+
+### Level 1: Floor Level (Y = 0)
+Shows all rooms, corridor, doorways (D), and stairs/elevators.
+
+```text
+Z = -58.0 (North)
++--------------+--------+-------+-------+
+|              | ELEV   | MAINT |       |
+|              +---D----+---D---+       |
+|    EMPTY     |................| EMPTY |
+|              |................|       |
++--------------+................+-------+  Z = -47.5
+|              |................D  410  |
+|    401       D................|       |
+|   (DBL)      |................+-------+
+|              |................D  411  |
++--------------+................|       |
+|              |................+-------+
+|    402       D................D  412  |
+|   (DBL)      |................|       |
+|              |................+-------+
+|              |................D  413  |
++--------------+................|       |
+|              |................+-------+
+|    403       D................D  415  |
+|   (DBL)      |................|       |
++--------------+.......++.......+-------+
+|              |.......||.......D  416  |
+|    405       D.......||.......|       |
+|   (DBL)      |.......++.......+-------+
+|              |................D  417  |
++--------------+................|       |
+|              |................+-------+
+|    406       D................D  420  |
+|   (DBL)      |................|       |
+|              |................+-------+
+|              |................D  421  |
++--------------+................|       |
+|              |................+-------+
+|    408       D................|       |
+|   (DBL)      |................| EMPTY |
+|              |.......+------+ |       |
++--------------+       |STAIRS| |       |
+|                      D SOUTH| +-------+
+|    EMPTY             |      | |       |
+|                      |      | |       |
++----------------------+------+--+------+  Z = +24.55 (South)
+```
+
+### Level 2: Above Door Lintel (Y = 2.5)
+Shows the geometry exactly 1 pixel above the door holes. Notice that all doorways (D) are replaced by solid walls (|), proving there are no holes extending upwards.
+
+```text
+Z = -58.0 (North)
++--------------+--------+-------+-------+
+|              | ELEV   | MAINT |       |
+|              +--------+-------+       |
+|    EMPTY     |                | EMPTY |
+|              |                |       |
++--------------+                +-------+  Z = -47.5
+|              |                |  410  |
+|    401       |                |       |
+|   (DBL)      |                +-------+
+|              |                |  411  |
++--------------+                |       |
+|              |                +-------+
+|    402       |                |  412  |
+|   (DBL)      |                |       |
+|              |                +-------+
+|              |    CORRIDOR    |  413  |
++--------------+                |       |
+|              |                +-------+
+|    403       |                |  415  |
+|   (DBL)      |                |       |
++--------------+       ++       +-------+
+|              |       ||       |  416  |
+|    405       |       ||       |       |
+|   (DBL)      |       ++       +-------+
+|              |                |  417  |
++--------------+                |       |
+|              |                +-------+
+|    406       |                |  420  |
+|   (DBL)      |                |       |
+|              |                +-------+
+|              |                |  421  |
++--------------+                |       |
+|              |                +-------+
+|    408       |                |       |
+|   (DBL)      |                | EMPTY |
+|              |       +------+ |       |
++--------------+       |STAIRS| |       |
+|                      | SOUTH| +-------+
+|    EMPTY             |      | |       |
+|                      |      | |       |
++----------------------+------+--+------+  Z = +24.55 (South)
+```
+
+### Level 3: Ceiling Joint (Y = 3.5)
+Shows the geometry where the walls meet the ceiling. It is identical to Level 2, proving the monolithic nature of the upper walls with zero gaps.
+
+```text
+Z = -58.0 (North)
++--------------+--------+-------+-------+
+|              | ELEV   | MAINT |       |
+|              +--------+-------+       |
+|    EMPTY     |                | EMPTY |
+|              |                |       |
++--------------+                +-------+  Z = -47.5
+|              |                |  410  |
+|    401       |                |       |
+|   (DBL)      |                +-------+
+|              |                |  411  |
++--------------+                |       |
+|              |                +-------+
+|    402       |                |  412  |
+|   (DBL)      |                |       |
+|              |                +-------+
+|              |    CORRIDOR    |  413  |
++--------------+                |       |
+|              |                +-------+
+|    403       |                |  415  |
+|   (DBL)      |                |       |
++--------------+       ++       +-------+
+|              |       ||       |  416  |
+|    405       |       ||       |       |
+|   (DBL)      |       ++       +-------+
+|              |                |  417  |
++--------------+                |       |
+|              |                +-------+
+|    406       |                |  420  |
+|   (DBL)      |                |       |
+|              |                +-------+
+|              |                |  421  |
++--------------+                |       |
+|              |                +-------+
+|    408       |                |       |
+|   (DBL)      |                | EMPTY |
+|              |       +------+ |       |
++--------------+       |STAIRS| |       |
+|                      | SOUTH| +-------+
+|    EMPTY             |      | |       |
+|                      |      | |       |
++----------------------+------+--+------+  Z = +24.55 (South)
+```
+
