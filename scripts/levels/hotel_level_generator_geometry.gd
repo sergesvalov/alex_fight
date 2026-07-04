@@ -162,20 +162,30 @@ func _generate_south_block(parent: Node3D, stair_z: float) -> void:
 	if stairwell_south_scene:
 		var stair_inst = stairwell_south_scene.instantiate()
 		stair_inst.name = "StairwellSouth"
-		stair_inst.rotation_degrees.y = 180
-		stair_inst.position = Vector3(0, 0, stair_z)
+		stair_inst.rotation_degrees.y = -90
+		var side_x = (corridor_width / 2.0) + (side_corridor_depth / 2.0)
+		var stair_z_pos = -4.0 * GlobalConfig.get_floor_scale()
+		stair_inst.position = Vector3(side_x, 0, stair_z_pos)
 		parent.add_child(stair_inst)
 		stair_inst.owner = get_tree().edited_scene_root
 		
-	var fill_left_len = -62.0 - stair_z
-	if fill_left_len > 0:
-		_create_csg_box(parent, "SouthFillerLeft", Vector3(-8.6, 2.0, stair_z + fill_left_len/2.0), Vector3(10.2, 4.0, fill_left_len), false, false)
+		# Cut hole in the automatically generated corridor wall for the stairs
+		var w_x = corridor_width / 2.0 - wall_thickness / 2.0
+		var hole_width = room_door_opening_width
+		var hole_height = util_door_height
+		var hole_y = hole_height / 2.0
+		_create_csg_hole(parent, "SouthStairJunctionHole", Vector3(w_x, hole_y, stair_z_pos), Vector3(wall_thickness + room_hole_margin, hole_height, hole_width))
 		
-	var fill_right_len = -64.8 - stair_z
-	if fill_right_len > 0:
-		_create_csg_box(parent, "SouthFillerRight", Vector3(7.4, 2.0, stair_z + fill_right_len/2.0), Vector3(7.8, 4.0, fill_right_len), false, false)
-		
-	_generate_stairwell_junction(parent, stair_z, false)
+		var inst = HotelDoorGenerator.create_stairwell_door(parent, Vector3(w_x, 0, stair_z_pos), false)
+		if inst and Engine.is_editor_hint() and get_tree().edited_scene_root:
+			inst.owner = get_tree().edited_scene_root
+
+	# Cap the south end of the corridor with a solid wall
+	var wall_w = corridor_width + wall_thickness * 2.0
+	var wall_h = corridor_height
+	var wall_thick = wall_thickness
+	var w_z = stair_z + (wall_thick / 2.0)
+	_create_csg_box(parent, "SouthEndWall", Vector3(0, wall_h / 2.0, w_z), Vector3(wall_w, wall_h, wall_thick), false, false)
 
 func _generate_stairwell_junction(parent: Node3D, z_pos: float, is_north: bool) -> void:
 	var prefix = "North" if is_north else "South"
@@ -203,7 +213,7 @@ func _generate_elevator_shaft(parent: Node3D) -> void:
 	var elev_x_center = (corridor_width / 2.0) + (side_corridor_depth / 2.0)
 	var inst = elevator_shaft_scene.instantiate()
 	inst.name = "ElevatorShaftBlock"
-	inst.transform.origin = Vector3(elev_x_center, 0, side_corridor_z_end)
+	inst.transform.origin = Vector3(elev_x_center, 0, -54.0 * GlobalConfig.get_floor_scale())
 	HotelDoorGenerator.create_elevator_door(inst, Vector3.ZERO)
 	parent.add_child(inst)
 	inst.owner = get_tree().edited_scene_root
@@ -213,7 +223,7 @@ func _generate_maintenance_room(parent: Node3D) -> void:
 	var east_wall_x = (corridor_width / 2.0) + side_corridor_depth
 	var inst = maintenance_room_scene.instantiate()
 	inst.name = "MaintenanceRoomBlock"
-	inst.transform.origin = Vector3(east_wall_x, 0, side_corridor_z_start)
+	inst.transform.origin = Vector3(east_wall_x, 0, -50.0 * GlobalConfig.get_floor_scale())
 	parent.add_child(inst)
 	inst.owner = get_tree().edited_scene_root
 
