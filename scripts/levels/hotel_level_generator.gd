@@ -8,7 +8,7 @@ class_name HotelLevelGenerator
 			_generate_level()
 
 @export_group("Rooms Count & Steps")
-@export var num_double_rooms: int = 7 # Исправлено: 7 номеров согласно чертежу
+@export var num_double_rooms: int = 6
 @export var num_single_rooms: int = 9
 @export var double_room_step: float = 12.0
 @export var single_room_step: float = 7.2
@@ -22,7 +22,7 @@ class_name HotelLevelGenerator
 
 @export_subgroup("Double Rooms Position")
 @export var double_room_x: float = -8.3
-@export var double_room_start_z: float = 6.0 # Смещено на Север. Теперь номер 401 идеально напротив 410
+@export var double_room_start_z: float = 4.0
 @export var double_room_wall_len: float = 6.6
 
 @export_subgroup("Single Rooms Position")
@@ -130,8 +130,8 @@ func _generate_floor(f_num: int, parent: Node3D, is_main: bool) -> void:
 	var room_half_width = room_door_width / 2.0
 	
 	# 3. Generate Double Rooms (Left side)
-	var dbl_suffixes = ["00", "01", "02", "03", "05", "06", "08", "09", "10", "11"]
-	var prev_z_left = corridor_start_z # Начинаем левую стену от края коридора (Z = 12.0)
+	var dbl_suffixes = ["01", "02", "03", "05", "06", "08"]
+	var prev_z_left = corridor_start_z # Начинаем левую стену от края коридора
 	var wall_x_left = -corridor_width / 2.0
 	
 	for i in range(num_double_rooms):
@@ -143,18 +143,15 @@ func _generate_floor(f_num: int, parent: Node3D, is_main: bool) -> void:
 		parent.add_child(room)
 		room.owner = get_tree().edited_scene_root
 		
-		var suffix = dbl_suffixes[i % dbl_suffixes.size()]
 		if "room_number" in room:
-			if suffix == "00":
-				room.room_number = "" # Самая верхняя комната не имеет номера по чертежу
-			else:
-				room.room_number = str(f_num) + suffix
+			room.room_number = str(f_num) + dbl_suffixes[i % dbl_suffixes.size()]
 		if "carpet_color" in room:
 			room.carpet_color = carpet_color
 			
-		var current_door_width = room.get("door_hole_width") if "door_hole_width" in room else room_door_width
-		var door_top_z = c_z + (current_door_width / 2.0)
-		var door_bottom_z = c_z - (current_door_width / 2.0)
+		var gap_center = c_z + 0.5
+		var gap_width = 2.0
+		var door_top_z = gap_center + (gap_width / 2.0)
+		var door_bottom_z = gap_center - (gap_width / 2.0)
 		
 		if prev_z_left > door_top_z:
 			_create_wall(parent, "CorrWall_L_" + str(i), Vector3(wall_x_left, 0, (prev_z_left + door_top_z) / 2.0), prev_z_left - door_top_z)
@@ -165,7 +162,7 @@ func _generate_floor(f_num: int, parent: Node3D, is_main: bool) -> void:
 		_create_wall(parent, "CorrWall_L_end", Vector3(wall_x_left, 0, (total_corridor_end + prev_z_left) / 2.0), prev_z_left - total_corridor_end)
 		
 	# 4. Generate Single Rooms (Right side)
-	var sngl_suffixes = ["10", "11", "12", "13", "15", "16", "17", "20", "21", "22", "23"]
+	var sngl_suffixes = ["10", "11", "12", "13", "15", "16", "17", "20", "21"]
 	var prev_z_right = 0.0 # ВАЖНО: правая стена должна начинаться ПОСЛЕ подсобки (Z = 0.0)
 	var wall_x_right = corridor_width / 2.0
 	
@@ -183,9 +180,10 @@ func _generate_floor(f_num: int, parent: Node3D, is_main: bool) -> void:
 		if "carpet_color" in room:
 			room.carpet_color = carpet_color
 			
-		var current_door_width = room.get("door_hole_width") if "door_hole_width" in room else room_door_width
-		var door_top_z = c_z + (current_door_width / 2.0)
-		var door_bottom_z = c_z - (current_door_width / 2.0)
+		var gap_center = c_z + 0.5
+		var gap_width = 2.0
+		var door_top_z = gap_center + (gap_width / 2.0)
+		var door_bottom_z = gap_center - (gap_width / 2.0)
 		
 		if prev_z_right > door_top_z:
 			_create_wall(parent, "CorrWall_R_" + str(i), Vector3(wall_x_right, 0, (prev_z_right + door_top_z) / 2.0), prev_z_right - door_top_z)
