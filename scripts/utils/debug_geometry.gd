@@ -56,7 +56,7 @@ static func print_room_alignments(root: Node) -> Array:
 	for door in cross_doors:
 		var has_wall = false
 		for child in root.get_children():
-			if child is CSGBox3D and abs(child.global_position.z - door.pos.z) < 2.0 and abs(child.global_position.x) < 0.1:
+			if child is CSGBox3D and abs(child.global_position.z - door.pos.z) < 2.0 and abs(child.global_position.x - door.pos.x) < 0.5:
 				has_wall = true
 				break
 		if not has_wall:

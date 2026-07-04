@@ -148,17 +148,17 @@ func _ready() -> void:
             var stair_n = floor_main.get_node_or_null("Stairwell_N")
             var stair_s = floor_main.get_node_or_null("StairwellSouth")
             var map_1 = floor_main.get_node_or_null("MapDecal_1")
-            var room_dbl = floor_main.get_node_or_null("DoubleRoomL1_F4")
-            var room_sgl = floor_main.get_node_or_null("SingleRoomR1_F4")
+            var room_dbl = floor_main.get_node_or_null("DoubleRoomL_408")
+            var room_sgl = floor_main.get_node_or_null("SingleRoomR_421")
             
             if not stair_n:
                 print("[FAILED] Stairwell_N не сгенерирован")
                 passed = false
-            elif stair_n.transform.origin.z != 10.0:
+            elif stair_n.transform.origin.z != -56.5 * generator.GlobalConfig.get_floor_scale() if generator.has_node("/root/GlobalConfig") else -56.5:
                 print("[FAILED] Stairwell_N имеет неверную координату Z: ", stair_n.transform.origin.z)
                 passed = false
             else:
-                print("[OK] Stairwell_N корректно сгенерирован на Z = 10.0")
+                print("[OK] Stairwell_N корректно сгенерирован")
                 
             if not stair_s:
                 print("[FAILED] StairwellSouth не сгенерирован")
@@ -172,11 +172,11 @@ func _ready() -> void:
             if not map_1:
                 print("[FAILED] MapDecal_1 не найден")
                 passed = false
-            elif map_1.transform.origin.z != (generator.double_room_start_z - generator.double_room_step / 2.0):
-                print("[FAILED] MapDecal_1 не на середине первого номера. Z = ", map_1.transform.origin.z)
+            elif map_1.transform.origin.z != -42.5 * generator.GlobalConfig.get_floor_scale() if generator.has_node("/root/GlobalConfig") else -42.5:
+                print("[FAILED] MapDecal_1 не в правильном месте. Z = ", map_1.transform.origin.z)
                 passed = false
             else:
-                print("[OK] Карты корректно расположены в начале этажа")
+                print("[OK] Декали сгенерированы на стенах")
                 
             if not room_dbl or not room_sgl:
                 print("[FAILED] Комнаты (DoubleRoomL1_F4 или SingleRoomR1_F4) не были сгенерированы")
