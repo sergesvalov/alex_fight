@@ -105,6 +105,7 @@ func _generate_floor(f_num: int, parent: Node3D, is_main: bool) -> void:
 	var total_corridor_end = HotelLevelCoordinates.get_total_corridor_end()
 	
 	_generate_corridor_shell(parent, corridor_start_z, total_corridor_end)
+	_generate_outer_shell(parent)
 	_generate_north_block(parent, total_corridor_end)
 	
 	_generate_rooms_side(f_num, parent, true, corridor_start_z, total_corridor_end)

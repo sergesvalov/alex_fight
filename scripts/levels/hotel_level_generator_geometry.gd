@@ -17,6 +17,24 @@ func _generate_corridor_shell(parent: Node3D, corridor_start_z: float, total_cor
 	_create_csg_box(parent, "CorridorFloor", Vector3(hotel_center_x, floor_y, corridor_center_z), Vector3(hotel_width, floor_thickness, corridor_length), true)
 	_create_csg_box(parent, "CorridorCeiling", Vector3(hotel_center_x, ceil_y, corridor_center_z), Vector3(hotel_width, floor_thickness, corridor_length), true)
 
+func _generate_outer_shell(parent: Node3D) -> void:
+	var f_scale = GlobalConfig.get_floor_scale()
+	var left_x = -13.75 * f_scale
+	var right_x = 9.25 * f_scale
+	var top_z = -58.0 * f_scale
+	# South stairs end at 13.05 + 11.5 = 24.55
+	var bottom_z = 24.55 * f_scale
+	
+	var width = right_x - left_x
+	var length = bottom_z - top_z
+	var center_x = (left_x + right_x) / 2.0
+	var center_z = (top_z + bottom_z) / 2.0
+	
+	_create_csg_box(parent, "OuterWall_West", Vector3(left_x - wall_thickness/2.0, corridor_height/2.0, center_z), Vector3(wall_thickness, corridor_height, length), false, false)
+	_create_csg_box(parent, "OuterWall_East", Vector3(right_x + wall_thickness/2.0, corridor_height/2.0, center_z), Vector3(wall_thickness, corridor_height, length), false, false)
+	_create_csg_box(parent, "OuterWall_North", Vector3(center_x, corridor_height/2.0, top_z - wall_thickness/2.0), Vector3(width + wall_thickness*2, corridor_height, wall_thickness), false, false)
+	_create_csg_box(parent, "OuterWall_South", Vector3(center_x, corridor_height/2.0, bottom_z + wall_thickness/2.0), Vector3(width + wall_thickness*2, corridor_height, wall_thickness), false, false)
+
 func _generate_rooms_side(f_num: int, parent: Node3D, is_left: bool, corridor_start_z: float, total_corridor_end: float) -> void:
 	var prev_z = corridor_start_z
 	var corridor_wall_shift = wall_thickness / 2.0
@@ -173,25 +191,19 @@ func _generate_north_block(parent: Node3D, start_z: float) -> void:
 	_create_wall(parent, "AlcoveEastWall_South", Vector3(east_wall_x, 0, (gap2_z_start + gap2_z_end) / 2.0), gap2_z_start - gap2_z_end)
 
 func _generate_south_block(parent: Node3D, stair_z: float) -> void:
+	# First, generate the solid wall closing the corridor, which also cuts the door hole at X=0
+	_generate_stairwell_junction(parent, stair_z, false)
+	
 	var stairwell_south_scene = load("res://scenes/levels/hotel_siberia/stairwell_south.tscn")
 	if stairwell_south_scene:
 		var stair_inst = stairwell_south_scene.instantiate()
 		stair_inst.name = "StairwellSouth"
-		stair_inst.rotation_degrees.y = 90
-		var side_x = (corridor_width / 2.0) + 0.5 * GlobalConfig.get_floor_scale()
-		var stair_z_pos = HotelLevelCoordinates.get_south_stair_z()
-		stair_inst.position = Vector3(side_x, 0, stair_z_pos)
+		# Place it slightly to the right (near 421), but its open side still covers X=0 for the door
+		stair_inst.position = Vector3(2.0, 0, stair_z)
 		parent.add_child(stair_inst)
 		stair_inst.owner = get_tree().edited_scene_root
 		
-		# Cut hole in the automatically generated corridor wall for the stairs
-		var w_x = corridor_width / 2.0 - wall_thickness / 2.0
-		var hole_width = room_door_opening_width
-		var hole_height = util_door_height
-		var hole_y = hole_height / 2.0
-		_create_csg_hole(parent, "SouthStairJunctionHole", Vector3(w_x, hole_y, stair_z_pos), Vector3(wall_thickness + room_hole_margin, hole_height, hole_width))
-		
-		var inst = HotelDoorGenerator.create_stairwell_door(parent, Vector3(w_x, 0, stair_z_pos), PI/2.0, false)
+		var inst = HotelDoorGenerator.create_stairwell_door(parent, Vector3(0, 0, stair_z), 0, false)
 		if inst and Engine.is_editor_hint() and get_tree().edited_scene_root:
 			inst.owner = get_tree().edited_scene_root
 
