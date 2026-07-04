@@ -124,8 +124,8 @@ func _generate_floor(f_num: int, parent: Node3D, is_main: bool) -> void:
 	var floor_y = -floor_thickness / 2.0
 	var ceil_y = corridor_height + (floor_thickness / 2.0)
 	
-	_create_csg_box(parent, "CorridorFloor", Vector3(0, floor_y, corridor_center_z), Vector3(corridor_width + 0.2, floor_thickness, corridor_length), true)
-	_create_csg_box(parent, "CorridorCeiling", Vector3(0, ceil_y, corridor_center_z), Vector3(corridor_width + 0.2, floor_thickness, corridor_length), true)
+	_create_csg_box(parent, "CorridorFloor", Vector3(0, floor_y, corridor_center_z), Vector3(35.0, floor_thickness, corridor_length), true)
+	_create_csg_box(parent, "CorridorCeiling", Vector3(0, ceil_y, corridor_center_z), Vector3(35.0, floor_thickness, corridor_length), true)
 	
 	var room_half_width = room_door_width / 2.0
 	

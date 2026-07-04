@@ -40,27 +40,12 @@ script = ExtResource("1_script")
 door_hole_width = 1.84
 room_label = NodePath("RoomLabel")
 door_body = NodePath("MainDoor/AnimatableBody3D")
-floor_mesh = NodePath("Floor")
-
-[node name="Floor" type="CSGBox3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3, -0.25, 0)
-use_collision = true
-collision_layer = 2
-size = Vector3(7.8, 0.5, 7.2)
-material = SubResource("StandardMaterial3D_floor")
 
 [node name="MainDoor" parent="." instance=ExtResource("6_door")]
 transform = Transform3D(-5.02681e-08, 0, -1.15, 0, 1.15, 0, 1.15, 0, -5.02681e-08, -3.6, 0.0, -0.3)
 
 [node name="WCDoor" parent="." instance=ExtResource("6_door")]
 transform = Transform3D(0.92, 0, 0, 0, 1.15, 0, 0, 0, 1.15, -1.92, 0.0, -0.3)
-
-[node name="Ceil" type="CSGBox3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 4.25, 0.0)
-use_collision = true
-collision_layer = 2
-size = Vector3(7.2, 0.5, 7.2)
-material = SubResource("StandardMaterial3D_floor")
 
 [node name="WallE" type="CSGBox3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.2, 2.0, 0.0)
@@ -151,12 +136,6 @@ occluder = SubResource("BoxOccluder3D_WallS")
 
 [node name="Occluder" type="OccluderInstance3D" parent="WallE"]
 occluder = SubResource("BoxOccluder3D_WallE")
-
-[node name="Occluder" type="OccluderInstance3D" parent="Floor"]
-occluder = SubResource("BoxOccluder3D_Floor")
-
-[node name="Occluder" type="OccluderInstance3D" parent="Ceil"]
-occluder = SubResource("BoxOccluder3D_Ceil")
 
 [node name="Occluder" type="OccluderInstance3D" parent="WC_WallE"]
 occluder = SubResource("BoxOccluder3D_WC_WallE")
