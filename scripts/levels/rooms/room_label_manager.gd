@@ -33,6 +33,9 @@ func _attach_label_to_door() -> void:
 			
 			room_label.transform.basis = Basis.IDENTITY
 			room_label.transform.origin = label_door_offset
+			
+			if get_parent().scale.z < 0:
+				room_label.scale.x = -1
 
 func _update_label() -> void:
 	if not room_label:
