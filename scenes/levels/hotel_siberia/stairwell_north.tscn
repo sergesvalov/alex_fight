@@ -51,9 +51,9 @@ size = Vector3(7, 10, 0.5)
 material = SubResource("StandardMaterial3D_wall")
 
 [node name="DoorHole" type="CSGBox3D" parent="WallSouth"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4375, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5625, 0)
 operation = 2
-size = Vector3(1.84, 2.875, 1.5)
+size = Vector3(1.84, 2.875, 0.6)
 
 [node name="DoorHoleBottom" type="CSGBox3D" parent="WallSouth"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -3.5625, 0)
@@ -81,7 +81,7 @@ size = Vector3(0.5, 10, 3.5)
 material = SubResource("StandardMaterial3D_wall")
 
 [node name="MainDoor" parent="." instance=ExtResource("3_door")]
-transform = Transform3D(-1, 0, 8.74228e-08, 0, 1, 0, -8.74228e-08, 0, -1, 0.75, 0, 0)
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0.92, 0, 0)
 
 [node name="LightMain" type="OmniLight3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 1.75)
