@@ -6,6 +6,7 @@ class_name StairDoor
 
 var is_open: bool = false
 var is_moving: bool = false
+var open_angle: float = 0.0
 
 func interact(player: Node) -> void:
 	if is_moving:
@@ -42,7 +43,7 @@ func interact(player: Node) -> void:
 		if not is_open:
 			var to_player = player.global_position - global_position
 			var forward = global_transform.basis.z
-			var open_angle = -PI / 2.0
+			open_angle = -PI / 2.0
 			if to_player.dot(forward) > 0:
 				open_angle = PI / 2.0
 				

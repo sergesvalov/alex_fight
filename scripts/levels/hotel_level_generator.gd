@@ -320,7 +320,7 @@ func _generate_north_block(parent: Node, start_z: float) -> void:
 	parent.add_child(stair)
 	stair.owner = get_tree().edited_scene_root
 	
-	var map_z = 0.0 # План идеально встанет между комнатой 401 и безымянной
+	var map_z = double_room_start_z - (double_room_step / 2.0) # По середине первого номера
 	var decal_positions = [
 		Vector3(-2.99, 2.0, map_z),
 		Vector3(2.99, 2.0, map_z)
