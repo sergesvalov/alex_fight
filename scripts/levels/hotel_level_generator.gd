@@ -2,6 +2,8 @@
 extends Node3D
 class_name HotelLevelGenerator
 
+# region Export Variables
+
 @export var generate: bool = false:
 	set(value):
 		if value:
@@ -16,7 +18,7 @@ class_name HotelLevelGenerator
 @export_group("Layout & Dimensions")
 @export var corridor_width: float = 7.0
 @export var corridor_height: float = 4.25
-@export var floor_height: float = 5.0 # Исправлено: увеличено до 5.0, чтобы пол не наслаивался на потолок нижнего этажа
+@export var floor_height: float = 5.0
 @export var floor_thickness: float = 0.5
 @export var wall_thickness: float = 1.0
 
@@ -42,12 +44,24 @@ class_name HotelLevelGenerator
 @export var carpet_color: Color = Color.WHITE
 @export var map_texture: Texture2D
 
+@export_group("Room Suffixes")
+@export var double_room_suffixes: Array[String] = ["01", "02", "03", "05", "06", "08"]
+@export var single_room_suffixes: Array[String] = ["10", "11", "12", "13", "15", "16", "17", "20", "21"]
+
+# endregion
+
+# region Preloaded Scenes
+
 var double_room_scene = preload("res://scenes/levels/hotel_siberia/rooms/double_room.tscn")
 var double_room_large_scene = preload("res://scenes/levels/hotel_siberia/rooms/double_room_large.tscn")
 var single_room_scene = preload("res://scenes/levels/hotel_siberia/rooms/single_room.tscn")
 var stairwell_scene = preload("res://scenes/levels/hotel_siberia/stairwell_north.tscn")
 var door_scene = preload("res://entities/props/door.tscn")
 var elevator_door_scene = preload("res://entities/props/elevator_door.tscn")
+
+# endregion
+
+# region Initialization
 
 func _ready() -> void:
 	if not Engine.is_editor_hint():
@@ -76,6 +90,10 @@ func _apply_stylization() -> void:
 			for child in floor_node.get_children():
 				if child is HotelRoom:
 					child.carpet_color = carpet_color
+
+# endregion
+
+# region Core Generation Logic
 
 func _generate_level() -> void:
 	print("Generating hotel level geometry...")
@@ -123,44 +141,48 @@ func _create_floor_group(name: String, y_pos: float, is_main: bool) -> void:
 	map_texture = orig_map
 
 func _generate_floor(f_num: int, parent: Node3D, is_main: bool) -> void:
-	# Вычисляем истинное начало коридора на Севере
 	var corridor_start_z = double_room_start_z + (double_room_step / 2.0)
-	
-	_generate_north_block(parent, corridor_start_z)
-	
 	var max_double_z = double_room_start_z - (num_double_rooms - 1) * double_room_step - double_room_wall_len
 	var max_single_z = single_room_start_z - (num_single_rooms - 1) * single_room_step - single_room_wall_len
 	var corridor_end_z = min(max_double_z, max_single_z)
 	var stair_z = corridor_end_z - 10.0
 	var total_corridor_end = stair_z - 1.5
 	
-	var corridor_length = corridor_start_z - total_corridor_end
-	var corridor_center_z = (corridor_start_z + total_corridor_end) / 2.0
+	_generate_corridor_shell(parent, corridor_start_z, total_corridor_end)
+	_generate_north_block(parent, corridor_start_z)
+	_generate_south_block(parent, stair_z)
+	
+	_generate_double_rooms(f_num, parent, corridor_start_z, total_corridor_end)
+	_generate_single_rooms(f_num, parent, 0.0, total_corridor_end)
+	
+	_generate_map_decals(parent)
 	
 	if is_main:
 		_generate_entities(corridor_end_z)
+		
+	print("Level geometry generated for floor " + str(f_num))
+
+# endregion
+
+# region Corridor Shell & Rooms
+
+func _generate_corridor_shell(parent: Node3D, corridor_start_z: float, total_corridor_end: float) -> void:
+	var corridor_length = corridor_start_z - total_corridor_end
+	var corridor_center_z = (corridor_start_z + total_corridor_end) / 2.0
 	
 	var floor_y = -floor_thickness / 2.0
 	var ceil_y = corridor_height + (floor_thickness / 2.0)
 	
 	_create_csg_box(parent, "CorridorFloor", Vector3(0, floor_y, corridor_center_z), Vector3(35.0, floor_thickness, corridor_length), true)
 	_create_csg_box(parent, "CorridorCeiling", Vector3(0, ceil_y, corridor_center_z), Vector3(35.0, floor_thickness, corridor_length), true)
-	
-	var room_half_width = room_door_width / 2.0
-	
-	# 3. Generate Double Rooms (Left side)
-	var dbl_suffixes = ["01", "02", "03", "05", "06", "08"]
-	var prev_z_left = corridor_start_z # Начинаем левую стену от края коридора
+
+func _generate_double_rooms(f_num: int, parent: Node3D, corridor_start_z: float, total_corridor_end: float) -> void:
+	var prev_z_left = corridor_start_z
 	var wall_x_left = -corridor_width / 2.0
 	
 	for i in range(num_double_rooms):
 		var c_z = double_room_start_z - i * double_room_step
-		
-		var room
-		if i < 2:
-			room = double_room_large_scene.instantiate()
-		else:
-			room = double_room_scene.instantiate()
+		var room = double_room_large_scene.instantiate() if i < 2 else double_room_scene.instantiate()
 		
 		room.name = "DoubleRoomL" + str(i + 1) + "_F" + str(f_num)
 		room.transform.origin = Vector3(double_room_x, room_y_offset, c_z)
@@ -168,66 +190,138 @@ func _generate_floor(f_num: int, parent: Node3D, is_main: bool) -> void:
 		room.owner = get_tree().edited_scene_root
 		
 		if "room_number" in room:
-			room.room_number = str(f_num) + dbl_suffixes[i % dbl_suffixes.size()]
+			room.room_number = str(f_num) + double_room_suffixes[i % double_room_suffixes.size()]
 		if "carpet_color" in room:
 			room.carpet_color = carpet_color
 			
-		var gap_center = c_z + 0.5
-		var gap_width = 2.0
-		var door_top_z = gap_center + (gap_width / 2.0)
-		var door_bottom_z = gap_center - (gap_width / 2.0)
+		var door_top_z = c_z + 0.5 + 1.0
+		var door_bottom_z = c_z + 0.5 - 1.0
 		
 		if prev_z_left > door_top_z:
 			_create_wall(parent, "CorrWall_L_" + str(i), Vector3(wall_x_left, 0, (prev_z_left + door_top_z) / 2.0), prev_z_left - door_top_z)
-		
 		prev_z_left = door_bottom_z
 		
 	if prev_z_left > total_corridor_end:
 		_create_wall(parent, "CorrWall_L_end", Vector3(wall_x_left, 0, (total_corridor_end + prev_z_left) / 2.0), prev_z_left - total_corridor_end)
-		
-	# 4. Generate Single Rooms (Right side)
-	var sngl_suffixes = ["10", "11", "12", "13", "15", "16", "17", "20", "21"]
-	var prev_z_right = 0.0 # ВАЖНО: правая стена должна начинаться ПОСЛЕ подсобки (Z = 0.0)
+
+func _generate_single_rooms(f_num: int, parent: Node3D, corridor_start_z: float, total_corridor_end: float) -> void:
+	var prev_z_right = corridor_start_z
 	var wall_x_right = corridor_width / 2.0
 	
 	for i in range(num_single_rooms):
 		var c_z = single_room_start_z - i * single_room_step
-		
 		var room = single_room_scene.instantiate()
+		
 		room.name = "SingleRoomR" + str(i + 1) + "_F" + str(f_num)
 		room.transform.origin = Vector3(single_room_x, room_y_offset, c_z)
 		parent.add_child(room)
 		room.owner = get_tree().edited_scene_root
 		
 		if "room_number" in room:
-			room.room_number = str(f_num) + sngl_suffixes[i % sngl_suffixes.size()]
+			room.room_number = str(f_num) + single_room_suffixes[i % single_room_suffixes.size()]
 		if "carpet_color" in room:
 			room.carpet_color = carpet_color
 			
-		var gap_center = c_z + 0.5
-		var gap_width = 2.0
-		var door_top_z = gap_center + (gap_width / 2.0)
-		var door_bottom_z = gap_center - (gap_width / 2.0)
+		var door_top_z = c_z + 0.5 + 1.0
+		var door_bottom_z = c_z + 0.5 - 1.0
 		
 		if prev_z_right > door_top_z:
 			_create_wall(parent, "CorrWall_R_" + str(i), Vector3(wall_x_right, 0, (prev_z_right + door_top_z) / 2.0), prev_z_right - door_top_z)
-			
 		prev_z_right = door_bottom_z
 
 	if prev_z_right > total_corridor_end:
 		_create_wall(parent, "CorrWall_R_end", Vector3(wall_x_right, 0, (total_corridor_end + prev_z_right) / 2.0), prev_z_right - total_corridor_end)
 
-	# 5. Generate South Block (South Stairwell)
+func _generate_map_decals(parent: Node3D) -> void:
+	var map_z = double_room_start_z - (double_room_step / 2.0)
+	var decal_positions = [Vector3(-2.99, 2.0, map_z), Vector3(2.99, 2.0, map_z)]
+	
+	for i in range(decal_positions.size()):
+		var pos = decal_positions[i]
+		var map_decal = MeshInstance3D.new()
+		map_decal.name = "MapDecal_" + str(i + 1)
+		map_decal.transform.origin = pos
+		map_decal.transform.basis = Basis.from_euler(Vector3(0, PI/2 if pos.x < 0 else -PI/2, 0))
+			
+		var quad = QuadMesh.new()
+		quad.size = Vector2(2, 2)
+		var map_mat = StandardMaterial3D.new()
+		map_mat.albedo_texture = map_texture if map_texture else preload("res://assets/textures/hotel_map.jpg")
+		map_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		quad.material = map_mat
+		map_decal.mesh = quad
+		parent.add_child(map_decal)
+		map_decal.owner = get_tree().edited_scene_root
+
+# endregion
+
+# region Block Generators
+
+func _generate_north_block(parent: Node3D, start_z: float) -> void:
+	_generate_elevator_shaft(parent)
+	_generate_maintenance_room(parent)
+	
+	var main_wall_len = start_z - 3.0
+	if main_wall_len > 0:
+		_create_csg_box(parent, "MainCorrRightWall", Vector3(3.5, corridor_height / 2.0, 3.0 + main_wall_len / 2.0), Vector3(1.2, corridor_height, main_wall_len), false, false)
+		
+	var stair = stairwell_scene.instantiate()
+	stair.name = "Stairwell_N"
+	stair.transform.basis = Basis.from_euler(Vector3(0, 0, 0))
+	stair.transform.origin = Vector3(0, 0, start_z)
+	parent.add_child(stair)
+	stair.owner = get_tree().edited_scene_root
+
+func _generate_south_block(parent: Node3D, stair_z: float) -> void:
 	var stairwell_south_scene = load("res://scenes/levels/hotel_siberia/stairwell_south.tscn")
 	if stairwell_south_scene:
 		var stair_inst = stairwell_south_scene.instantiate()
 		stair_inst.name = "StairwellSouth"
-		# Ротация 180, чтобы лестница уходила в -Z (на Юг, от коридора)
 		stair_inst.rotation_degrees.y = 180
 		stair_inst.position = Vector3(0, 0, stair_z)
 		parent.add_child(stair_inst)
-		
-	print("Level geometry generated for floor " + str(f_num))
+		stair_inst.owner = get_tree().edited_scene_root
+
+func _generate_elevator_shaft(parent: Node3D) -> void:
+	var wall_y_center = corridor_height / 2.0
+	var hole_y = (util_door_height - corridor_height) / 2.0
+	
+	var side_north_wall = _create_csg_box(parent, "SideCorrNorthWall", Vector3(6.0, wall_y_center, 3.0), Vector3(5.0, corridor_height, 1.2), false, false)
+	_create_csg_hole(side_north_wall, "ElevatorDoorHole", Vector3(0, hole_y, 0), Vector3(util_door_width, util_door_height, 1.6))
+	
+	_create_csg_box(parent, "ElevatorShaft", Vector3(6.0, wall_y_center, 5.5), Vector3(5.0, corridor_height, 5.0), false, false)
+	_create_csg_hole(parent, "ElevatorHole", Vector3(6.0, wall_y_center, 5.5), Vector3(4.8, corridor_height, 4.8))
+	_create_light(parent, "ElevatorLight", Vector3(6.0, 3.5, 3.5), Color(0.9, 0.95, 1, 1))
+	
+	var elev_doors = elevator_door_scene.instantiate()
+	elev_doors.name = "ElevatorDoors"
+	elev_doors.transform.origin = Vector3(6.0, 0.0, 3.0)
+	parent.add_child(elev_doors)
+	elev_doors.owner = get_tree().edited_scene_root
+
+func _generate_maintenance_room(parent: Node3D) -> void:
+	var wall_y_center = corridor_height / 2.0
+	var hole_y = (util_door_height - corridor_height) / 2.0
+	
+	var side_east_wall = _create_csg_box(parent, "SideCorrEastWall", Vector3(8.5, wall_y_center, 1.5), Vector3(1.2, corridor_height, 3.0), false, false)
+	_create_csg_hole(side_east_wall, "MaintenanceDoorHole", Vector3(0, hole_y, 0), Vector3(1.6, util_door_height, util_door_width))
+	
+	_create_csg_box(parent, "MaintenanceRoom", Vector3(11.0, wall_y_center, 1.5), Vector3(5.0, corridor_height, 3.0), false, false)
+	_create_csg_hole(parent, "MaintenanceRoomHole", Vector3(11.0, wall_y_center, 1.5), Vector3(4.8, corridor_height, 2.8))
+	_create_csg_hole(parent, "MaintenanceRoomDoorHole", Vector3(8.5, wall_y_center + hole_y, 1.5), Vector3(2.0, util_door_height, util_door_width))
+	_create_light(parent, "MaintenanceLight", Vector3(11.0, 3.5, 1.5), Color(1.0, 0.9, 0.7, 1))
+	
+	var maint_door = door_scene.instantiate()
+	maint_door.name = "MaintenanceDoor"
+	maint_door.transform.origin = Vector3(8.5, 0, 1.5)
+	maint_door.transform.basis = Basis.from_euler(Vector3(0, -PI/2, 0))
+	maint_door.scale = Vector3(util_door_scale, util_door_scale, util_door_scale) 
+	parent.add_child(maint_door)
+	maint_door.owner = get_tree().edited_scene_root
+
+# endregion
+
+# region CSG Helpers
 
 func _create_wall(parent: Node, node_name: String, pos: Vector3, length: float) -> void:
 	var wall_y_center = corridor_height / 2.0
@@ -286,84 +380,9 @@ func _create_light(parent: Node, node_name: String, pos: Vector3, color: Color) 
 	light.owner = get_tree().edited_scene_root
 	return light
 
-func _generate_north_block(parent: Node, start_z: float) -> void:
-	var wall_y_center = corridor_height / 2.0
-	var hole_y = (util_door_height - corridor_height) / 2.0
+# endregion
 
-	# 1. Main corridor right wall (Z=3.0 to start_z)
-	var main_wall_len = start_z - 3.0
-	if main_wall_len > 0:
-		_create_csg_box(parent, "MainCorrRightWall", Vector3(3.5, wall_y_center, 3.0 + main_wall_len / 2.0), Vector3(1.2, corridor_height, main_wall_len), false, false)
-		
-	# 2. Side corridor North wall (Z=3.0, X from 3.5 to 8.5)
-	var side_north_wall = _create_csg_box(parent, "SideCorrNorthWall", Vector3(6.0, wall_y_center, 3.0), Vector3(5.0, corridor_height, 1.2), false, false)
-	_create_csg_hole(side_north_wall, "ElevatorDoorHole", Vector3(0, hole_y, 0), Vector3(util_door_width, util_door_height, 1.6))
-	
-	# 3. Elevator Shaft and Doors (Z > 3.0)
-	var elev_shaft = _create_csg_box(parent, "ElevatorShaft", Vector3(6.0, wall_y_center, 5.5), Vector3(5.0, corridor_height, 5.0), false, false)
-	_create_csg_hole(parent, "ElevatorHole", Vector3(6.0, wall_y_center, 5.5), Vector3(4.8, corridor_height, 4.8))
-	_create_light(parent, "ElevatorLight", Vector3(6.0, 3.5, 3.5), Color(0.9, 0.95, 1, 1))
-	
-	var elev_doors = elevator_door_scene.instantiate()
-	elev_doors.name = "ElevatorDoors"
-	elev_doors.transform.origin = Vector3(6.0, 0.0, 3.0)
-	parent.add_child(elev_doors)
-	elev_doors.owner = get_tree().edited_scene_root
-	
-	# 4. Side corridor East wall (X=8.5, Z from 0.0 to 3.0)
-	var side_east_wall = _create_csg_box(parent, "SideCorrEastWall", Vector3(8.5, wall_y_center, 1.5), Vector3(1.2, corridor_height, 3.0), false, false)
-	_create_csg_hole(side_east_wall, "MaintenanceDoorHole", Vector3(0, hole_y, 0), Vector3(1.6, util_door_height, util_door_width))
-	
-	# 5. Maintenance Room (X > 8.5)
-	var maint_room = _create_csg_box(parent, "MaintenanceRoom", Vector3(11.0, wall_y_center, 1.5), Vector3(5.0, corridor_height, 3.0), false, false)
-	_create_csg_hole(parent, "MaintenanceRoomHole", Vector3(11.0, wall_y_center, 1.5), Vector3(4.8, corridor_height, 2.8))
-	_create_csg_hole(parent, "MaintenanceRoomDoorHole", Vector3(8.5, wall_y_center + hole_y, 1.5), Vector3(2.0, util_door_height, util_door_width))
-	_create_light(parent, "MaintenanceLight", Vector3(11.0, 3.5, 1.5), Color(1.0, 0.9, 0.7, 1))
-	
-	var maint_door = door_scene.instantiate()
-	maint_door.name = "MaintenanceDoor"
-	maint_door.transform.origin = Vector3(8.5, 0, 1.5)
-	maint_door.transform.basis = Basis.from_euler(Vector3(0, -PI/2, 0))
-	maint_door.scale = Vector3(util_door_scale, util_door_scale, util_door_scale) 
-	parent.add_child(maint_door)
-	maint_door.owner = get_tree().edited_scene_root
-	
-	# Северная лестница выровнена по самому верху коридора
-	var stair = stairwell_scene.instantiate()
-	stair.name = "Stairwell_N"
-	# Без ротации, чтобы лестница уходила в +Z (на Север, от коридора)
-	stair.transform.basis = Basis.from_euler(Vector3(0, 0, 0))
-	stair.transform.origin = Vector3(0, 0, start_z)
-	parent.add_child(stair)
-	stair.owner = get_tree().edited_scene_root
-	
-	var map_z = double_room_start_z - (double_room_step / 2.0) # По середине первого номера
-	var decal_positions = [
-		Vector3(-2.99, 2.0, map_z),
-		Vector3(2.99, 2.0, map_z)
-	]
-	for i in range(decal_positions.size()):
-		var pos = decal_positions[i]
-		var map_decal = MeshInstance3D.new()
-		map_decal.name = "MapDecal_" + str(i + 1)
-		map_decal.transform.origin = pos
-		if pos.x < 0:
-			map_decal.transform.basis = Basis.from_euler(Vector3(0, PI/2, 0))
-		else:
-			map_decal.transform.basis = Basis.from_euler(Vector3(0, -PI/2, 0))
-			
-		var quad = QuadMesh.new()
-		quad.size = Vector2(2, 2)
-		var map_mat = StandardMaterial3D.new()
-		if map_texture:
-			map_mat.albedo_texture = map_texture
-		else:
-			map_mat.albedo_texture = preload("res://assets/textures/hotel_map.jpg")
-		map_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-		quad.material = map_mat
-		map_decal.mesh = quad
-		parent.add_child(map_decal)
-		map_decal.owner = get_tree().edited_scene_root
+# region Utilities & Entities
 
 func _clear_generated_nodes() -> void:
 	var nodes_to_remove = []
@@ -418,3 +437,5 @@ func _generate_entities(end_z: float) -> void:
 				
 			if cerberus and "patrol_points" in cerberus:
 				cerberus.patrol_points = points_array
+
+# endregion
