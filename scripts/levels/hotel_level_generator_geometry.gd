@@ -21,35 +21,49 @@ func _generate_rooms_side(f_num: int, parent: Node3D, is_left: bool, corridor_st
 	var prev_z = corridor_start_z
 	var corridor_wall_shift = wall_thickness / 2.0
 	var wall_x = (-corridor_width / 2.0 + corridor_wall_shift) if is_left else (corridor_width / 2.0 - corridor_wall_shift)
-	var num_rooms = num_double_rooms if is_left else num_single_rooms
-	var start_z = double_room_start_z if is_left else single_room_start_z
-	var step = double_room_step if is_left else single_room_step
 	var room_x = double_room_x if is_left else single_room_x
-	var suffixes = double_room_suffixes if is_left else single_room_suffixes
 	var prefix = "DoubleRoomL_" if is_left else "SingleRoomR_"
 	var side_str = "L_" if is_left else "R_"
 	
-	for i in range(num_rooms):
-		var c_z = start_z - i * step
-		var reverse_i = num_rooms - 1 - i
-		var is_flipped = false
-		
+	var left_rooms_data = [
+		{"name": "408", "z": 5.0,   "type": "normal", "flip": true},
+		{"name": "406", "z": -5.0,  "type": "normal", "flip": false},
+		{"name": "405", "z": -15.0, "type": "normal", "flip": false},
+		{"name": "403", "z": -25.0, "type": "normal", "flip": false},
+		{"name": "402", "z": -41.0, "type": "large",  "flip": false},
+		{"name": "401", "z": -51.0, "type": "large",  "flip": false},
+	]
+
+	var right_rooms_data = [
+		{"name": "421", "z": 7.0,   "flip": false},
+		{"name": "420", "z": 1.0,   "flip": true},
+		{"name": "417", "z": -9.0,  "flip": true},
+		{"name": "416", "z": -15.0, "flip": false},
+		{"name": "415", "z": -21.0, "flip": true},
+		{"name": "413", "z": -27.0, "flip": false},
+		{"name": "412", "z": -33.0, "flip": false},
+		{"name": "411", "z": -39.0, "flip": false},
+		{"name": "410", "z": -45.0, "flip": false},
+	]
+	
+	var rooms_data = left_rooms_data if is_left else right_rooms_data
+	
+	for i in range(rooms_data.size()):
+		var data = rooms_data[i]
+		var c_z = data["z"] * GlobalConfig.get_floor_scale()
+		var is_flipped = data["flip"]
+		var room_number = str(f_num) + data["name"].substr(1, 2)
 		var room
+		
 		if is_left:
-			var is_large = reverse_i < 2
-			room = double_room_large_scene.instantiate() if is_large else double_room_scene.instantiate()
+			room = double_room_large_scene.instantiate() if data["type"] == "large" else double_room_scene.instantiate()
 			HotelDoorGenerator.create_room_main_door(room, Vector3(4.3, 0, 0.5), true)
 			HotelDoorGenerator.create_room_wc_door(room, Vector3(1.55, 0, -3.6), true)
-			if reverse_i == 5:
-				is_flipped = true
 		else:
 			room = single_room_scene.instantiate()
 			HotelDoorGenerator.create_room_main_door(room, Vector3(-3.05, 0, -0.25), false)
 			HotelDoorGenerator.create_room_wc_door(room, Vector3(-2.2, 0, -0.25), false)
-			if reverse_i in [4, 6, 7]:
-				is_flipped = true
-				
-		var room_number = str(f_num) + suffixes[reverse_i]
+			
 		room.name = prefix + room_number
 		room.transform.origin = Vector3(room_x, room_y_offset, c_z)
 		
@@ -184,7 +198,7 @@ func _generate_south_block(parent: Node3D, stair_z: float) -> void:
 	var wall_w = corridor_width + wall_thickness * 2.0
 	var wall_h = corridor_height
 	var wall_thick = wall_thickness
-	var w_z = stair_z + (wall_thick / 2.0)
+	var w_z = 10.0 * GlobalConfig.get_floor_scale() + (wall_thick / 2.0)
 	_create_csg_box(parent, "SouthEndWall", Vector3(0, wall_h / 2.0, w_z), Vector3(wall_w, wall_h, wall_thick), false, false)
 
 func _generate_stairwell_junction(parent: Node3D, z_pos: float, is_north: bool) -> void:
@@ -210,21 +224,35 @@ func _generate_stairwell_junction(parent: Node3D, z_pos: float, is_north: bool) 
 
 func _generate_elevator_shaft(parent: Node3D) -> void:
 	if not elevator_shaft_scene: return
+	var elev_z = -54.0 * GlobalConfig.get_floor_scale()
 	var elev_x_center = (corridor_width / 2.0) + (side_corridor_depth / 2.0)
 	var inst = elevator_shaft_scene.instantiate()
 	inst.name = "ElevatorShaftBlock"
-	inst.transform.origin = Vector3(elev_x_center, 0, -54.0 * GlobalConfig.get_floor_scale())
+	inst.transform.origin = Vector3(elev_x_center, 0, elev_z)
 	HotelDoorGenerator.create_elevator_door(inst, Vector3.ZERO)
 	parent.add_child(inst)
 	inst.owner = get_tree().edited_scene_root
+	
+	var w_x = corridor_width / 2.0 - wall_thickness / 2.0
+	var hole_width = 1.4 # Same as ElevatorDoorHole in elevator_shaft.tscn
+	var hole_height = 2.2 # Same as ElevatorDoorHole
+	var hole_y = hole_height / 2.0
+	_create_csg_hole(parent, "ElevatorCorrHole", Vector3(w_x, hole_y, elev_z), Vector3(wall_thickness + room_hole_margin, hole_height, hole_width))
 
 func _generate_maintenance_room(parent: Node3D) -> void:
 	if not maintenance_room_scene: return
+	var maint_z = -50.0 * GlobalConfig.get_floor_scale()
 	var east_wall_x = (corridor_width / 2.0) + side_corridor_depth
 	var inst = maintenance_room_scene.instantiate()
 	inst.name = "MaintenanceRoomBlock"
-	inst.transform.origin = Vector3(east_wall_x, 0, -50.0 * GlobalConfig.get_floor_scale())
+	inst.transform.origin = Vector3(east_wall_x, 0, maint_z)
 	parent.add_child(inst)
 	inst.owner = get_tree().edited_scene_root
+	
+	var w_x = corridor_width / 2.0 - wall_thickness / 2.0
+	var hole_width = util_door_width
+	var hole_height = util_door_height
+	var hole_y = hole_height / 2.0
+	_create_csg_hole(parent, "MaintenanceCorrHole", Vector3(w_x, hole_y, maint_z), Vector3(wall_thickness + room_hole_margin, hole_height, hole_width))
 
 # endregion
