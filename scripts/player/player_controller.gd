@@ -41,6 +41,11 @@ func _input(event: InputEvent) -> void:
                 var inv_ui = hud.find_child("InventoryUI", true, false)
                 if inv_ui and inv_ui.has_method("open"):
                     inv_ui.open()
+        elif event.keycode == KEY_V:
+            if GameStateManager.current_state == GameStateManager.GameState.SPECTATOR:
+                GameStateManager.change_state(GameStateManager.GameState.EXPLORING)
+            else:
+                GameStateManager.change_state(GameStateManager.GameState.SPECTATOR)
 
 func _physics_process(delta: float) -> void:
     if Input.is_action_just_pressed("shoot") and camera_comp.is_desktop:

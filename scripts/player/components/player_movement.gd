@@ -20,6 +20,16 @@ func _ready() -> void:
     player.floor_stop_on_slope = true
     player.floor_max_angle = deg_to_rad(45)
     player.floor_snap_length = 0.1
+    
+    GameStateManager.state_changed.connect(_on_state_changed)
+
+func _on_state_changed(new_state: GameStateManager.GameState) -> void:
+    if new_state == GameStateManager.GameState.SPECTATOR:
+        player.collision_layer = 0
+        player.collision_mask = 0
+    else:
+        player.collision_layer = 1
+        player.collision_mask = 2
 
 var time_since_last_step: float = 0.0
 var footstep_sound = preload("res://assets/audio/sfx/footstep.wav")
@@ -36,6 +46,18 @@ func process_movement(delta: float) -> void:
         current_input.y = Input.get_action_strength("ui_down") - Input.get_action_strength("ui_up")
         if current_input.length() > 1.0: 
             current_input = current_input.normalized()
+            
+    if GameStateManager.current_state == GameStateManager.GameState.SPECTATOR:
+        var camera_rig = player.get_node_or_null("CameraRig/Camera3D")
+        if camera_rig:
+            var cam_basis = camera_rig.global_transform.basis
+            var direction = (cam_basis.x * current_input.x + cam_basis.z * current_input.y).normalized()
+            var speed = sprint_speed if is_sprinting else walk_speed
+            player.velocity = direction * speed
+            player.move_and_slide()
+        return
+    
+
     
     _apply_gravity(delta)
     _apply_movement(current_input, delta)

@@ -11,7 +11,8 @@ enum GameState {
     READING,        # Просмотр кассеты / записки
     COMBAT,         # Боевой контакт
     DEAD,
-    WIN
+    WIN,
+    SPECTATOR
 }
 
 var current_state: GameState = GameState.EXPLORING

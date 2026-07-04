@@ -79,6 +79,11 @@ func _state_chase(_delta: float) -> void:
     if not is_instance_valid(player):
         _set_state(State.RETURN)
         return
+        
+    if GameStateManager.current_state == GameStateManager.GameState.SPECTATOR:
+        player = null
+        _set_state(State.RETURN)
+        return
     
     # Throttle: обновляем маршрут раз в NAV_UPDATE_INTERVAL
     if _nav_update_timer <= 0.0:
@@ -139,6 +144,9 @@ func _set_state(new_state: State) -> void:
             GameStateManager.change_state(GameStateManager.GameState.EXPLORING)
 
 func _on_player_detected(p: Node3D) -> void:
+    if GameStateManager.current_state == GameStateManager.GameState.SPECTATOR:
+        return
+        
     if current_state != State.ATTACK:
         player = p
         _set_state(State.CHASE)
