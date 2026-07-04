@@ -45,7 +45,7 @@ class_name HotelLevelGenerator
 var double_room_scene = preload("res://scenes/levels/hotel_siberia/rooms/double_room.tscn")
 var double_room_large_scene = preload("res://scenes/levels/hotel_siberia/rooms/double_room_large.tscn")
 var single_room_scene = preload("res://scenes/levels/hotel_siberia/rooms/single_room.tscn")
-var stairwell_scene = preload("res://scenes/levels/hotel_siberia/stairwell.tscn")
+var stairwell_scene = preload("res://scenes/levels/hotel_siberia/stairwell_north.tscn")
 var door_scene = preload("res://entities/props/door.tscn")
 var elevator_door_scene = preload("res://entities/props/elevator_door.tscn")
 
@@ -201,7 +201,7 @@ func _generate_floor(f_num: int, parent: Node3D, is_main: bool) -> void:
 		_create_wall(parent, "CorrWall_R_end", Vector3(wall_x_right, 0, (total_corridor_end + prev_z_right) / 2.0), prev_z_right - total_corridor_end)
 
 	# 5. Generate South Block (South Stairwell)
-	var stairwell_south_scene = load("res://scenes/levels/hotel_siberia/stairwell.tscn")
+	var stairwell_south_scene = load("res://scenes/levels/hotel_siberia/stairwell_south.tscn")
 	if stairwell_south_scene:
 		var stair_inst = stairwell_south_scene.instantiate()
 		stair_inst.name = "StairwellSouth"
