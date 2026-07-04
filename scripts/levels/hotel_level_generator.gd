@@ -100,10 +100,27 @@ func _create_floor_group(name: String, y_pos: float, is_main: bool) -> void:
 	elif name.ends_with("_Below"):
 		f_num -= 1
 		
-	if not is_main and not ResourceLoader.exists("res://scenes/levels/hotel_siberia/hotel_level_" + str(f_num) + ".tscn"):
-		f_num = floor_number
+	var orig_carpet = carpet_color
+	var orig_map = map_texture
+		
+	if not is_main:
+		var scene_path = "res://scenes/levels/hotel_siberia/hotel_level_" + str(f_num) + ".tscn"
+		if ResourceLoader.exists(scene_path):
+			var scene = load(scene_path)
+			if scene:
+				var instance = scene.instantiate()
+				var gen = instance.find_child("HotelGeometry", true, false)
+				if gen:
+					carpet_color = gen.carpet_color
+					map_texture = gen.map_texture
+				instance.free()
+		else:
+			f_num = floor_number
 		
 	_generate_floor(f_num, parent, is_main)
+	
+	carpet_color = orig_carpet
+	map_texture = orig_map
 
 func _generate_floor(f_num: int, parent: Node3D, is_main: bool) -> void:
 	# Вычисляем истинное начало коридора на Севере
