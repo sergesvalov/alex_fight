@@ -164,17 +164,10 @@ func _generate_corridor_lights(parent: Node3D, start_z: float, end_z: float, f_n
 func _generate_north_block(parent: Node3D, start_z: float) -> void:
 	_generate_elevator_shaft(parent)
 	_generate_maintenance_room(parent)
-	
-	var side_corr_z_end = -56.0 * GlobalConfig.get_floor_scale()
-	var main_wall_len = side_corr_z_end - start_z
-	if main_wall_len > 0:
-		var center_z = start_z + (main_wall_len / 2.0)
-		var center_x = corridor_width / 2.0 - wall_thickness / 2.0
-		_create_csg_box(parent, "MainCorrRightWall", Vector3(center_x, corridor_height / 2.0, center_z), Vector3(wall_thickness, corridor_height, main_wall_len), false, false)
 		
 	var stair = stairwell_scene.instantiate()
 	stair.name = "Stairwell_N"
-	stair.transform.basis = Basis.from_euler(Vector3(0, 0, 0))
+	stair.transform.basis = Basis.from_euler(Vector3(0, PI, 0))
 	stair.transform.origin = Vector3(0, 0, start_z)
 	parent.add_child(stair)
 	stair.owner = get_tree().edited_scene_root
@@ -200,7 +193,7 @@ func _generate_south_block(parent: Node3D, stair_z: float) -> void:
 		var hole_y = hole_height / 2.0
 		_create_csg_hole(parent, "SouthStairJunctionHole", Vector3(w_x, hole_y, stair_z_pos), Vector3(wall_thickness + room_hole_margin, hole_height, hole_width))
 		
-		var inst = HotelDoorGenerator.create_stairwell_door(parent, Vector3(w_x, 0, stair_z_pos), false)
+		var inst = HotelDoorGenerator.create_stairwell_door(parent, Vector3(w_x, 0, stair_z_pos), -PI/2.0, false)
 		if inst and Engine.is_editor_hint() and get_tree().edited_scene_root:
 			inst.owner = get_tree().edited_scene_root
 
@@ -227,7 +220,7 @@ func _generate_stairwell_junction(parent: Node3D, z_pos: float, is_north: bool) 
 	var hole_y = hole_height / 2.0
 	_create_csg_hole(wall_node, prefix + "StairwellJunctionHole", Vector3(0, hole_y - (wall_h / 2.0), 0), Vector3(hole_width, hole_height, wall_thick + room_hole_margin))
 	
-	var inst = HotelDoorGenerator.create_stairwell_door(parent, Vector3(0, 0, z_pos), is_north)
+	var inst = HotelDoorGenerator.create_stairwell_door(parent, Vector3(0, 0, z_pos), PI if is_north else 0.0, is_north)
 	if inst and Engine.is_editor_hint() and get_tree().edited_scene_root:
 		inst.owner = get_tree().edited_scene_root
 

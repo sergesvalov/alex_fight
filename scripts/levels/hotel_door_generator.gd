@@ -41,13 +41,12 @@ static func create_room_wc_door(parent: Node3D, pos: Vector3, is_left: bool) -> 
 # ---------------------------------------------------------
 # Corridor Doors (Stairwell and Elevator)
 # ---------------------------------------------------------
-static func create_stairwell_door(parent: Node3D, pos: Vector3, is_north: bool = true) -> Node3D:
+static func create_stairwell_door(parent: Node3D, pos: Vector3, rot_y: float = 0.0, is_north: bool = true) -> Node3D:
 	var door = STAIR_DOOR_SCENE.instantiate()
 	door.name = "StairwellDoor" if is_north else "StairwellDoor_South"
 	parent.add_child(door)
 	door.position = pos
-	# stair_door.tscn is built such that it swings correctly if placed at Z center.
-	# The rotation is handled inside the stairwell setup if needed, but normally it just sits at pos.
+	door.rotation.y = rot_y
 	return door
 
 static func create_elevator_door(parent: Node3D, pos: Vector3, rot_y: float = 0.0) -> Node3D:
