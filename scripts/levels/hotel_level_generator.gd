@@ -101,9 +101,8 @@ func _create_floor_group(name: String, y_pos: float, is_main: bool) -> void:
 	ad_texture = orig_ad
 
 func _generate_floor(f_num: int, parent: Node3D, is_main: bool) -> void:
-	var f_scale = GlobalConfig.get_floor_scale()
-	var corridor_start_z = 13.05 * f_scale
-	var total_corridor_end = -58.0 * f_scale
+	var corridor_start_z = HotelLevelCoordinates.get_corridor_start_z()
+	var total_corridor_end = HotelLevelCoordinates.get_total_corridor_end()
 	
 	_generate_corridor_shell(parent, corridor_start_z, total_corridor_end)
 	_generate_north_block(parent, total_corridor_end)

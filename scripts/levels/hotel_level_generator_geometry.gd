@@ -25,28 +25,7 @@ func _generate_rooms_side(f_num: int, parent: Node3D, is_left: bool, corridor_st
 	var prefix = "DoubleRoomL_" if is_left else "SingleRoomR_"
 	var side_str = "L_" if is_left else "R_"
 	
-	var left_rooms_data = [
-		{"name": "408", "z": 5.0,   "type": "normal", "flip": true},
-		{"name": "406", "z": -5.0,  "type": "normal", "flip": false},
-		{"name": "405", "z": -15.0, "type": "normal", "flip": false},
-		{"name": "403", "z": -25.0, "type": "normal", "flip": true},
-		{"name": "402", "z": -35.0, "type": "large",  "flip": true},
-		{"name": "401", "z": -45.0, "type": "large",  "flip": false},
-	]
-
-	var right_rooms_data = [
-		{"name": "421", "z": 7.0,   "flip": false},
-		{"name": "420", "z": 1.0,   "flip": false},
-		{"name": "417", "z": -5.0,  "flip": false},
-		{"name": "416", "z": -13.0, "flip": false},
-		{"name": "415", "z": -21.0, "flip": false},
-		{"name": "413", "z": -27.0, "flip": false},
-		{"name": "412", "z": -33.0, "flip": false},
-		{"name": "411", "z": -39.0, "flip": false},
-		{"name": "410", "z": -45.0, "flip": false},
-	]
-	
-	var rooms_data = left_rooms_data if is_left else right_rooms_data
+	var rooms_data = HotelLevelCoordinates.get_left_rooms_data() if is_left else HotelLevelCoordinates.get_right_rooms_data()
 	
 	for i in range(rooms_data.size()):
 		var data = rooms_data[i]
@@ -109,15 +88,15 @@ func _generate_rooms_side(f_num: int, parent: Node3D, is_left: bool, corridor_st
 		
 	var end_wall_z = total_corridor_end
 	if not is_left:
-		# The right side has a side corridor (alcove) from -48.0 to -56.0 for Maintenance and Elevator
-		end_wall_z = -48.0 * GlobalConfig.get_floor_scale()
+		# The right side has a side corridor (alcove) for Maintenance and Elevator
+		end_wall_z = HotelLevelCoordinates.get_alcove_south_wall_z()
 		
 	if prev_z > end_wall_z:
 		_create_wall(parent, "CorrWall_" + side_str + "end", Vector3(wall_x, 0, (end_wall_z + prev_z) / 2.0), prev_z - end_wall_z)
 
 func _generate_map_decals(parent: Node3D) -> void:
-	# Place near the elevator (North end, Z=-42.5) where it's a solid wall on both sides
-	var map_z = -42.5 * GlobalConfig.get_floor_scale()
+	# Place near the elevator (North end) where it's a solid wall on both sides
+	var map_z = HotelLevelCoordinates.get_map_decal_z()
 	var inner_wall_x = (corridor_width / 2.0) - (wall_thickness / 2.0)
 	var decal_x = inner_wall_x - map_decal_wall_offset
 	
@@ -175,9 +154,8 @@ func _generate_north_block(parent: Node3D, start_z: float) -> void:
 	_generate_stairwell_junction(parent, start_z, true)
 	
 	# Fill in missing walls for the alcove on the right
-	var f_scale = GlobalConfig.get_floor_scale()
 	var east_wall_x = (corridor_width / 2.0) + side_corridor_depth
-	var south_wall_z = -48.0 * f_scale
+	var south_wall_z = HotelLevelCoordinates.get_alcove_south_wall_z()
 	var south_wall_x_start = corridor_width / 2.0 - wall_thickness / 2.0
 	var south_wall_length = side_corridor_depth + wall_thickness
 	
@@ -185,13 +163,13 @@ func _generate_north_block(parent: Node3D, start_z: float) -> void:
 	_create_csg_box(parent, "AlcoveSouthWall", Vector3(south_wall_x_start + south_wall_length/2.0, corridor_height / 2.0, south_wall_z), Vector3(south_wall_length, corridor_height, wall_thickness), false, false)
 	
 	# Gap 2: East wall of alcove between Maintenance and Elevator
-	var gap_z_start = -50.5 * f_scale
-	var gap_z_end = -58.0 * f_scale
+	var gap_z_start = HotelLevelCoordinates.get_alcove_east_wall_gap1_z_start()
+	var gap_z_end = HotelLevelCoordinates.get_alcove_east_wall_gap1_z_end()
 	_create_wall(parent, "AlcoveEastWall", Vector3(east_wall_x, 0, (gap_z_start + gap_z_end) / 2.0), gap_z_start - gap_z_end)
 	
 	# Gap 3: East wall of alcove from -48.0 to -47.5
-	var gap2_z_start = -48.0 * f_scale
-	var gap2_z_end = -47.5 * f_scale
+	var gap2_z_start = HotelLevelCoordinates.get_alcove_east_wall_gap2_z_start()
+	var gap2_z_end = HotelLevelCoordinates.get_alcove_east_wall_gap2_z_end()
 	_create_wall(parent, "AlcoveEastWall_South", Vector3(east_wall_x, 0, (gap2_z_start + gap2_z_end) / 2.0), gap2_z_start - gap2_z_end)
 
 func _generate_south_block(parent: Node3D, stair_z: float) -> void:
@@ -201,7 +179,7 @@ func _generate_south_block(parent: Node3D, stair_z: float) -> void:
 		stair_inst.name = "StairwellSouth"
 		stair_inst.rotation_degrees.y = 90
 		var side_x = (corridor_width / 2.0) + 0.5 * GlobalConfig.get_floor_scale()
-		var stair_z_pos = 12.0 * GlobalConfig.get_floor_scale()
+		var stair_z_pos = HotelLevelCoordinates.get_south_stair_z()
 		stair_inst.position = Vector3(side_x, 0, stair_z_pos)
 		parent.add_child(stair_inst)
 		stair_inst.owner = get_tree().edited_scene_root
@@ -247,7 +225,7 @@ func _generate_stairwell_junction(parent: Node3D, z_pos: float, is_north: bool) 
 
 func _generate_elevator_shaft(parent: Node3D) -> void:
 	if not elevator_shaft_scene: return
-	var elev_z = -58.0 * GlobalConfig.get_floor_scale()
+	var elev_z = HotelLevelCoordinates.get_elevator_z()
 	var elev_x_center = (corridor_width / 2.0) + (side_corridor_depth / 2.0)
 	var inst = elevator_shaft_scene.instantiate()
 	inst.name = "ElevatorShaftBlock"
@@ -258,7 +236,7 @@ func _generate_elevator_shaft(parent: Node3D) -> void:
 
 func _generate_maintenance_room(parent: Node3D) -> void:
 	if not maintenance_room_scene: return
-	var maint_z = -50.5 * GlobalConfig.get_floor_scale()
+	var maint_z = HotelLevelCoordinates.get_maintenance_z()
 	var east_wall_x = (corridor_width / 2.0) + side_corridor_depth
 	var inst = maintenance_room_scene.instantiate()
 	inst.name = "MaintenanceRoomBlock"
