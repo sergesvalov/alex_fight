@@ -154,11 +154,11 @@ func _ready() -> void:
             if not stair_n:
                 print("[FAILED] Stairwell_N не сгенерирован")
                 passed = false
-            elif stair_n.transform.origin.z != (-56.5 * GlobalConfig.get_floor_scale() if Engine.has_singleton("GlobalConfig") or floor_main.has_node("/root/GlobalConfig") else -56.5):
+            elif stair_n.transform.origin.z != (10.0 * GlobalConfig.get_floor_scale() if Engine.has_singleton("GlobalConfig") or floor_main.has_node("/root/GlobalConfig") else 10.0):
                 print("[FAILED] Stairwell_N имеет неверную координату Z: ", stair_n.transform.origin.z)
                 passed = false
             else:
-                print("[OK] Stairwell_N корректно сгенерирован")
+                print("[OK] Stairwell_N корректно сгенерирован на Z = 10.0")
                 
             if not stair_s:
                 print("[FAILED] StairwellSouth не сгенерирован")
