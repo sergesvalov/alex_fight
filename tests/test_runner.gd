@@ -98,14 +98,40 @@ func _ready() -> void:
     print("Тест: HotelLevelGenerator")
     var gen_script = load("res://scripts/levels/hotel_level_generator.gd")
     if gen_script:
+        var parent_node = Node3D.new()
+        add_child(parent_node)
+        
+        var mock_player = Node3D.new()
+        mock_player.name = "Player"
+        parent_node.add_child(mock_player)
+        
+        var mock_enemies = Node3D.new()
+        mock_enemies.name = "Enemies"
+        var mock_cerberus = Node3D.new()
+        mock_cerberus.name = "Cerberus"
+        mock_enemies.add_child(mock_cerberus)
+        parent_node.add_child(mock_enemies)
+        
         var generator = Node3D.new()
         generator.set_script(gen_script)
-        add_child(generator)
+        generator.name = "HotelGeometry"
+        parent_node.add_child(generator)
         
         # Эмулируем генерацию
-        generator._generate_level()
-        # Проверяем, что стилизация работает без ошибок
-        generator._apply_stylization()
+        generator._ready() # _ready triggers generation
+        
+        # Validate that generation completed successfully by checking if player moved
+        if mock_player.global_transform.origin == Vector3.ZERO:
+            print("[FAILED] Игрок не был перемещен на точку спавна! Возможно, генератор прервался с ошибкой до генерации энтити.")
+            passed = false
+        else:
+            print("[OK] Игрок успешно перемещен генератором на " + str(mock_player.global_transform.origin))
+            
+        if mock_cerberus.global_transform.origin == Vector3.ZERO:
+            print("[FAILED] Цербер не был перемещен на точку спавна! Генератор прервался или не нашел ноду.")
+            passed = false
+        else:
+            print("[OK] Цербер успешно перемещен генератором на " + str(mock_cerberus.global_transform.origin))
         
         var floor_main = generator.get_node_or_null("GeneratedFloor_Main")
         var floor_above = generator.get_node_or_null("GeneratedFloor_Above")

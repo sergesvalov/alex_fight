@@ -51,7 +51,7 @@ func _generate_rooms_side(f_num: int, parent: Node3D, is_left: bool, corridor_st
 		if "carpet_color" in room:
 			room.carpet_color = carpet_color
 			
-		var current_door_offset = room_door_z_offset if is_left else -0.25 * GlobalConfig.get_floor_scale()
+		var current_door_offset = room_door_z_offset * GlobalConfig.get_floor_scale() if is_left else -0.25 * GlobalConfig.get_floor_scale()
 		var half_opening = room_door_opening_width / 2.0
 		var door_center_z = c_z + current_door_offset
 		var door_top_z = door_center_z + half_opening
@@ -95,11 +95,12 @@ func _generate_map_decals(parent: Node3D) -> void:
 		parent.add_child(map_decal)
 		map_decal.owner = get_tree().edited_scene_root
 
-func _generate_corridor_lights(parent: Node3D, start_z: float, end_z: float) -> void:
+func _generate_corridor_lights(parent: Node3D, start_z: float, end_z: float, f_num: int) -> void:
 	var z = start_z - (double_room_step / 2.0)
 	var i = 1
 	while z >= end_z:
-		_create_light(parent, "CorridorLight_" + str(i), Vector3(0, corridor_height - 0.5, z), Color(1.0, 0.95, 0.9))
+		var light = _create_light(parent, "CorridorLight_" + str(i), Vector3(0, corridor_height - 0.5, z), Color(1.0, 0.95, 0.9))
+		light.visible = (f_num == 4)
 		z -= double_room_step
 		i += 1
 

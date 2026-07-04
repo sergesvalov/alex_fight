@@ -115,10 +115,10 @@ func _generate_floor(f_num: int, parent: Node3D, is_main: bool) -> void:
 	_generate_rooms_side(f_num, parent, false, corridor_start_z, total_corridor_end)
 	
 	_generate_map_decals(parent)
-	_generate_corridor_lights(parent, corridor_start_z, total_corridor_end)
+	_generate_corridor_lights(parent, corridor_start_z, total_corridor_end, f_num)
 	
 	if is_main:
-		HotelLevelEntitySpawner.generate_entities(self, corridor_end_z)
+		HotelLevelEntitySpawner.generate_entities(self, total_corridor_end)
 		
 	print("Level geometry generated for floor " + str(f_num))
 
