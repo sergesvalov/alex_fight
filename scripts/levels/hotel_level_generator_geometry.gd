@@ -105,6 +105,8 @@ func _generate_north_block(parent: Node3D, start_z: float) -> void:
 	stair.owner = get_tree().edited_scene_root
 	
 	_create_csg_box(parent, "NorthFillerRight", Vector3(7.4, 2.0, 9.0), Vector3(7.8, 4.0, 2.0), false, false)
+	
+	_generate_stairwell_junction(parent, start_z, true)
 
 func _generate_south_block(parent: Node3D, stair_z: float) -> void:
 	var stairwell_south_scene = load("res://scenes/levels/hotel_siberia/stairwell_south.tscn")
@@ -123,6 +125,41 @@ func _generate_south_block(parent: Node3D, stair_z: float) -> void:
 	var fill_right_len = -64.8 - stair_z
 	if fill_right_len > 0:
 		_create_csg_box(parent, "SouthFillerRight", Vector3(7.4, 2.0, stair_z + fill_right_len/2.0), Vector3(7.8, 4.0, fill_right_len), false, false)
+		
+	_generate_stairwell_junction(parent, stair_z, false)
+
+func _generate_stairwell_junction(parent: Node3D, z_pos: float, is_north: bool) -> void:
+	var prefix = "North" if is_north else "South"
+	
+	var wall_w = 7.0
+	var wall_h = corridor_height
+	var wall_thick = wall_thickness
+	
+	var w_z = z_pos - (wall_thick / 2.0) if is_north else z_pos + (wall_thick / 2.0)
+	
+	var wall_node = _create_csg_box(parent, prefix + "StairwellJunctionWall", Vector3(0, wall_h / 2.0, w_z), Vector3(wall_w, wall_h, wall_thick), false, false)
+	
+	var hole_width = room_door_opening_width
+	var hole_height = util_door_height
+	var hole_y = hole_height / 2.0
+	
+	_create_csg_hole(wall_node, prefix + "StairwellJunctionHole", Vector3(0, hole_y - (wall_h / 2.0), 0), Vector3(hole_width, hole_height, wall_thick + room_hole_margin))
+	
+	var stair_door = load("res://entities/props/stair_door.tscn")
+	if stair_door:
+		var inst = stair_door.instantiate()
+		inst.name = prefix + "StairwellDoor"
+		inst.transform.origin = Vector3(0, 0, z_pos)
+		if is_north:
+			inst.rotation_degrees.y = 180
+		
+		# Apply dynamic scale based on player size if available
+		if not Engine.is_editor_hint():
+			var p_scale = GlobalConfig.get_player_scale()
+			inst.scale = Vector3(p_scale, p_scale, p_scale)
+			
+		parent.add_child(inst)
+		inst.owner = get_tree().edited_scene_root
 
 func _generate_elevator_shaft(parent: Node3D) -> void:
 	if not elevator_shaft_scene: return
