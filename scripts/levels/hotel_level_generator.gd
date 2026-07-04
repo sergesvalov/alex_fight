@@ -201,11 +201,12 @@ func _generate_floor(f_num: int, parent: Node3D, is_main: bool) -> void:
 		_create_wall(parent, "CorrWall_R_end", Vector3(wall_x_right, 0, (total_corridor_end + prev_z_right) / 2.0), prev_z_right - total_corridor_end)
 
 	# 5. Generate South Block (South Stairwell)
-	var stairwell_south_scene = load("res://scenes/levels/hotel_siberia/stairwell_south.tscn")
+	var stairwell_south_scene = load("res://scenes/levels/hotel_siberia/stairwell.tscn")
 	if stairwell_south_scene:
 		var stair_inst = stairwell_south_scene.instantiate()
 		stair_inst.name = "StairwellSouth"
-		# Positioned exactly at the end of the corridor, facing South (no rotation)
+		# Ротация 180, чтобы лестница уходила в -Z (на Юг, от коридора)
+		stair_inst.rotation_degrees.y = 180
 		stair_inst.position = Vector3(0, 0, stair_z)
 		parent.add_child(stair_inst)
 		
@@ -313,7 +314,8 @@ func _generate_north_block(parent: Node, start_z: float) -> void:
 	# Северная лестница выровнена по самому верху коридора
 	var stair = stairwell_scene.instantiate()
 	stair.name = "Stairwell_N"
-	stair.transform.basis = Basis.from_euler(Vector3(0, PI, 0))
+	# Без ротации, чтобы лестница уходила в +Z (на Север, от коридора)
+	stair.transform.basis = Basis.from_euler(Vector3(0, 0, 0))
 	stair.transform.origin = Vector3(0, 0, start_z)
 	parent.add_child(stair)
 	stair.owner = get_tree().edited_scene_root
