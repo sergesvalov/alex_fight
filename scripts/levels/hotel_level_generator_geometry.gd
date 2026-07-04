@@ -29,17 +29,17 @@ func _generate_rooms_side(f_num: int, parent: Node3D, is_left: bool, corridor_st
 		{"name": "408", "z": 5.0,   "type": "normal", "flip": true},
 		{"name": "406", "z": -5.0,  "type": "normal", "flip": false},
 		{"name": "405", "z": -15.0, "type": "normal", "flip": false},
-		{"name": "403", "z": -25.0, "type": "normal", "flip": false},
-		{"name": "402", "z": -41.0, "type": "large",  "flip": false},
-		{"name": "401", "z": -51.0, "type": "large",  "flip": false},
+		{"name": "403", "z": -25.0, "type": "normal", "flip": true},
+		{"name": "402", "z": -35.0, "type": "large",  "flip": true},
+		{"name": "401", "z": -45.0, "type": "large",  "flip": false},
 	]
 
 	var right_rooms_data = [
 		{"name": "421", "z": 7.0,   "flip": false},
-		{"name": "420", "z": 1.0,   "flip": true},
-		{"name": "417", "z": -9.0,  "flip": true},
-		{"name": "416", "z": -15.0, "flip": false},
-		{"name": "415", "z": -21.0, "flip": true},
+		{"name": "420", "z": 1.0,   "flip": false},
+		{"name": "417", "z": -5.0,  "flip": false},
+		{"name": "416", "z": -13.0, "flip": false},
+		{"name": "415", "z": -21.0, "flip": false},
 		{"name": "413", "z": -27.0, "flip": false},
 		{"name": "412", "z": -33.0, "flip": false},
 		{"name": "411", "z": -39.0, "flip": false},
@@ -181,7 +181,7 @@ func _generate_south_block(parent: Node3D, stair_z: float) -> void:
 		stair_inst.name = "StairwellSouth"
 		stair_inst.rotation_degrees.y = 90
 		var side_x = (corridor_width / 2.0) + (side_corridor_depth / 2.0)
-		var stair_z_pos = -4.0 * GlobalConfig.get_floor_scale()
+		var stair_z_pos = 12.0 * GlobalConfig.get_floor_scale()
 		stair_inst.position = Vector3(side_x, 0, stair_z_pos)
 		parent.add_child(stair_inst)
 		stair_inst.owner = get_tree().edited_scene_root
@@ -201,7 +201,7 @@ func _generate_south_block(parent: Node3D, stair_z: float) -> void:
 	var wall_w = corridor_width + wall_thickness * 2.0
 	var wall_h = corridor_height
 	var wall_thick = wall_thickness
-	var w_z = 10.0 * GlobalConfig.get_floor_scale() + (wall_thick / 2.0)
+	var w_z = 15.0 * GlobalConfig.get_floor_scale() + (wall_thick / 2.0)
 	_create_csg_box(parent, "SouthEndWall", Vector3(0, wall_h / 2.0, w_z), Vector3(wall_w, wall_h, wall_thick), false, false)
 
 func _generate_stairwell_junction(parent: Node3D, z_pos: float, is_north: bool) -> void:
@@ -227,7 +227,7 @@ func _generate_stairwell_junction(parent: Node3D, z_pos: float, is_north: bool) 
 
 func _generate_elevator_shaft(parent: Node3D) -> void:
 	if not elevator_shaft_scene: return
-	var elev_z = -54.0 * GlobalConfig.get_floor_scale()
+	var elev_z = -55.5 * GlobalConfig.get_floor_scale()
 	var elev_x_center = (corridor_width / 2.0) + (side_corridor_depth / 2.0)
 	var inst = elevator_shaft_scene.instantiate()
 	inst.name = "ElevatorShaftBlock"
@@ -238,7 +238,7 @@ func _generate_elevator_shaft(parent: Node3D) -> void:
 
 func _generate_maintenance_room(parent: Node3D) -> void:
 	if not maintenance_room_scene: return
-	var maint_z = -50.0 * GlobalConfig.get_floor_scale()
+	var maint_z = -50.5 * GlobalConfig.get_floor_scale()
 	var east_wall_x = (corridor_width / 2.0) + side_corridor_depth
 	var inst = maintenance_room_scene.instantiate()
 	inst.name = "MaintenanceRoomBlock"

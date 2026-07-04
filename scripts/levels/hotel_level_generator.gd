@@ -101,16 +101,13 @@ func _create_floor_group(name: String, y_pos: float, is_main: bool) -> void:
 	ad_texture = orig_ad
 
 func _generate_floor(f_num: int, parent: Node3D, is_main: bool) -> void:
-	var corridor_start_z = double_room_start_z + (double_room_step / 2.0)
-	var max_double_z = double_room_start_z - (num_double_rooms - 1) * double_room_step - double_room_wall_len
-	var max_single_z = single_room_start_z - (num_single_rooms - 1) * single_room_step - single_room_wall_len
-	var corridor_end_z = min(max_double_z, max_single_z)
-	var stair_z = corridor_end_z - stairwell_south_offset
-	var total_corridor_end = stair_z - total_corridor_end_margin
+	var f_scale = GlobalConfig.get_floor_scale()
+	var corridor_start_z = 15.0 * f_scale
+	var total_corridor_end = -58.0 * f_scale
 	
 	_generate_corridor_shell(parent, corridor_start_z, total_corridor_end)
 	_generate_north_block(parent, total_corridor_end)
-	_generate_south_block(parent, stair_z)
+	_generate_south_block(parent, corridor_start_z)
 	
 	_generate_rooms_side(f_num, parent, true, corridor_start_z, total_corridor_end)
 	_generate_rooms_side(f_num, parent, false, corridor_start_z, total_corridor_end)

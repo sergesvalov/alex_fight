@@ -212,7 +212,7 @@ func _ready() -> void:
                         floor_errors += 1
                 
                 # Проверка дверей
-                if current.name in ["MainDoor", "WCDoor", "MaintenanceDoor", "Door"]:
+                if current.name in ["MainDoor", "WCDoor", "MaintenanceDoor", "Door", "ElevatorDoor", "StairwellDoor", "StairwellDoor_South"]:
                     var door_body = current.get_node_or_null("AnimatableBody3D")
                     if door_body:
                         checked_doors += 1
