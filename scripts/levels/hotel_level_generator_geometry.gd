@@ -26,23 +26,36 @@ func _generate_rooms_side(f_num: int, parent: Node3D, is_left: bool, corridor_st
 	var step = double_room_step if is_left else single_room_step
 	var room_x = double_room_x if is_left else single_room_x
 	var suffixes = double_room_suffixes if is_left else single_room_suffixes
-	var prefix = "DoubleRoomL" if is_left else "SingleRoomR"
+	var prefix = "DoubleRoomL_" if is_left else "SingleRoomR_"
 	var side_str = "L_" if is_left else "R_"
 	
 	for i in range(num_rooms):
 		var c_z = start_z - i * step
+		var reverse_i = num_rooms - 1 - i
+		var is_flipped = false
+		
 		var room
 		if is_left:
-			room = double_room_large_scene.instantiate() if i < 2 else double_room_scene.instantiate()
+			var is_large = reverse_i < 2
+			room = double_room_large_scene.instantiate() if is_large else double_room_scene.instantiate()
 			HotelDoorGenerator.create_room_main_door(room, Vector3(4.3, 0, 0.5), true)
 			HotelDoorGenerator.create_room_wc_door(room, Vector3(1.55, 0, -3.6), true)
+			if reverse_i == 5:
+				is_flipped = true
 		else:
 			room = single_room_scene.instantiate()
 			HotelDoorGenerator.create_room_main_door(room, Vector3(-3.05, 0, -0.25), false)
 			HotelDoorGenerator.create_room_wc_door(room, Vector3(-2.2, 0, -0.25), false)
-			
-		room.name = prefix + str(i + 1) + "_F" + str(f_num)
+			if reverse_i in [4, 6, 7]:
+				is_flipped = true
+				
+		var room_number = str(f_num) + suffixes[reverse_i]
+		room.name = prefix + room_number
 		room.transform.origin = Vector3(room_x, room_y_offset, c_z)
+		
+		if is_flipped:
+			room.scale.z = -1
+			
 		parent.add_child(room)
 		room.owner = get_tree().edited_scene_root
 		
@@ -58,12 +71,13 @@ func _generate_rooms_side(f_num: int, parent: Node3D, is_left: bool, corridor_st
 		room.add_child(lm)
 		lm.owner = get_tree().edited_scene_root
 		
-		lm.room_number = str(f_num) + suffixes[i % suffixes.size()]
+		lm.room_number = room_number
 		
 		if "carpet_color" in room:
 			room.carpet_color = carpet_color
 			
-		var current_door_offset = room_door_z_offset * GlobalConfig.get_floor_scale() if is_left else -0.25 * GlobalConfig.get_floor_scale()
+		var flip_mult = -1.0 if is_flipped else 1.0
+		var current_door_offset = (room_door_z_offset * GlobalConfig.get_floor_scale() if is_left else -0.25 * GlobalConfig.get_floor_scale()) * flip_mult
 		var half_opening = room_door_opening_width / 2.0
 		var door_center_z = c_z + current_door_offset
 		var door_top_z = door_center_z + half_opening
@@ -77,8 +91,8 @@ func _generate_rooms_side(f_num: int, parent: Node3D, is_left: bool, corridor_st
 		_create_wall(parent, "CorrWall_" + side_str + "end", Vector3(wall_x, 0, (total_corridor_end + prev_z) / 2.0), prev_z - total_corridor_end)
 
 func _generate_map_decals(parent: Node3D) -> void:
-	# Place at 1/4th step to avoid SingleRoom doors (which are at 0 and 1/2 step relative to DoubleRoom)
-	var map_z = double_room_start_z - (double_room_step * 0.25)
+	# Place near the elevator (North end, Z=-42.5) where it's a solid wall on both sides
+	var map_z = -42.5 * GlobalConfig.get_floor_scale()
 	var inner_wall_x = (corridor_width / 2.0) - (wall_thickness / 2.0)
 	var decal_x = inner_wall_x - map_decal_wall_offset
 	
