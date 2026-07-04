@@ -45,15 +45,25 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.75, -5.25, 1.75)
 size = Vector3(3.5, 0.5, 3.5)
 material = SubResource("StandardMaterial3D_floor")
 
-[node name="WallSouth" type="CSGBox3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.25)
-size = Vector3(7, 10, 0.5)
+[node name="WallSouthLeft" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.21, 0, -0.25)
+size = Vector3(2.58, 10, 0.5)
 material = SubResource("StandardMaterial3D_wall")
 
-[node name="DoorHole" type="CSGBox3D" parent="WallSouth"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4375, 0)
-operation = 2
-size = Vector3(1.84, 2.875, 1)
+[node name="WallSouthRight" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.21, 0, -0.25)
+size = Vector3(2.58, 10, 0.5)
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="WallSouthTop" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.9375, -0.25)
+size = Vector3(1.84, 2.125, 0.5)
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="WallSouthBottom" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -2.5, -0.25)
+size = Vector3(1.84, 5.0, 0.5)
+material = SubResource("StandardMaterial3D_wall")
 
 [node name="WallNorth" type="CSGBox3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 10.75)
