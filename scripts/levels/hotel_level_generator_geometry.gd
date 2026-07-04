@@ -179,7 +179,7 @@ func _generate_south_block(parent: Node3D, stair_z: float) -> void:
 	if stairwell_south_scene:
 		var stair_inst = stairwell_south_scene.instantiate()
 		stair_inst.name = "StairwellSouth"
-		stair_inst.rotation_degrees.y = -90
+		stair_inst.rotation_degrees.y = 90
 		var side_x = (corridor_width / 2.0) + (side_corridor_depth / 2.0)
 		var stair_z_pos = -4.0 * GlobalConfig.get_floor_scale()
 		stair_inst.position = Vector3(side_x, 0, stair_z_pos)
@@ -193,7 +193,7 @@ func _generate_south_block(parent: Node3D, stair_z: float) -> void:
 		var hole_y = hole_height / 2.0
 		_create_csg_hole(parent, "SouthStairJunctionHole", Vector3(w_x, hole_y, stair_z_pos), Vector3(wall_thickness + room_hole_margin, hole_height, hole_width))
 		
-		var inst = HotelDoorGenerator.create_stairwell_door(parent, Vector3(w_x, 0, stair_z_pos), -PI/2.0, false)
+		var inst = HotelDoorGenerator.create_stairwell_door(parent, Vector3(w_x, 0, stair_z_pos), PI/2.0, false)
 		if inst and Engine.is_editor_hint() and get_tree().edited_scene_root:
 			inst.owner = get_tree().edited_scene_root
 
