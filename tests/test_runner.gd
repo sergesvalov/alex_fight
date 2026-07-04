@@ -154,7 +154,7 @@ func _ready() -> void:
             if not stair_n:
                 print("[FAILED] Stairwell_N не сгенерирован")
                 passed = false
-            elif stair_n.transform.origin.z != -56.5 * generator.GlobalConfig.get_floor_scale() if generator.has_node("/root/GlobalConfig") else -56.5:
+            elif stair_n.transform.origin.z != (-56.5 * GlobalConfig.get_floor_scale() if Engine.has_singleton("GlobalConfig") or floor_main.has_node("/root/GlobalConfig") else -56.5):
                 print("[FAILED] Stairwell_N имеет неверную координату Z: ", stair_n.transform.origin.z)
                 passed = false
             else:
@@ -172,7 +172,7 @@ func _ready() -> void:
             if not map_1:
                 print("[FAILED] MapDecal_1 не найден")
                 passed = false
-            elif map_1.transform.origin.z != -42.5 * generator.GlobalConfig.get_floor_scale() if generator.has_node("/root/GlobalConfig") else -42.5:
+            elif map_1.transform.origin.z != (-42.5 * GlobalConfig.get_floor_scale() if Engine.has_singleton("GlobalConfig") or floor_main.has_node("/root/GlobalConfig") else -42.5):
                 print("[FAILED] MapDecal_1 не в правильном месте. Z = ", map_1.transform.origin.z)
                 passed = false
             else:
