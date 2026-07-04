@@ -43,6 +43,7 @@ class_name HotelLevelGenerator
 @export var map_texture: Texture2D
 
 var double_room_scene = preload("res://scenes/levels/hotel_siberia/rooms/double_room.tscn")
+var double_room_large_scene = preload("res://scenes/levels/hotel_siberia/rooms/double_room_large.tscn")
 var single_room_scene = preload("res://scenes/levels/hotel_siberia/rooms/single_room.tscn")
 var stairwell_scene = preload("res://scenes/levels/hotel_siberia/stairwell.tscn")
 var door_scene = preload("res://entities/props/door.tscn")
@@ -137,7 +138,12 @@ func _generate_floor(f_num: int, parent: Node3D, is_main: bool) -> void:
 	for i in range(num_double_rooms):
 		var c_z = double_room_start_z - i * double_room_step
 		
-		var room = double_room_scene.instantiate()
+		var room
+		if i < 2:
+			room = double_room_large_scene.instantiate()
+		else:
+			room = double_room_scene.instantiate()
+		
 		room.name = "DoubleRoomL" + str(i + 1) + "_F" + str(f_num)
 		room.transform.origin = Vector3(double_room_x, room_y_offset, c_z)
 		parent.add_child(room)
