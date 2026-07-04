@@ -8,8 +8,8 @@
 [ext_resource type="Script" path="res://scripts/player/components/player_weapon.gd" id="weap_script"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_pl"]
-radius = 0.8
-height = 3.2
+radius = 0.64
+height = 2.56
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_skin"]
 albedo_color = Color(0.9, 0.7, 0.5, 1)
@@ -38,11 +38,11 @@ floor_snap_length = 0.5
 script = ExtResource("1_player")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.28, 0)
 shape = SubResource("CapsuleShape3D_pl")
 
 [node name="PlayerBodyModel" type="Node3D" parent="."]
-transform = Transform3D(1.6, 0, 0, 0, 1.6, 0, 0, 0, 1.6, 0, 0, 0)
+transform = Transform3D(1.28, 0, 0, 0, 1.28, 0, 0, 0, 1.28, 0, 0, 0)
 
 [node name="Head" type="MeshInstance3D" parent="PlayerBodyModel"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
@@ -65,7 +65,7 @@ layers = 2
 mesh = SubResource("BoxMesh_arm")
 
 [node name="CameraRig" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.6, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.1, 0)
 
 [node name="Camera3D" type="Camera3D" parent="CameraRig"]
 cull_mask = 1048573
@@ -100,8 +100,8 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3, -0.3, -0.5)
 
 [node name="PlayerMovement" type="Node" parent="."]
 script = ExtResource("move_script")
-walk_speed = 7.0
-sprint_speed = 12.0
+walk_speed = 5.5
+sprint_speed = 9.5
 gravity = 9.8
 
 [node name="PlayerCamera" type="Node" parent="."]

@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3]
+﻿[gd_scene load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://scripts/levels/rooms/room.gd" id="1_script"]
 [ext_resource type="Texture2D" path="res://assets/textures/hotel_carpet.jpg" id="1_carpet"]
@@ -120,25 +120,25 @@ light_energy = 0.6
 omni_range = 4.0
 
 [node name="Bed1" parent="." instance=ExtResource("5_bed")]
-transform = Transform3D(0.0, 0.0, 1.7, 0.0, 1.7, 0.0, -1.7, 0.0, 0.0, -4.2, 0.0, -2.4)
+transform = Transform3D(0.0, 0.0, 1.36, 0.0, 1.36, 0.0, -1.36, 0.0, 0.0, -4.2, 0.0, -2.4)
 
 [node name="Bed2" parent="." instance=ExtResource("5_bed")]
-transform = Transform3D(0.0, 0.0, 1.7, 0.0, 1.7, 0.0, -1.7, 0.0, 0.0, -4.2, 0.0, 2.4)
+transform = Transform3D(0.0, 0.0, 1.36, 0.0, 1.36, 0.0, -1.36, 0.0, 0.0, -4.2, 0.0, 2.4)
 
 [node name="Wardrobe" parent="." instance=ExtResource("6_wardrobe")]
-transform = Transform3D(-1.7, 0.0, -0.0, 0.0, 1.7, 0.0, 0.0, 0.0, -1.7, 3.0, 0.0, 5.4)
+transform = Transform3D(-1.36, 0.0, -0.0, 0.0, 1.36, 0.0, 0.0, 0.0, -1.36, 3.0, 0.0, 5.4)
 
 [node name="Table1" parent="." instance=ExtResource("3_table")]
-transform = Transform3D(-1.7, 0.0, -0.0, 0.0, 1.7, 0.0, 0.0, 0.0, -1.7, -1.8, 0.0, 5.4)
+transform = Transform3D(-1.36, 0.0, -0.0, 0.0, 1.36, 0.0, 0.0, 0.0, -1.36, -1.8, 0.0, 5.4)
 
 [node name="Chair1" parent="." instance=ExtResource("4_chair")]
-transform = Transform3D(1.7, 0.0, 0.0, 0.0, 1.7, 0.0, 0.0, 0.0, 1.7, -1.8, 0.0, 4.56)
+transform = Transform3D(1.36, 0.0, 0.0, 0.0, 1.36, 0.0, 0.0, 0.0, 1.36, -1.8, 0.0, 4.56)
 
 [node name="Table2" parent="." instance=ExtResource("3_table")]
-transform = Transform3D(-1.7, 0.0, -0.0, 0.0, 1.7, 0.0, 0.0, 0.0, -1.7, 0.6, 0.0, 5.4)
+transform = Transform3D(-1.36, 0.0, -0.0, 0.0, 1.36, 0.0, 0.0, 0.0, -1.36, 0.6, 0.0, 5.4)
 
 [node name="Chair2" parent="." instance=ExtResource("4_chair")]
-transform = Transform3D(1.7, 0.0, 0.0, 0.0, 1.7, 0.0, 0.0, 0.0, 1.7, 0.6, 0.0, 4.56)
+transform = Transform3D(1.36, 0.0, 0.0, 0.0, 1.36, 0.0, 0.0, 0.0, 1.36, 0.6, 0.0, 4.56)
 
 [node name="RoomLabel" type="Label3D" parent="."]
 transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 4.812, 2.2, 0.6)
