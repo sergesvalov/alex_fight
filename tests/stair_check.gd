@@ -4,9 +4,9 @@ extends Node
 
 func _ready() -> void:
 	print("=== STAIRWELL ENTRANCE CHECK ===")
-	var stair_scene = load("res://scenes/levels/hotel_siberia/stairwell.tscn")
+	var stair_scene = load("res://scenes/levels/hotel_siberia/stairwell_north.tscn")
 	if not stair_scene:
-		print("[FAILED] stairwell.tscn not found")
+		print("[FAILED] stairwell_north.tscn not found")
 		get_tree().quit(1)
 		return
 

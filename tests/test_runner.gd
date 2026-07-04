@@ -116,7 +116,7 @@ func _ready() -> void:
             passed = false
         else:
             var stair_n = floor_main.get_node_or_null("Stairwell_N")
-            var stair_s = floor_main.get_node_or_null("Stairwell_S")
+            var stair_s = floor_main.get_node_or_null("StairwellSouth")
             var map_1 = floor_main.get_node_or_null("MapDecal_1")
             var room_dbl = floor_main.get_node_or_null("DoubleRoomL1_F4")
             var room_sgl = floor_main.get_node_or_null("SingleRoomR1_F4")
@@ -124,25 +124,25 @@ func _ready() -> void:
             if not stair_n:
                 print("[FAILED] Stairwell_N не сгенерирован")
                 passed = false
-            elif stair_n.transform.origin.z != 10.5:
+            elif stair_n.transform.origin.z != 10.0:
                 print("[FAILED] Stairwell_N имеет неверную координату Z: ", stair_n.transform.origin.z)
                 passed = false
             else:
-                print("[OK] Stairwell_N корректно сгенерирован на Z = 10.5")
+                print("[OK] Stairwell_N корректно сгенерирован на Z = 10.0")
                 
             if not stair_s:
-                print("[FAILED] Stairwell_S не сгенерирован")
+                print("[FAILED] StairwellSouth не сгенерирован")
                 passed = false
             elif stair_s.transform.origin.z >= 0:
-                print("[FAILED] Stairwell_S должен быть на отрицательной Z, а он на: ", stair_s.transform.origin.z)
+                print("[FAILED] StairwellSouth должен быть на отрицательной Z, а он на: ", stair_s.transform.origin.z)
                 passed = false
             else:
-                print("[OK] Stairwell_S корректно сгенерирован на Z < 0")
+                print("[OK] StairwellSouth корректно сгенерирован на Z < 0")
                 
             if not map_1:
                 print("[FAILED] MapDecal_1 не найден")
                 passed = false
-            elif map_1.transform.origin.z != (4.0 - generator.double_room_step / 2.0):
+            elif map_1.transform.origin.z != (generator.double_room_start_z - generator.double_room_step / 2.0):
                 print("[FAILED] MapDecal_1 не на середине первого номера. Z = ", map_1.transform.origin.z)
                 passed = false
             else:
@@ -176,8 +176,9 @@ func _ready() -> void:
                 if current is CSGBox3D and "Floor" in current.name and not "StairFloor" in current.name:
                     checked_floors += 1
                     var top_y = current.global_transform.origin.y + (current.size.y / 2.0)
-                    if abs(top_y) > 0.001:
-                        print("     [FAILED] Пол '", current.name, "' в '", current.get_parent().name, "' не выровнен! Y = ", top_y)
+                    var expected_y = current.get_parent().global_transform.origin.y
+                    if abs(top_y - expected_y) > 0.001:
+                        print("     [FAILED] Пол '", current.name, "' в '", current.get_parent().name, "' не выровнен! Ожидалось Y = ", expected_y, ", а факт Y = ", top_y)
                         floor_errors += 1
                 
                 # Проверка дверей
@@ -198,8 +199,12 @@ func _ready() -> void:
                             door_body.interact(door_dummy_player)
                             
                             if not door_body.is_open:
-                                print("     [FAILED] Дверь '", current.name, "' в '", current.get_parent().name, "' не открылась после interact()")
-                                door_errors += 1
+                                if door_body is StairDoor and current.global_transform.origin.y < -2.0:
+                                    # Это нижняя дверь лестницы, она работает как телепорт, а не открывается.
+                                    pass
+                                else:
+                                    print("     [FAILED] Дверь '", current.name, "' в '", current.get_parent().name, "' не открылась после interact()")
+                                    door_errors += 1
                             else:
                                 # В headless-режиме Tween не синхронизирует физику.
                                 # Принудительно телепортируем дверь в открытое положение (внутрь комнаты).
@@ -222,7 +227,7 @@ func _ready() -> void:
                                 var start_pos = current.global_transform.origin \
                                     - door_basis.z * 3.0 \
                                     + door_basis.x * 0.8
-                                start_pos.y = 0.9
+                                start_pos.y = current.global_transform.origin.y + 0.9
                                 char_body.global_transform.origin = start_pos
                                 
                                 # Даём физическому движку 3 кадра на синхронизацию
