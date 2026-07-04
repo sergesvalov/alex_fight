@@ -1,0 +1,13 @@
+﻿[gd_scene load_steps=3 format=3 uid="uid://stair_ramp_123"]
+
+[ext_resource type="Texture2D" path="res://assets/textures/hotel_carpet.jpg" id="1_carpet"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_floor"]
+albedo_texture = ExtResource("1_carpet")
+uv1_scale = Vector3(10, 10, 10)
+uv1_triplanar = true
+
+[node name="StairRamp" type="CSGPolygon3D"]
+polygon = PackedVector2Array(-0.1, 0, 0, 0, 3.5, -2.5, 3.6, -2.5, 3.6, -3, 3.5, -3, 0, -0.5, -0.1, -0.5)
+depth = 3.6
+material = SubResource("StandardMaterial3D_floor")

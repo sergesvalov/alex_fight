@@ -1,8 +1,9 @@
-[gd_scene load_steps=6 format=3]
+﻿[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Texture2D" path="res://assets/textures/hotel_carpet.jpg" id="1_carpet"]
 [ext_resource type="Texture2D" path="res://assets/textures/hotel_wallpaper.jpg" id="2_wallpaper"]
 [ext_resource type="PackedScene" path="res://entities/props/stair_door.tscn" id="3_door"]
+[ext_resource type="PackedScene" path="res://scenes/levels/hotel_siberia/stair_ramp.tscn" id="4_ramp"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_floor"]
 albedo_texture = ExtResource("1_carpet")
@@ -23,22 +24,16 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, 1.75)
 size = Vector3(7, 0.5, 3.5)
 material = SubResource("StandardMaterial3D_floor")
 
-[node name="Ramp1" type="CSGPolygon3D" parent="."]
+[node name="Ramp1" parent="." instance=ExtResource("4_ramp")]
 transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 0, 0, 3.5)
-polygon = PackedVector2Array(-0.1, 0, 0, 0, 3.5, -2.5, 3.6, -2.5, 3.6, -3, 3.5, -3, 0, -0.5, -0.1, -0.5)
-depth = 3.6
-material = SubResource("StandardMaterial3D_floor")
 
 [node name="LandingCorner" type="CSGBox3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -2.75, 8.75)
 size = Vector3(7, 0.5, 3.5)
 material = SubResource("StandardMaterial3D_floor")
 
-[node name="Ramp2" type="CSGPolygon3D" parent="."]
+[node name="Ramp2" parent="." instance=ExtResource("4_ramp")]
 transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, 0, -2.5, 7.0)
-polygon = PackedVector2Array(-0.1, 0, 0, 0, 3.5, -2.5, 3.6, -2.5, 3.6, -3, 3.5, -3, 0, -0.5, -0.1, -0.5)
-depth = 3.6
-material = SubResource("StandardMaterial3D_floor")
 
 [node name="LandingBottom" type="CSGBox3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.75, -5.25, 1.75)
@@ -78,3 +73,4 @@ omni_range = 10.0
 [node name="LightBottom" type="OmniLight3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.75, -2, 1.75)
 omni_range = 10.0
+
