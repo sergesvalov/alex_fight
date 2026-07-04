@@ -100,8 +100,8 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3, -0.3, -0.5)
 
 [node name="PlayerMovement" type="Node" parent="."]
 script = ExtResource("move_script")
-walk_speed = 5.5
-sprint_speed = 9.5
+walk_speed = 4.4
+sprint_speed = 7.6
 gravity = 9.8
 
 [node name="PlayerCamera" type="Node" parent="."]
