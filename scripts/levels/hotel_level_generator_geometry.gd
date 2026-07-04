@@ -11,8 +11,11 @@ func _generate_corridor_shell(parent: Node3D, corridor_start_z: float, total_cor
 	var floor_y = -floor_thickness / 2.0
 	var ceil_y = corridor_height + (floor_thickness / 2.0)
 	
-	_create_csg_box(parent, "CorridorFloor", Vector3(0, floor_y, corridor_center_z), Vector3(35.0, floor_thickness, corridor_length), true)
-	_create_csg_box(parent, "CorridorCeiling", Vector3(0, ceil_y, corridor_center_z), Vector3(35.0, floor_thickness, corridor_length), true)
+	var hotel_width = 22.35
+	var hotel_center_x = -0.175
+	
+	_create_csg_box(parent, "CorridorFloor", Vector3(hotel_center_x, floor_y, corridor_center_z), Vector3(hotel_width, floor_thickness, corridor_length), true)
+	_create_csg_box(parent, "CorridorCeiling", Vector3(hotel_center_x, ceil_y, corridor_center_z), Vector3(hotel_width, floor_thickness, corridor_length), true)
 
 func _generate_rooms_side(f_num: int, parent: Node3D, is_left: bool, corridor_start_z: float, total_corridor_end: float) -> void:
 	var prev_z = corridor_start_z
