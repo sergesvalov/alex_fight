@@ -2,6 +2,7 @@
 
 [ext_resource type="Texture2D" path="res://assets/textures/hotel_wallpaper.jpg" id="1_wallpaper"]
 [ext_resource type="PackedScene" path="res://entities/props/elevator_door.tscn" id="2_elev_doors"]
+[ext_resource type="Script" path="res://scripts/levels/blocks/block.gd" id="3_script"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wall"]
 albedo_texture = ExtResource("1_wallpaper")
@@ -12,6 +13,7 @@ roughness = 0.9
 size = Vector3(4.0, 3.5, 0.6)
 
 [node name="ElevatorShaftBlock" type="Node3D"]
+script = ExtResource("3_script")
 
 [node name="ElevatorGeometry" type="CSGCombiner3D" parent="."]
 use_collision = true

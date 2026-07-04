@@ -17,6 +17,7 @@ config/icon="res://icon.svg"
 
 [autoload]
 
+GlobalConfig="*res://scripts/autoloads/GlobalConfig.gd"
 MouseManager="*res://scripts/autoloads/MouseManager.gd"
 
 EventBus="*res://scripts/autoloads/EventBus.gd"

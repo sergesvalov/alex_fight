@@ -6,6 +6,44 @@ class_name HotelLevelGenerator
 
 func _ready() -> void:
 	if not Engine.is_editor_hint():
+		var f_scale = GlobalConfig.get_floor_scale()
+		var p_scale = GlobalConfig.get_player_scale()
+		
+		double_room_step *= f_scale
+		single_room_step *= f_scale
+		corridor_width *= f_scale
+		corridor_height *= f_scale
+		floor_height *= f_scale
+		stairwell_south_offset *= f_scale
+		total_corridor_end_margin *= f_scale
+		side_corridor_z_start *= f_scale
+		side_corridor_z_end *= f_scale
+		side_corridor_depth *= f_scale
+		elev_shaft_depth *= f_scale
+		maint_room_depth *= f_scale
+		double_room_x *= f_scale
+		double_room_start_z *= f_scale
+		double_room_wall_len *= f_scale
+		single_room_x *= f_scale
+		single_room_start_z *= f_scale
+		single_room_wall_len *= f_scale
+		room_door_z_offset *= f_scale
+		
+		# Door and hole variables strictly follow player height
+		room_door_width *= p_scale
+		room_door_opening_width *= p_scale
+		util_door_width *= p_scale
+		util_door_height *= p_scale
+		door_hole_width_margin *= p_scale
+		maint_door_hole_width_margin *= p_scale
+		room_hole_margin *= p_scale
+		
+		player_spawn_pos *= f_scale
+		enemies_spawn_z_offset *= f_scale
+		patrol_point_step *= f_scale
+		patrol_end_margin *= f_scale
+		patrol_fallback_z *= f_scale
+		
 		_generate_level()
 		_apply_stylization()
 		

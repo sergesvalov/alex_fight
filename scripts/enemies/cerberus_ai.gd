@@ -33,6 +33,9 @@ func _ready() -> void:
     add_to_group("enemies")
     spawn_position = global_position
     
+    var c_scale = GlobalConfig.player_height / 1.6
+    scale = Vector3(c_scale, c_scale, c_scale)
+    
     sensors.player_detected.connect(_on_player_detected)
     sensors.player_lost.connect(_on_player_lost)
     

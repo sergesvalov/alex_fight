@@ -29,6 +29,9 @@ class_name HotelRoom
 @export var label_door_offset: Vector3 = Vector3(0.75, 1.5, 0.06)
 
 func _ready() -> void:
+	if not Engine.is_editor_hint():
+		GlobalConfig.apply_dynamic_scale(self)
+		
 	_update_label()
 	_update_floor_color()
 	if not Engine.is_editor_hint():

@@ -8,6 +8,20 @@ extends CharacterBody3D
 @onready var weapon: PlayerWeapon = $PlayerWeapon
 
 func _ready() -> void:
+    # Scale player to match config
+    var p_scale = GlobalConfig.get_player_scale()
+    var col_shape = get_node_or_null("CollisionShape3D")
+    if col_shape and col_shape.shape is CapsuleShape3D:
+        var new_shape = col_shape.shape.duplicate()
+        new_shape.height *= p_scale
+        new_shape.radius *= p_scale
+        col_shape.shape = new_shape
+        col_shape.position.y *= p_scale
+        
+    var cam_rig = get_node_or_null("CameraRig")
+    if cam_rig:
+        cam_rig.position.y *= p_scale
+
     var hud = null
     if get_tree().current_scene:
         hud = get_tree().current_scene.find_child("HUD", true, false)
