@@ -134,23 +134,26 @@ func _create_floor_group(name: String, y_pos: float, is_main: bool) -> void:
 	var orig_map = map_texture
 		
 	if not is_main:
-		var scene_path = "res://scenes/levels/hotel_siberia/hotel_level_" + str(f_num) + ".tscn"
-		if ResourceLoader.exists(scene_path):
-			var scene = load(scene_path)
-			if scene:
-				var instance = scene.instantiate()
-				var gen = instance.find_child("HotelGeometry", true, false)
-				if gen:
-					carpet_color = gen.carpet_color
-					map_texture = gen.map_texture
-				instance.free()
-		else:
-			f_num = floor_number
+		f_num = _apply_external_styles(f_num)
 		
 	_generate_floor(f_num, parent, is_main)
 	
 	carpet_color = orig_carpet
 	map_texture = orig_map
+
+func _apply_external_styles(target_floor: int) -> int:
+	var scene_path = "res://scenes/levels/hotel_siberia/hotel_level_" + str(target_floor) + ".tscn"
+	if ResourceLoader.exists(scene_path):
+		var scene = load(scene_path)
+		if scene:
+			var instance = scene.instantiate()
+			var gen = instance.find_child("HotelGeometry", true, false)
+			if gen:
+				carpet_color = gen.carpet_color
+				map_texture = gen.map_texture
+			instance.free()
+			return target_floor
+	return floor_number
 
 func _generate_floor(f_num: int, parent: Node3D, is_main: bool) -> void:
 	var corridor_start_z = double_room_start_z + (double_room_step / 2.0)
@@ -164,8 +167,8 @@ func _generate_floor(f_num: int, parent: Node3D, is_main: bool) -> void:
 	_generate_north_block(parent, corridor_start_z)
 	_generate_south_block(parent, stair_z)
 	
-	_generate_double_rooms(f_num, parent, corridor_start_z, total_corridor_end)
-	_generate_single_rooms(f_num, parent, 0.0, total_corridor_end)
+	_generate_rooms_side(f_num, parent, true, corridor_start_z, total_corridor_end)
+	_generate_rooms_side(f_num, parent, false, corridor_start_z, total_corridor_end)
 	
 	_generate_map_decals(parent)
 	
@@ -188,61 +191,44 @@ func _generate_corridor_shell(parent: Node3D, corridor_start_z: float, total_cor
 	_create_csg_box(parent, "CorridorFloor", Vector3(0, floor_y, corridor_center_z), Vector3(35.0, floor_thickness, corridor_length), true)
 	_create_csg_box(parent, "CorridorCeiling", Vector3(0, ceil_y, corridor_center_z), Vector3(35.0, floor_thickness, corridor_length), true)
 
-func _generate_double_rooms(f_num: int, parent: Node3D, corridor_start_z: float, total_corridor_end: float) -> void:
-	var prev_z_left = corridor_start_z
-	var wall_x_left = -corridor_width / 2.0
+func _generate_rooms_side(f_num: int, parent: Node3D, is_left: bool, corridor_start_z: float, total_corridor_end: float) -> void:
+	var prev_z = corridor_start_z
+	var wall_x = -corridor_width / 2.0 if is_left else corridor_width / 2.0
+	var num_rooms = num_double_rooms if is_left else num_single_rooms
+	var start_z = double_room_start_z if is_left else single_room_start_z
+	var step = double_room_step if is_left else single_room_step
+	var room_x = double_room_x if is_left else single_room_x
+	var suffixes = double_room_suffixes if is_left else single_room_suffixes
+	var prefix = "DoubleRoomL" if is_left else "SingleRoomR"
+	var side_str = "L_" if is_left else "R_"
 	
-	for i in range(num_double_rooms):
-		var c_z = double_room_start_z - i * double_room_step
-		var room = double_room_large_scene.instantiate() if i < 2 else double_room_scene.instantiate()
-		
-		room.name = "DoubleRoomL" + str(i + 1) + "_F" + str(f_num)
-		room.transform.origin = Vector3(double_room_x, room_y_offset, c_z)
+	for i in range(num_rooms):
+		var c_z = start_z - i * step
+		var room
+		if is_left:
+			room = double_room_large_scene.instantiate() if i < 2 else double_room_scene.instantiate()
+		else:
+			room = single_room_scene.instantiate()
+			
+		room.name = prefix + str(i + 1) + "_F" + str(f_num)
+		room.transform.origin = Vector3(room_x, room_y_offset, c_z)
 		parent.add_child(room)
 		room.owner = get_tree().edited_scene_root
 		
 		if "room_number" in room:
-			room.room_number = str(f_num) + double_room_suffixes[i % double_room_suffixes.size()]
+			room.room_number = str(f_num) + suffixes[i % suffixes.size()]
 		if "carpet_color" in room:
 			room.carpet_color = carpet_color
 			
 		var door_top_z = c_z + 0.5 + 1.0
 		var door_bottom_z = c_z + 0.5 - 1.0
 		
-		if prev_z_left > door_top_z:
-			_create_wall(parent, "CorrWall_L_" + str(i), Vector3(wall_x_left, 0, (prev_z_left + door_top_z) / 2.0), prev_z_left - door_top_z)
-		prev_z_left = door_bottom_z
+		if prev_z > door_top_z:
+			_create_wall(parent, "CorrWall_" + side_str + str(i), Vector3(wall_x, 0, (prev_z + door_top_z) / 2.0), prev_z - door_top_z)
+		prev_z = door_bottom_z
 		
-	if prev_z_left > total_corridor_end:
-		_create_wall(parent, "CorrWall_L_end", Vector3(wall_x_left, 0, (total_corridor_end + prev_z_left) / 2.0), prev_z_left - total_corridor_end)
-
-func _generate_single_rooms(f_num: int, parent: Node3D, corridor_start_z: float, total_corridor_end: float) -> void:
-	var prev_z_right = corridor_start_z
-	var wall_x_right = corridor_width / 2.0
-	
-	for i in range(num_single_rooms):
-		var c_z = single_room_start_z - i * single_room_step
-		var room = single_room_scene.instantiate()
-		
-		room.name = "SingleRoomR" + str(i + 1) + "_F" + str(f_num)
-		room.transform.origin = Vector3(single_room_x, room_y_offset, c_z)
-		parent.add_child(room)
-		room.owner = get_tree().edited_scene_root
-		
-		if "room_number" in room:
-			room.room_number = str(f_num) + single_room_suffixes[i % single_room_suffixes.size()]
-		if "carpet_color" in room:
-			room.carpet_color = carpet_color
-			
-		var door_top_z = c_z + 0.5 + 1.0
-		var door_bottom_z = c_z + 0.5 - 1.0
-		
-		if prev_z_right > door_top_z:
-			_create_wall(parent, "CorrWall_R_" + str(i), Vector3(wall_x_right, 0, (prev_z_right + door_top_z) / 2.0), prev_z_right - door_top_z)
-		prev_z_right = door_bottom_z
-
-	if prev_z_right > total_corridor_end:
-		_create_wall(parent, "CorrWall_R_end", Vector3(wall_x_right, 0, (total_corridor_end + prev_z_right) / 2.0), prev_z_right - total_corridor_end)
+	if prev_z > total_corridor_end:
+		_create_wall(parent, "CorrWall_" + side_str + "end", Vector3(wall_x, 0, (total_corridor_end + prev_z) / 2.0), prev_z - total_corridor_end)
 
 func _generate_map_decals(parent: Node3D) -> void:
 	var map_z = double_room_start_z - (double_room_step / 2.0)
