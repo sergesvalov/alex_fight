@@ -4,6 +4,10 @@ extends Node
 var room_layouts = {
 	"SingleRoom": {
 		"bounds": Vector3(7.0, 3.5, 6.0),
+		"bounds_pos_x": 2.9,
+		"bounds_neg_x": -2.75,
+		"bounds_pos_z": 2.4,
+		"bounds_neg_z": -2.4,
 		"props": {
 			"MainDoor": {"pos": Vector3(-2.8, 0.0, -0.25), "anchor_x": 0, "anchor_z": 0},
 			"WCDoor": {"pos": Vector3(-2.2, 0.0, -0.25), "anchor_x": 0, "anchor_z": 0},
@@ -15,6 +19,10 @@ var room_layouts = {
 	},
 	"DoubleRoom": {
 		"bounds": Vector3(8.9, 3.5, 10.0),
+		"bounds_pos_x": 4.0,
+		"bounds_neg_x": -3.15,
+		"bounds_pos_z": 4.4,
+		"bounds_neg_z": -4.4,
 		"props": {
 			"MainDoor": {"pos": Vector3(4.3, 0.0, 0.5), "anchor_x": 0, "anchor_z": 0},
 			"WCDoor": {"pos": Vector3(1.55, 0.0, -3.6), "anchor_x": 0, "anchor_z": 0},
@@ -87,23 +95,37 @@ func apply_dynamic_scale(root: Node3D) -> void:
 						var ax = layout["anchor_x"]
 						var az = layout["anchor_z"]
 						
+						var bound_pos_x = bounds.x / 2.0
+						var bound_neg_x = -bounds.x / 2.0
+						if room_layouts[r_type].has("bounds_pos_x"):
+							bound_pos_x = room_layouts[r_type]["bounds_pos_x"]
+						if room_layouts[r_type].has("bounds_neg_x"):
+							bound_neg_x = room_layouts[r_type]["bounds_neg_x"]
+							
 						# X Axis anchor
 						if ax == 1:
-							var orig_dist = (bounds.x / 2.0) - orig_pos.x
-							new_pos.x = (bounds.x / 2.0) * f_scale - orig_dist * p_scale
+							var orig_dist = bound_pos_x - orig_pos.x
+							new_pos.x = bound_pos_x * f_scale - orig_dist * p_scale
 						elif ax == -1:
-							var orig_dist = orig_pos.x - (-(bounds.x / 2.0))
-							new_pos.x = -(bounds.x / 2.0) * f_scale + orig_dist * p_scale
+							var orig_dist = orig_pos.x - bound_neg_x
+							new_pos.x = bound_neg_x * f_scale + orig_dist * p_scale
 						else:
 							new_pos.x = orig_pos.x * f_scale
 							
+						var bound_pos_z = bounds.z / 2.0
+						var bound_neg_z = -bounds.z / 2.0
+						if room_layouts[r_type].has("bounds_pos_z"):
+							bound_pos_z = room_layouts[r_type]["bounds_pos_z"]
+						if room_layouts[r_type].has("bounds_neg_z"):
+							bound_neg_z = room_layouts[r_type]["bounds_neg_z"]
+							
 						# Z Axis anchor
 						if az == 1:
-							var orig_dist = (bounds.z / 2.0) - orig_pos.z
-							new_pos.z = (bounds.z / 2.0) * f_scale - orig_dist * p_scale
+							var orig_dist = bound_pos_z - orig_pos.z
+							new_pos.z = bound_pos_z * f_scale - orig_dist * p_scale
 						elif az == -1:
-							var orig_dist = orig_pos.z - (-(bounds.z / 2.0))
-							new_pos.z = -(bounds.z / 2.0) * f_scale + orig_dist * p_scale
+							var orig_dist = orig_pos.z - bound_neg_z
+							new_pos.z = bound_neg_z * f_scale + orig_dist * p_scale
 						else:
 							new_pos.z = orig_pos.z * f_scale
 							
