@@ -13,6 +13,7 @@ func _ready() -> void:
 		single_room_step *= f_scale
 		corridor_width *= f_scale
 		corridor_height *= f_scale
+		wall_thickness *= f_scale
 		floor_height *= f_scale
 		stairwell_south_offset *= f_scale
 		total_corridor_end_margin *= f_scale

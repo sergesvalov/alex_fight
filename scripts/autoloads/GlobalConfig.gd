@@ -1,5 +1,35 @@
 extends Node
 
+# Configuration for room furniture positioning to keep them relative to walls when scaling
+var room_layouts = {
+	"SingleRoom": {
+		"bounds": Vector3(7.0, 3.5, 6.0),
+		"props": {
+			"MainDoor": {"pos": Vector3(-3.0, 0.0, -0.25), "anchor_x": 0, "anchor_z": 0},
+			"WCDoor": {"pos": Vector3(-2.2, 0.0, -0.25), "anchor_x": 0, "anchor_z": 0},
+			"Bed": {"pos": Vector3(2.0, 0.0, 2.0), "anchor_x": 1, "anchor_z": 1},
+			"Table": {"pos": Vector3(2.0, 0.0, -2.5), "anchor_x": 1, "anchor_z": -1},
+			"Chair1": {"pos": Vector3(2.0, 0.0, -1.8), "anchor_x": 1, "anchor_z": -1},
+			"RoomLabel": {"pos": Vector3(-3.0, 2.2, 0.5), "anchor_x": 0, "anchor_z": 0}
+		}
+	},
+	"DoubleRoom": {
+		"bounds": Vector3(8.9, 3.5, 10.0),
+		"props": {
+			"MainDoor": {"pos": Vector3(4.25, 0.0, 0.5), "anchor_x": 0, "anchor_z": 0},
+			"WCDoor": {"pos": Vector3(1.55, 0.0, -3.6), "anchor_x": 0, "anchor_z": 0},
+			"Bed1": {"pos": Vector3(-2.5, 0.0, -2.0), "anchor_x": -1, "anchor_z": 0},
+			"Bed2": {"pos": Vector3(-2.5, 0.0, 2.0), "anchor_x": -1, "anchor_z": 0},
+			"Table1": {"pos": Vector3(-1.5, 0.0, 4.5), "anchor_x": 0, "anchor_z": 1},
+			"Chair1": {"pos": Vector3(-1.5, 0.0, 3.7), "anchor_x": 0, "anchor_z": 1},
+			"Table2": {"pos": Vector3(0.5, 0.0, 4.5), "anchor_x": 0, "anchor_z": 1},
+			"Chair2": {"pos": Vector3(0.5, 0.0, 3.7), "anchor_x": 0, "anchor_z": 1},
+			"Wardrobe": {"pos": Vector3(2.5, 0.0, 4.5), "anchor_x": 1, "anchor_z": 1},
+			"RoomLabel": {"pos": Vector3(4.56, 2.2, 0.6), "anchor_x": 0, "anchor_z": 0}
+		}
+	}
+}
+
 @export var player_height: float = 1.8
 @export var floor_ceiling_height: float = 3.5
 
@@ -39,8 +69,51 @@ func apply_dynamic_scale(root: Node3D) -> void:
 					is_prop = true
 					
 			if is_prop:
-				child.position.x *= f_scale
-				child.position.z *= f_scale
+				var new_pos = child.position
+				var r_type = ""
+				if root.name.begins_with("SingleRoom"):
+					r_type = "SingleRoom"
+				elif root.name.begins_with("DoubleRoom"):
+					r_type = "DoubleRoom"
+					
+				var handled_by_anchor = false
+				if r_type != "" and room_layouts.has(r_type):
+					var props = room_layouts[r_type]["props"]
+					var bounds = room_layouts[r_type]["bounds"]
+					var cname = child.name
+					if props.has(cname):
+						var layout = props[cname]
+						var orig_pos = layout["pos"]
+						var ax = layout["anchor_x"]
+						var az = layout["anchor_z"]
+						
+						# X Axis anchor
+						if ax == 1:
+							var orig_dist = (bounds.x / 2.0) - orig_pos.x
+							new_pos.x = (bounds.x / 2.0) * f_scale - orig_dist * p_scale
+						elif ax == -1:
+							var orig_dist = orig_pos.x - (-(bounds.x / 2.0))
+							new_pos.x = -(bounds.x / 2.0) * f_scale + orig_dist * p_scale
+						else:
+							new_pos.x = orig_pos.x * f_scale
+							
+						# Z Axis anchor
+						if az == 1:
+							var orig_dist = (bounds.z / 2.0) - orig_pos.z
+							new_pos.z = (bounds.z / 2.0) * f_scale - orig_dist * p_scale
+						elif az == -1:
+							var orig_dist = orig_pos.z - (-(bounds.z / 2.0))
+							new_pos.z = -(bounds.z / 2.0) * f_scale + orig_dist * p_scale
+						else:
+							new_pos.z = orig_pos.z * f_scale
+							
+						handled_by_anchor = true
+				
+				if not handled_by_anchor:
+					new_pos.x *= f_scale
+					new_pos.z *= f_scale
+					
+				child.position = new_pos
 				# Keep position.y the same (0, on the floor)
 				child.scale = Vector3(p_scale, p_scale, p_scale)
 				queue.pop_back() # Don't descend into prop children
