@@ -1,0 +1,41 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/interactables/stair_door.gd" id="1_script"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/door_open.wav" id="2_open"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/door_close.wav" id="3_close"]
+[ext_resource type="Texture2D" path="res://assets/textures/hotel_wallpaper.jpg" id="4_tex"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_door"]
+albedo_color = Color(0.4, 0.25, 0.15, 1)
+albedo_texture = ExtResource("4_tex")
+uv1_scale = Vector3(2, 5, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_door"]
+material = SubResource("StandardMaterial3D_door")
+size = Vector3(1.5, 2.5, 0.1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_door"]
+size = Vector3(1.5, 2.5, 0.1)
+
+[node name="DoorRoot" type="Node3D"]
+
+[node name="AnimatableBody3D" type="AnimatableBody3D" parent="."]
+collision_layer = 7
+collision_mask = 0
+script = ExtResource("1_script")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="AnimatableBody3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.75, 1.25, 0)
+mesh = SubResource("BoxMesh_door")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="AnimatableBody3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.75, 1.25, 0)
+shape = SubResource("BoxShape3D_door")
+
+[node name="SfxOpen" type="AudioStreamPlayer3D" parent="."]
+stream = ExtResource("2_open")
+max_distance = 15.0
+
+[node name="SfxClose" type="AudioStreamPlayer3D" parent="."]
+stream = ExtResource("3_close")
+max_distance = 15.0

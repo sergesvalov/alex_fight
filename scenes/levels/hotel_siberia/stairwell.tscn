@@ -3,7 +3,7 @@
 [ext_resource type="Script" path="res://scripts/levels/seamless_teleporter.gd" id="1_script"]
 [ext_resource type="Texture2D" path="res://assets/textures/hotel_carpet.jpg" id="2_carpet"]
 [ext_resource type="Texture2D" path="res://assets/textures/hotel_wallpaper.jpg" id="3_wallpaper"]
-[ext_resource type="PackedScene" path="res://entities/props/door.tscn" id="4_door"]
+[ext_resource type="PackedScene" path="res://entities/props/stair_door.tscn" id="4_door"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_floor"]
 albedo_texture = ExtResource("2_carpet")
@@ -76,21 +76,7 @@ size = Vector3(1.84, 2.875, 1)
 
 [node name="MainDoor" parent="." instance=ExtResource("4_door")]
 
-[node name="TeleportUpper" type="Area3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.75, 3.0, -5.25)
-script = ExtResource("1_script")
-teleport_offset = Vector3(0, -5, 0)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="TeleportUpper"]
-shape = SubResource("BoxShape3D_teleport")
-
-[node name="TeleportLower" type="Area3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.75, -2.0, -1.75)
-script = ExtResource("1_script")
-teleport_offset = Vector3(0, 5, 0)
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="TeleportLower"]
-shape = SubResource("BoxShape3D_teleport")
 
 [node name="LightMain" type="OmniLight3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.75, 3, -1.75)
