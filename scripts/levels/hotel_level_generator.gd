@@ -22,6 +22,13 @@ class_name HotelLevelGenerator
 @export var floor_thickness: float = 0.5
 @export var wall_thickness: float = 1.0
 
+@export_group("North Block Layout")
+@export var side_corridor_z_start: float = 0.0
+@export var side_corridor_z_end: float = 3.0
+@export var side_corridor_depth: float = 5.0
+@export var elev_shaft_depth: float = 5.0
+@export var maint_room_depth: float = 5.0
+
 @export_subgroup("Double Rooms Position")
 @export var double_room_x: float = -8.3
 @export var double_room_start_z: float = 4.0
@@ -47,6 +54,11 @@ class_name HotelLevelGenerator
 @export_group("Room Suffixes")
 @export var double_room_suffixes: Array[String] = ["01", "02", "03", "05", "06", "08"]
 @export var single_room_suffixes: Array[String] = ["10", "11", "12", "13", "15", "16", "17", "20", "21"]
+
+@export_group("Entities Spawn")
+@export var player_spawn_pos: Vector3 = Vector3(0.0, 2.0, 4.0)
+@export var enemies_spawn_z_offset: float = 10.0
+@export var patrol_point_step: float = 20.0
 
 # endregion
 
@@ -261,9 +273,11 @@ func _generate_north_block(parent: Node3D, start_z: float) -> void:
 	_generate_elevator_shaft(parent)
 	_generate_maintenance_room(parent)
 	
-	var main_wall_len = start_z - 3.0
+	var main_wall_len = start_z - side_corridor_z_end
 	if main_wall_len > 0:
-		_create_csg_box(parent, "MainCorrRightWall", Vector3(3.5, corridor_height / 2.0, 3.0 + main_wall_len / 2.0), Vector3(1.2, corridor_height, main_wall_len), false, false)
+		var center_z = side_corridor_z_end + (main_wall_len / 2.0)
+		var center_x = corridor_width / 2.0
+		_create_csg_box(parent, "MainCorrRightWall", Vector3(center_x, corridor_height / 2.0, center_z), Vector3(wall_thickness, corridor_height, main_wall_len), false, false)
 		
 	var stair = stairwell_scene.instantiate()
 	stair.name = "Stairwell_N"
@@ -286,16 +300,21 @@ func _generate_elevator_shaft(parent: Node3D) -> void:
 	var wall_y_center = corridor_height / 2.0
 	var hole_y = (util_door_height - corridor_height) / 2.0
 	
-	var side_north_wall = _create_csg_box(parent, "SideCorrNorthWall", Vector3(6.0, wall_y_center, 3.0), Vector3(5.0, corridor_height, 1.2), false, false)
-	_create_csg_hole(side_north_wall, "ElevatorDoorHole", Vector3(0, hole_y, 0), Vector3(util_door_width, util_door_height, 1.6))
+	var elev_x_center = (corridor_width / 2.0) + (side_corridor_depth / 2.0)
+	var elev_z_center = side_corridor_z_end + (elev_shaft_depth / 2.0)
 	
-	_create_csg_box(parent, "ElevatorShaft", Vector3(6.0, wall_y_center, 5.5), Vector3(5.0, corridor_height, 5.0), false, false)
-	_create_csg_hole(parent, "ElevatorHole", Vector3(6.0, wall_y_center, 5.5), Vector3(4.8, corridor_height, 4.8))
-	_create_light(parent, "ElevatorLight", Vector3(6.0, 3.5, 3.5), Color(0.9, 0.95, 1, 1))
+	var side_north_wall = _create_csg_box(parent, "SideCorrNorthWall", Vector3(elev_x_center, wall_y_center, side_corridor_z_end), Vector3(side_corridor_depth, corridor_height, wall_thickness), false, false)
+	_create_csg_hole(side_north_wall, "ElevatorDoorHole", Vector3(0, hole_y, 0), Vector3(util_door_width, util_door_height, wall_thickness + 0.4))
+	
+	_create_csg_box(parent, "ElevatorShaft", Vector3(elev_x_center, wall_y_center, elev_z_center), Vector3(side_corridor_depth, corridor_height, elev_shaft_depth), false, false)
+	_create_csg_hole(parent, "ElevatorHole", Vector3(elev_x_center, wall_y_center, elev_z_center), Vector3(side_corridor_depth - 0.2, corridor_height, elev_shaft_depth - 0.2))
+	
+	var light_z = side_corridor_z_end + 0.5
+	_create_light(parent, "ElevatorLight", Vector3(elev_x_center, corridor_height - 0.75, light_z), Color(0.9, 0.95, 1, 1))
 	
 	var elev_doors = elevator_door_scene.instantiate()
 	elev_doors.name = "ElevatorDoors"
-	elev_doors.transform.origin = Vector3(6.0, 0.0, 3.0)
+	elev_doors.transform.origin = Vector3(elev_x_center, 0.0, side_corridor_z_end)
 	parent.add_child(elev_doors)
 	elev_doors.owner = get_tree().edited_scene_root
 
@@ -303,17 +322,24 @@ func _generate_maintenance_room(parent: Node3D) -> void:
 	var wall_y_center = corridor_height / 2.0
 	var hole_y = (util_door_height - corridor_height) / 2.0
 	
-	var side_east_wall = _create_csg_box(parent, "SideCorrEastWall", Vector3(8.5, wall_y_center, 1.5), Vector3(1.2, corridor_height, 3.0), false, false)
-	_create_csg_hole(side_east_wall, "MaintenanceDoorHole", Vector3(0, hole_y, 0), Vector3(1.6, util_door_height, util_door_width))
+	var side_corridor_z_len = side_corridor_z_end - side_corridor_z_start
+	var side_corridor_z_center = side_corridor_z_start + (side_corridor_z_len / 2.0)
+	var east_wall_x = (corridor_width / 2.0) + side_corridor_depth
 	
-	_create_csg_box(parent, "MaintenanceRoom", Vector3(11.0, wall_y_center, 1.5), Vector3(5.0, corridor_height, 3.0), false, false)
-	_create_csg_hole(parent, "MaintenanceRoomHole", Vector3(11.0, wall_y_center, 1.5), Vector3(4.8, corridor_height, 2.8))
-	_create_csg_hole(parent, "MaintenanceRoomDoorHole", Vector3(8.5, wall_y_center + hole_y, 1.5), Vector3(2.0, util_door_height, util_door_width))
-	_create_light(parent, "MaintenanceLight", Vector3(11.0, 3.5, 1.5), Color(1.0, 0.9, 0.7, 1))
+	var side_east_wall = _create_csg_box(parent, "SideCorrEastWall", Vector3(east_wall_x, wall_y_center, side_corridor_z_center), Vector3(wall_thickness, corridor_height, side_corridor_z_len), false, false)
+	_create_csg_hole(side_east_wall, "MaintenanceDoorHole", Vector3(0, hole_y, 0), Vector3(wall_thickness + 0.4, util_door_height, util_door_width))
+	
+	var maint_x_center = east_wall_x + (maint_room_depth / 2.0)
+	
+	_create_csg_box(parent, "MaintenanceRoom", Vector3(maint_x_center, wall_y_center, side_corridor_z_center), Vector3(maint_room_depth, corridor_height, side_corridor_z_len), false, false)
+	_create_csg_hole(parent, "MaintenanceRoomHole", Vector3(maint_x_center, wall_y_center, side_corridor_z_center), Vector3(maint_room_depth - 0.2, corridor_height, side_corridor_z_len - 0.2))
+	
+	_create_csg_hole(parent, "MaintenanceRoomDoorHole", Vector3(east_wall_x, wall_y_center + hole_y, side_corridor_z_center), Vector3(wall_thickness + 0.8, util_door_height, util_door_width))
+	_create_light(parent, "MaintenanceLight", Vector3(maint_x_center, corridor_height - 0.75, side_corridor_z_center), Color(1.0, 0.9, 0.7, 1))
 	
 	var maint_door = door_scene.instantiate()
 	maint_door.name = "MaintenanceDoor"
-	maint_door.transform.origin = Vector3(8.5, 0, 1.5)
+	maint_door.transform.origin = Vector3(east_wall_x, 0, side_corridor_z_center)
 	maint_door.transform.basis = Basis.from_euler(Vector3(0, -PI/2, 0))
 	maint_door.scale = Vector3(util_door_scale, util_door_scale, util_door_scale) 
 	parent.add_child(maint_door)
@@ -397,16 +423,17 @@ func _clear_generated_nodes() -> void:
 func _generate_entities(end_z: float) -> void:
 	var player = get_node_or_null("../../Player")
 	if player:
-		player.transform.origin = Vector3(0.0, 2.0, 4.0)
+		player.transform.origin = player_spawn_pos
 
 	var enemies_node = get_node_or_null("../../Enemies")
 	if enemies_node:
+		var spawn_z = end_z + enemies_spawn_z_offset
 		if "spawn_position" in enemies_node:
-			enemies_node.spawn_position = Vector3(0, 1, end_z + 10.0)
+			enemies_node.spawn_position = Vector3(0, 1, spawn_z)
 			
 		var cerberus = enemies_node.get_node_or_null("Cerberus")
 		if cerberus:
-			cerberus.transform.origin = Vector3(0, 1, end_z + 10.0)
+			cerberus.transform.origin = Vector3(0, 1, spawn_z)
 			
 		var patrol_points = enemies_node.get_node_or_null("PatrolPoints")
 		if patrol_points:
@@ -415,7 +442,7 @@ func _generate_entities(end_z: float) -> void:
 				child.queue_free()
 				
 			var points_array = []
-			var current_z = -20.0
+			var current_z = -patrol_point_step
 			var idx = 1
 			while current_z > end_z + 5.0:
 				var marker = Marker3D.new()
@@ -424,7 +451,7 @@ func _generate_entities(end_z: float) -> void:
 				patrol_points.add_child(marker)
 				marker.owner = get_tree().edited_scene_root
 				points_array.append(NodePath("../PatrolPoints/" + str(marker.name)))
-				current_z -= 20.0
+				current_z -= patrol_point_step
 				idx += 1
 				
 			if points_array.size() == 0:
