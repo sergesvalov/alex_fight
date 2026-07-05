@@ -163,33 +163,6 @@ func _generate_level() -> void:
 	map_mesh.rotation.y = PI / 2.0
 	parent.add_child(map_mesh)
 
-	# 6. Talking Head Screen
-	var screen_mesh = MeshInstance3D.new()
-	screen_mesh.name = "TalkingHeadScreen"
-	var screen_quad = QuadMesh.new()
-	screen_quad.size = Vector2(2.5, 1.5)
-	
-	var screen_mat = StandardMaterial3D.new()
-	var screen_tex = load("res://assets/textures/propaganda.jpg")
-	if screen_tex:
-		screen_mat.albedo_texture = screen_tex
-		screen_mat.emission_enabled = true
-		screen_mat.emission_texture = screen_tex
-		screen_mat.emission_energy_multiplier = 1.2
-	else:
-		screen_mat.albedo_color = Color(0.2, 0.2, 0.8)
-		screen_mat.emission_enabled = true
-		screen_mat.emission = Color(0.2, 0.2, 0.8)
-	screen_mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
-	screen_quad.material = screen_mat
-	screen_mesh.mesh = screen_quad
-	
-	# Wall face is at X = -2.75. We place it slightly off the wall (X = -2.74) to avoid z-fighting.
-	# Height 2.0m, Z = -20.0 (exactly between 401 and 402).
-	screen_mesh.position = Vector3(-2.74 * f_scale, 2.0 * f_scale, -20.0 * f_scale)
-	# QuadMesh faces +Z. Rotate 90 degrees around Y to face +X (East).
-	screen_mesh.rotation.y = PI / 2.0
-	parent.add_child(screen_mesh)
 
 	# 7. Ad Screen
 	var ad_mesh = MeshInstance3D.new()
@@ -213,8 +186,8 @@ func _generate_level() -> void:
 	ad_mesh.mesh = ad_quad
 	
 	# Wall face is at X = -2.75. Slightly off to avoid z-fighting.
-	# Height 2.0m, Z = 10.0 (exactly between 405 and 406).
-	ad_mesh.position = Vector3(-2.74 * f_scale, 2.0 * f_scale, 10.0 * f_scale)
+	# Place at Z = 13.5 to perfectly center it on the solid wall between the doors of 405 and 406.
+	ad_mesh.position = Vector3(-2.74 * f_scale, 2.0 * f_scale, 13.5 * f_scale)
 	ad_mesh.rotation.y = PI / 2.0
 	parent.add_child(ad_mesh)
 
