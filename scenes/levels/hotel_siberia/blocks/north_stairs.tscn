@@ -1,6 +1,7 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Texture2D" path="res://assets/textures/hotel_wallpaper.jpg" id="1_wallpaper"]
+[ext_resource type="Texture2D" path="res://assets/textures/hotel_carpet.jpg" id="2_carpet"]
 [ext_resource type="Script" path="res://scripts/levels/blocks/block.gd" id="3_script"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wall"]
@@ -8,6 +9,9 @@ albedo_texture = ExtResource("1_wallpaper")
 uv1_scale = Vector3(20, 2, 2)
 roughness = 0.9
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_floor"]
+albedo_texture = ExtResource("2_carpet")
+uv1_scale = Vector3(10, 10, 10)
 
 [node name="NorthStairsBlock" type="Node3D"]
 script = ExtResource("3_script")
@@ -44,23 +48,28 @@ size = Vector3(1.2, 2.2, 1.0)
 [node name="NWLanding" type="CSGBox3D" parent="StairsGeometry"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.4, 2.567, 1.2)
 size = Vector3(2.4, 0.2, 2.4)
+material = SubResource("StandardMaterial3D_floor")
 
 [node name="NELanding" type="CSGBox3D" parent="StairsGeometry"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.4, 1.233, 1.2)
 size = Vector3(2.4, 0.2, 2.4)
+material = SubResource("StandardMaterial3D_floor")
 
 [node name="EastFlight" type="CSGPolygon3D" parent="StairsGeometry"]
 transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 2.2, 0, 2.4)
 polygon = PackedVector2Array(0, 1.333, 2.4, 0, 2.4, -0.2, 0, 1.133)
 depth = 1.2
+material = SubResource("StandardMaterial3D_floor")
 
 [node name="NorthFlight" type="CSGPolygon3D" parent="StairsGeometry"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2.4)
 polygon = PackedVector2Array(1.2, 1.333, -1.2, 2.667, -1.2, 2.467, 1.2, 1.133)
 depth = 2.4
+material = SubResource("StandardMaterial3D_floor")
 
 [node name="WestFlight" type="CSGPolygon3D" parent="StairsGeometry"]
 transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -3.4, 0, 2.4)
 polygon = PackedVector2Array(0, 2.667, 2.4, 4.0, 2.4, 3.8, 0, 2.467)
 depth = 1.2
+material = SubResource("StandardMaterial3D_floor")
 
