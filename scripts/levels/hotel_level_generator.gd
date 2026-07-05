@@ -88,6 +88,18 @@ func _generate_level() -> void:
 	# 3.9 Double Room 402
 	_generate_double_room_402(parent, f_scale)
 	
+	# 3.10 Double Room 403
+	_generate_double_room_403(parent, f_scale)
+	
+	# 3.11 Double Room 405
+	_generate_double_room_405(parent, f_scale)
+	
+	# 3.12 Double Room 406
+	_generate_double_room_406(parent, f_scale)
+	
+	# 3.13 Double Room 408
+	_generate_double_room_408(parent, f_scale)
+	
 	# 4. Light
 	var light = OmniLight3D.new()
 	light.name = "MainRoomLight"
@@ -172,6 +184,44 @@ func _generate_double_room_402(parent: Node, f_scale: float) -> void:
 		parent.add_child(inst)
 		# Center X = -7.65. North wall Z = -20.0.
 		inst.position = Vector3(-7.65 * f_scale, 0, -20.0 * f_scale)
+
+func _generate_double_room_403(parent: Node, f_scale: float) -> void:
+	var scene = load("res://scenes/levels/hotel_siberia/blocks/double_room.tscn")
+	if scene:
+		var inst = scene.instantiate()
+		inst.name = "DoubleRoom_403"
+		parent.add_child(inst)
+		# Center X = -7.65. Base Z = 0.0 (Mirrored to go to -10.0)
+		inst.position = Vector3(-7.65 * f_scale, 0, 0.0 * f_scale)
+		inst.scale.z = -1.0
+
+func _generate_double_room_405(parent: Node, f_scale: float) -> void:
+	var scene = load("res://scenes/levels/hotel_siberia/blocks/double_room.tscn")
+	if scene:
+		var inst = scene.instantiate()
+		inst.name = "DoubleRoom_405"
+		parent.add_child(inst)
+		# Center X = -7.65. North wall Z = 0.0.
+		inst.position = Vector3(-7.65 * f_scale, 0, 0.0 * f_scale)
+
+func _generate_double_room_406(parent: Node, f_scale: float) -> void:
+	var scene = load("res://scenes/levels/hotel_siberia/blocks/double_room.tscn")
+	if scene:
+		var inst = scene.instantiate()
+		inst.name = "DoubleRoom_406"
+		parent.add_child(inst)
+		# Center X = -7.65. North wall Z = 10.0.
+		inst.position = Vector3(-7.65 * f_scale, 0, 10.0 * f_scale)
+
+func _generate_double_room_408(parent: Node, f_scale: float) -> void:
+	var scene = load("res://scenes/levels/hotel_siberia/blocks/double_room.tscn")
+	if scene:
+		var inst = scene.instantiate()
+		inst.name = "DoubleRoom_408"
+		parent.add_child(inst)
+		# Center X = -7.65. Base Z = 30.0 (Mirrored to go to 20.0)
+		inst.position = Vector3(-7.65 * f_scale, 0, 30.0 * f_scale)
+		inst.scale.z = -1.0
 
 func _create_static_box(parent: Node, node_name: String, pos: Vector3, size: Vector3, mat: Material) -> void:
 	var static_body = StaticBody3D.new()
