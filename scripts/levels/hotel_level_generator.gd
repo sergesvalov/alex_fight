@@ -27,16 +27,56 @@ func _ready() -> void:
 			nav_region.bake_navigation_mesh()
 
 func _generate_level() -> void:
-	print("Generating SIMPLE hotel level geometry with StaticBodies...")
+	print("Generating 3 hotel levels geometry with StaticBodies...")
 	
 	for child in get_children():
 		child.free()
 		
-	var parent = Node3D.new()
-	parent.name = "GeneratedFloor_Main"
-	add_child(parent)
-		
 	var f_scale = GlobalConfig.get_floor_scale()
+	var height = corridor_height * f_scale
+	var floor_thick = floor_thickness * f_scale
+	var y_step = height + floor_thick
+	
+	var get_color_from_scene = func(level_num: int) -> Color:
+		var scene_path = "res://scenes/levels/hotel_siberia/hotel_level_" + str(level_num) + ".tscn"
+		if ResourceLoader.exists(scene_path):
+			var packed = load(scene_path)
+			if packed:
+				var temp = packed.instantiate()
+				var geom = temp.get_node_or_null("NavigationRegion3D/HotelGeometry")
+				if geom and "carpet_color" in geom:
+					var c = geom.carpet_color
+					temp.queue_free()
+					return c
+				temp.queue_free()
+		return Color(1, 1, 1) # Default
+		
+	var c_color_below = Color(0.6, 0.2, 0.2)
+	var c_color_main = carpet_color
+	var c_color_above = Color(0.2, 0.6, 0.2)
+	
+	if floor_number > 1: c_color_below = get_color_from_scene.call(floor_number - 1)
+	if floor_number < 10: c_color_above = get_color_from_scene.call(floor_number + 1)
+	
+	# 1. Main floor (Y = 0)
+	_build_floor_geometry(floor_number, 0.0, "Main", c_color_main, map_texture, empty_box_mode, f_scale)
+	
+	# 2. Floor below
+	if floor_number > 1:
+		var below_empty = (floor_number - 1 == 1)
+		_build_floor_geometry(floor_number - 1, -y_step, "Below", c_color_below, null, below_empty, f_scale)
+		
+	# 3. Floor above
+	if floor_number < 10:
+		_build_floor_geometry(floor_number + 1, y_step, "Above", c_color_above, null, false, f_scale)
+		
+	call_deferred("_move_player", f_scale)
+
+func _build_floor_geometry(f_num: int, y_offset: float, suffix: String, c_color: Color, m_texture: Texture2D, is_empty: bool, f_scale: float) -> void:
+	var parent = Node3D.new()
+	parent.name = "GeneratedFloor_" + suffix
+	parent.position.y = y_offset
+	add_child(parent)
 	
 	var z_length = 60.0 * f_scale
 	var x_width = 25.3 * f_scale
@@ -48,9 +88,9 @@ func _generate_level() -> void:
 	var ceil_y = height + (floor_thick / 2.0)
 	
 	var floor_mat = StandardMaterial3D.new()
-	if not empty_box_mode:
+	if not is_empty:
 		floor_mat.albedo_texture = carpet_texture
-	floor_mat.albedo_color = carpet_color
+	floor_mat.albedo_color = c_color
 	floor_mat.uv1_scale = Vector3(10, 10, 10)
 	
 	var ceil_mat = StandardMaterial3D.new()
@@ -77,14 +117,14 @@ func _generate_level() -> void:
 	_create_static_box(parent, "Wall_North", Vector3(0, wall_y, -half_z - thickness/2.0), Vector3(x_width + thickness * 2.0, height, thickness), wall_mat)
 	_create_static_box(parent, "Wall_South", Vector3(0, wall_y, half_z + thickness/2.0), Vector3(x_width + thickness * 2.0, height, thickness), wall_mat)
 	
-	if empty_box_mode:
+	if is_empty:
 		return
 	
 	# 3.5 Maintenance Room
 	_generate_maintenance_room(parent, f_scale, height, thickness, wall_mat)
 	
 	# 3.6 Elevator
-	_generate_elevator(parent, f_scale, height, thickness, wall_mat)
+	_generate_elevator(parent, f_scale, height, thickness, wall_mat, f_num)
 	
 	# 3.7 North Stairs
 	_generate_north_stairs(parent, f_scale)
@@ -92,64 +132,25 @@ func _generate_level() -> void:
 	# 3.7.5 South Stairs Wall
 	_generate_south_stairs_wall(parent, f_scale, height, thickness, wall_mat)
 	
-	# 3.8 Double Room 401
-	_generate_double_room_401(parent, f_scale)
+	_generate_double_room(parent, f_scale, f_num, 401)
+	_generate_double_room(parent, f_scale, f_num, 402)
+	_generate_double_room(parent, f_scale, f_num, 403)
+	_generate_double_room(parent, f_scale, f_num, 405)
+	_generate_double_room(parent, f_scale, f_num, 406)
+	_generate_double_room(parent, f_scale, f_num, 408)
 	
-	# 3.9 Double Room 402
-	_generate_double_room_402(parent, f_scale)
+	_generate_single_room(parent, f_scale, f_num, 410)
+	_generate_single_room(parent, f_scale, f_num, 411)
+	_generate_single_room(parent, f_scale, f_num, 412)
+	_generate_single_room(parent, f_scale, f_num, 413)
+	_generate_single_room(parent, f_scale, f_num, 415)
+	_generate_single_room(parent, f_scale, f_num, 416)
+	_generate_single_room(parent, f_scale, f_num, 417)
+	_generate_single_room(parent, f_scale, f_num, 420)
+	_generate_single_room(parent, f_scale, f_num, 421)
 	
-	# 3.10 Double Room 403
-	_generate_double_room_403(parent, f_scale)
-	
-	# 3.11 Double Room 405
-	_generate_double_room_405(parent, f_scale)
-	
-	# 3.12 Double Room 406
-	_generate_double_room_406(parent, f_scale)
-	
-	# 3.13 Double Room 408
-	_generate_double_room_408(parent, f_scale)
-	
-	# 3.14 Single Room 410
-	_generate_single_room_410(parent, f_scale)
-	
-	# 3.15 Single Room 411
-	_generate_single_room_411(parent, f_scale)
-	
-	# 3.16 Single Room 412
-	_generate_single_room_412(parent, f_scale)
-	
-	# 3.17 Single Room 413
-	_generate_single_room_413(parent, f_scale)
-	
-	# 3.18 Single Room 415
-	_generate_single_room_415(parent, f_scale)
-	
-	# 3.19 Single Room 416
-	_generate_single_room_416(parent, f_scale)
-	
-	# 3.20 Single Room 417
-	_generate_single_room_417(parent, f_scale)
-	
-	# 3.21 Single Room 420
-	_generate_single_room_420(parent, f_scale)
-	
-	# 3.22 Single Room 421
-	_generate_single_room_421(parent, f_scale)
-	
-	# 3.23 Items and Enemies
 	_spawn_cassettes(parent, f_scale)
 	_spawn_cerberus(parent, f_scale)
-	
-	# 4. Light (Disabled to leave only room lights)
-	# var light = OmniLight3D.new()
-	# light.name = "MainRoomLight"
-	# light.position = Vector3(0, height - 0.5, 0)
-	# light.omni_range = 50.0
-	# light.light_energy = 2.0
-	# light.light_color = Color(1.0, 0.95, 0.9)
-	# light.shadow_enabled = true
-	# add_child(light)
 
 	# 5. Floor Map
 	var map_mesh = MeshInstance3D.new()
@@ -158,8 +159,8 @@ func _generate_level() -> void:
 	quad.size = Vector2(2.0, 1.5)
 	
 	var map_mat = StandardMaterial3D.new()
-	if map_texture:
-		map_mat.albedo_texture = map_texture
+	if m_texture:
+		map_mat.albedo_texture = m_texture
 	else:
 		var map_tex = load("res://assets/textures/hotel_map.jpg")
 		if map_tex:
@@ -170,13 +171,11 @@ func _generate_level() -> void:
 	quad.material = map_mat
 	map_mesh.mesh = quad
 	
-	# Wall face is at X = -2.75. We place it slightly off the wall (X = -2.74) to avoid z-fighting.
-	# Height 2.0m, Z = 0.0 (exactly between 403 and 405).
 	map_mesh.position = Vector3(-2.74 * f_scale, 2.0 * f_scale, 0.0 * f_scale)
-	# QuadMesh faces +Z. Rotate 90 degrees around Y to face +X (East).
 	map_mesh.rotation.y = PI / 2.0
 	parent.add_child(map_mesh)
-	# 6. Propaganda Screen (Flickering)
+	
+	# 6. Propaganda Screen
 	var prog_mesh = MeshInstance3D.new()
 	prog_mesh.name = "PropagandaScreen"
 	var prog_quad = QuadMesh.new()
@@ -196,14 +195,8 @@ func _generate_level() -> void:
 	prog_mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 	prog_quad.material = prog_mat
 	prog_mesh.mesh = prog_quad
-	
-	# Attach flicker script
 	prog_mesh.set_script(load("res://scripts/levels/blocks/flicker_material.gd"))
-	
-	# Wall face is at X = -2.75. We place it slightly off the wall (X = -2.74) to avoid z-fighting.
-	# Height 2.0m, Z = -15.5 (centered between 401 and 402 doors).
 	prog_mesh.position = Vector3(-2.74 * f_scale, 2.0 * f_scale, -15.5 * f_scale)
-	# QuadMesh faces +Z. Rotate 90 degrees around Y to face +X (East).
 	prog_mesh.rotation.y = PI / 2.0
 	parent.add_child(prog_mesh)
 
@@ -227,25 +220,17 @@ func _generate_level() -> void:
 	ad_mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 	ad_quad.material = ad_mat
 	ad_mesh.mesh = ad_quad
-	
-	# Wall face is at X = -2.75. Slightly off to avoid z-fighting.
-	# Place at Z = 13.5 to perfectly center it on the solid wall between the doors of 405 and 406.
 	ad_mesh.position = Vector3(-2.74 * f_scale, 2.0 * f_scale, 13.5 * f_scale)
 	ad_mesh.rotation.y = PI / 2.0
 	parent.add_child(ad_mesh)
 
-	# Call deferred to ensure nodes are physically in tree and physics updated
-	call_deferred("_move_player", f_scale)
-
 func _move_player(f_scale: float) -> void:
 	var player = get_node_or_null("../../Player")
 	if not player:
-		# Fallback if relative path fails
 		if get_tree() and get_tree().current_scene:
 			player = get_tree().current_scene.get_node_or_null("Player")
 	
 	if player:
-		# Use Y=2.0 to be absolutely sure the player's feet don't clip the floor
 		var p_spawn = Vector3(0, 2.0, 0) * f_scale
 		player.global_position = p_spawn
 		if "velocity" in player:
@@ -254,37 +239,23 @@ func _move_player(f_scale: float) -> void:
 
 func _generate_maintenance_room(parent: Node, f_scale: float, height: float, thickness: float, wall_mat: Material) -> void:
 	var wall_y = height / 2.0
-	
-	# Inner South Wall (runs along Z = -20.0, from X = 9.65 to 12.65)
-	# Center X = 11.15, Size X = 3.0
 	_create_static_box(parent, "Maint_Inner_South", Vector3(11.15 * f_scale, wall_y, -20.0 * f_scale), Vector3(3.0 * f_scale, height, thickness), wall_mat)
-	
-	# Inner West Wall (runs along X = 9.65, from Z = -30.0 to -20.0)
-	# Door hole at Z from -24.0 to -22.0, up to height 2.2
-	
-	# Part 1: Solid North Part (Z = -30.0 to -24.0). Center Z = -27.0, Size Z = 6.0
 	_create_static_box(parent, "Maint_Inner_West_North", Vector3(9.65 * f_scale, wall_y, -27.0 * f_scale), Vector3(thickness, height, 6.0 * f_scale), wall_mat)
-	
-	# Part 2: Solid South Part (Z = -22.0 to -20.0). Center Z = -21.0, Size Z = 2.0
 	_create_static_box(parent, "Maint_Inner_West_South", Vector3(9.65 * f_scale, wall_y, -21.0 * f_scale), Vector3(thickness, height, 2.0 * f_scale), wall_mat)
-	
-	# Part 3: Door Lintel (Z = -24.0 to -22.0)
 	var door_h = 2.2 * f_scale
 	if height > door_h:
 		var lintel_h = height - door_h
 		var lintel_y = door_h + (lintel_h / 2.0)
 		_create_static_box(parent, "Maint_Inner_West_Lintel", Vector3(9.65 * f_scale, lintel_y, -23.0 * f_scale), Vector3(thickness, lintel_h, 2.0 * f_scale), wall_mat)
 
-func _generate_elevator(parent: Node, f_scale: float, height: float, thickness: float, wall_mat: Material) -> void:
+func _generate_elevator(parent: Node, f_scale: float, height: float, thickness: float, wall_mat: Material, f_num: int) -> void:
 	var scene = load("res://scenes/levels/hotel_siberia/blocks/elevator_shaft.tscn")
 	if scene:
 		var inst = scene.instantiate()
 		parent.add_child(inst)
-		# Center X = 7.2 (shifted right by 1.9m). Base Z = -25.0 (mirrored).
 		inst.position = Vector3(7.2 * f_scale, 0, -25.0 * f_scale)
 		inst.scale.z = -1.0
 		
-		# Instantiate Elevator Door
 		var door_scene = load("res://entities/props/elevator_door.tscn")
 		if door_scene:
 			var door_inst = door_scene.instantiate()
@@ -293,11 +264,10 @@ func _generate_elevator(parent: Node, f_scale: float, height: float, thickness: 
 			door_inst.position = Vector3(0, 0, 0.1 * f_scale)
 			door_inst.scale = Vector3(1.428, 1.0, 1.0)
 			
-		# Instantiate Button
 		var btn_script = load("res://scripts/interactables/elevator_button.gd")
 		if btn_script:
 			var btn = AnimatableBody3D.new()
-			btn.name = "ButtonFloor4"
+			btn.name = "ButtonFloor" + str(f_num)
 			btn.collision_layer = 3
 			btn.set_script(btn_script)
 			
@@ -317,25 +287,21 @@ func _generate_elevator(parent: Node, f_scale: float, height: float, thickness: 
 			btn.add_child(btn_mesh)
 			
 			var label = Label3D.new()
-			label.text = "4"
+			label.text = str(f_num)
 			label.font_size = 24
 			label.outline_size = 4
-			# Face East
 			label.transform.basis = Basis(Vector3.UP, -PI/2)
 			label.position = Vector3(0.021, 0, 0)
 			btn.add_child(label)
 			
 			inst.add_child(btn)
-			# Put on West wall panel (X = -2.13 so it's slightly protruding from the -2.14 panel)
 			btn.position = Vector3(-2.13 * f_scale, 1.2 * f_scale, 2.5 * f_scale)
-
 
 func _generate_north_stairs(parent: Node, f_scale: float) -> void:
 	var scene = load("res://scenes/levels/hotel_siberia/blocks/north_stairs.tscn")
 	if scene:
 		var inst = scene.instantiate()
 		parent.add_child(inst)
-		# Center X = 1.05. North wall Z = -30.0.
 		inst.position = Vector3(1.05 * f_scale, 0, -30.0 * f_scale)
 
 func _generate_south_stairs_wall(parent: Node, f_scale: float, height: float, thickness: float, wall_mat: Material) -> void:
@@ -343,7 +309,6 @@ func _generate_south_stairs_wall(parent: Node, f_scale: float, height: float, th
 	var door_w = 1.2 * f_scale
 	var door_h = 2.2 * f_scale
 	
-	# Corridor spans X from -2.75 to 4.85. Center is 1.05.
 	var x_left = -2.75 * f_scale
 	var x_right = 4.85 * f_scale
 	var x_center = 1.05 * f_scale
@@ -362,146 +327,54 @@ func _generate_south_stairs_wall(parent: Node, f_scale: float, height: float, th
 		var lintel_y = door_h + (lintel_h / 2.0)
 		_create_static_box(parent, "SouthStairsWall_Lintel", Vector3(x_center, lintel_y, z_pos), Vector3(door_w, lintel_h, thickness), wall_mat)
 
-func _generate_double_room_401(parent: Node, f_scale: float) -> void:
+func _generate_double_room(parent: Node, f_scale: float, f_num: int, orig_num: int) -> void:
 	var scene = load("res://scenes/levels/hotel_siberia/blocks/double_room.tscn")
-	if scene:
-		var inst = scene.instantiate()
-		inst.name = "DoubleRoom_401"
-		parent.add_child(inst)
-		# Center X = -7.65. North wall Z = -30.0.
-		inst.position = Vector3(-7.65 * f_scale, 0, -30.0 * f_scale)
-
-func _generate_double_room_402(parent: Node, f_scale: float) -> void:
-	var scene = load("res://scenes/levels/hotel_siberia/blocks/double_room.tscn")
-	if scene:
-		var inst = scene.instantiate()
-		inst.name = "DoubleRoom_402"
-		parent.add_child(inst)
-		# Center X = -7.65. North wall Z = -20.0.
-		inst.position = Vector3(-7.65 * f_scale, 0, -20.0 * f_scale)
-
-func _generate_double_room_403(parent: Node, f_scale: float) -> void:
-	var scene = load("res://scenes/levels/hotel_siberia/blocks/double_room.tscn")
-	if scene:
-		var inst = scene.instantiate()
-		inst.name = "DoubleRoom_403"
-		parent.add_child(inst)
-		# Center X = -7.65. Base Z = 0.0 (Mirrored to go to -10.0)
-		inst.position = Vector3(-7.65 * f_scale, 0, 0.0 * f_scale)
+	if not scene: return
+	var inst = scene.instantiate()
+	var room_idx = orig_num % 100
+	var final_num = f_num * 100 + room_idx
+	inst.name = "DoubleRoom_" + str(final_num)
+	parent.add_child(inst)
+	
+	var base_x = -7.65
+	if orig_num == 401: inst.position = Vector3(base_x * f_scale, 0, -30.0 * f_scale)
+	elif orig_num == 402: inst.position = Vector3(base_x * f_scale, 0, -20.0 * f_scale)
+	elif orig_num == 403: 
+		inst.position = Vector3(base_x * f_scale, 0, 0.0 * f_scale)
+		inst.scale.z = -1.0
+	elif orig_num == 405: inst.position = Vector3(base_x * f_scale, 0, 0.0 * f_scale)
+	elif orig_num == 406: inst.position = Vector3(base_x * f_scale, 0, 10.0 * f_scale)
+	elif orig_num == 408:
+		inst.position = Vector3(base_x * f_scale, 0, 30.0 * f_scale)
 		inst.scale.z = -1.0
 
-func _generate_double_room_405(parent: Node, f_scale: float) -> void:
-	var scene = load("res://scenes/levels/hotel_siberia/blocks/double_room.tscn")
-	if scene:
-		var inst = scene.instantiate()
-		inst.name = "DoubleRoom_405"
-		parent.add_child(inst)
-		# Center X = -7.65. North wall Z = 0.0.
-		inst.position = Vector3(-7.65 * f_scale, 0, 0.0 * f_scale)
-
-func _generate_double_room_406(parent: Node, f_scale: float) -> void:
-	var scene = load("res://scenes/levels/hotel_siberia/blocks/double_room.tscn")
-	if scene:
-		var inst = scene.instantiate()
-		inst.name = "DoubleRoom_406"
-		parent.add_child(inst)
-		# Center X = -7.65. North wall Z = 10.0.
-		inst.position = Vector3(-7.65 * f_scale, 0, 10.0 * f_scale)
-
-func _generate_double_room_408(parent: Node, f_scale: float) -> void:
-	var scene = load("res://scenes/levels/hotel_siberia/blocks/double_room.tscn")
-	if scene:
-		var inst = scene.instantiate()
-		inst.name = "DoubleRoom_408"
-		parent.add_child(inst)
-		# Center X = -7.65. Base Z = 30.0 (Mirrored to go to 20.0)
-		inst.position = Vector3(-7.65 * f_scale, 0, 30.0 * f_scale)
+func _generate_single_room(parent: Node, f_scale: float, f_num: int, orig_num: int) -> void:
+	var scene = load("res://scenes/levels/hotel_siberia/blocks/single_room.tscn")
+	if not scene: return
+	var inst = scene.instantiate()
+	var room_idx = orig_num % 100
+	var final_num = f_num * 100 + room_idx
+	inst.name = "SingleRoom_" + str(final_num)
+	parent.add_child(inst)
+	
+	var base_x = 8.7
+	if orig_num == 410: inst.position = Vector3(base_x * f_scale, 0, -20.0 * f_scale)
+	elif orig_num == 411:
+		inst.position = Vector3(base_x * f_scale, 0, -10.0 * f_scale)
 		inst.scale.z = -1.0
-
-func _generate_single_room_410(parent: Node, f_scale: float) -> void:
-	var scene = load("res://scenes/levels/hotel_siberia/blocks/single_room.tscn")
-	if scene:
-		var inst = scene.instantiate()
-		inst.name = "SingleRoom_410"
-		parent.add_child(inst)
-		# Center X = 8.7. North wall Z = -20.0.
-		inst.position = Vector3(8.7 * f_scale, 0, -20.0 * f_scale)
-
-func _generate_single_room_411(parent: Node, f_scale: float) -> void:
-	var scene = load("res://scenes/levels/hotel_siberia/blocks/single_room.tscn")
-	if scene:
-		var inst = scene.instantiate()
-		inst.name = "SingleRoom_411"
-		parent.add_child(inst)
-		# Center X = 8.7. Mirrored, so Base Z = -10.0
-		inst.position = Vector3(8.7 * f_scale, 0, -10.0 * f_scale)
+	elif orig_num == 412: inst.position = Vector3(base_x * f_scale, 0, -10.0 * f_scale)
+	elif orig_num == 413:
+		inst.position = Vector3(base_x * f_scale, 0, 0.0 * f_scale)
 		inst.scale.z = -1.0
-
-func _generate_single_room_412(parent: Node, f_scale: float) -> void:
-	var scene = load("res://scenes/levels/hotel_siberia/blocks/single_room.tscn")
-	if scene:
-		var inst = scene.instantiate()
-		inst.name = "SingleRoom_412"
-		parent.add_child(inst)
-		# Center X = 8.7. North wall Z = -10.0.
-		inst.position = Vector3(8.7 * f_scale, 0, -10.0 * f_scale)
-
-func _generate_single_room_413(parent: Node, f_scale: float) -> void:
-	var scene = load("res://scenes/levels/hotel_siberia/blocks/single_room.tscn")
-	if scene:
-		var inst = scene.instantiate()
-		inst.name = "SingleRoom_413"
-		parent.add_child(inst)
-		# Center X = 8.7. Mirrored, so Base Z = 0.0
-		inst.position = Vector3(8.7 * f_scale, 0, 0.0 * f_scale)
+	elif orig_num == 415: inst.position = Vector3(base_x * f_scale, 0, 0.0 * f_scale)
+	elif orig_num == 416:
+		inst.position = Vector3(base_x * f_scale, 0, 10.0 * f_scale)
 		inst.scale.z = -1.0
-
-func _generate_single_room_415(parent: Node, f_scale: float) -> void:
-	var scene = load("res://scenes/levels/hotel_siberia/blocks/single_room.tscn")
-	if scene:
-		var inst = scene.instantiate()
-		inst.name = "SingleRoom_415"
-		parent.add_child(inst)
-		# Center X = 8.7. North wall Z = 0.0.
-		inst.position = Vector3(8.7 * f_scale, 0, 0.0 * f_scale)
-
-func _generate_single_room_416(parent: Node, f_scale: float) -> void:
-	var scene = load("res://scenes/levels/hotel_siberia/blocks/single_room.tscn")
-	if scene:
-		var inst = scene.instantiate()
-		inst.name = "SingleRoom_416"
-		parent.add_child(inst)
-		# Center X = 8.7. Mirrored, so Base Z = 10.0
-		inst.position = Vector3(8.7 * f_scale, 0, 10.0 * f_scale)
+	elif orig_num == 417:
+		inst.position = Vector3(base_x * f_scale, 0, 15.0 * f_scale)
 		inst.scale.z = -1.0
-
-func _generate_single_room_417(parent: Node, f_scale: float) -> void:
-	var scene = load("res://scenes/levels/hotel_siberia/blocks/single_room.tscn")
-	if scene:
-		var inst = scene.instantiate()
-		inst.name = "SingleRoom_417"
-		parent.add_child(inst)
-		# Center X = 8.7. Mirrored, so Base Z = 15.0
-		inst.position = Vector3(8.7 * f_scale, 0, 15.0 * f_scale)
-		inst.scale.z = -1.0
-
-func _generate_single_room_420(parent: Node, f_scale: float) -> void:
-	var scene = load("res://scenes/levels/hotel_siberia/blocks/single_room.tscn")
-	if scene:
-		var inst = scene.instantiate()
-		inst.name = "SingleRoom_420"
-		parent.add_child(inst)
-		# Center X = 8.7. North wall Z = 15.0.
-		inst.position = Vector3(8.7 * f_scale, 0, 15.0 * f_scale)
-
-func _generate_single_room_421(parent: Node, f_scale: float) -> void:
-	var scene = load("res://scenes/levels/hotel_siberia/blocks/single_room.tscn")
-	if scene:
-		var inst = scene.instantiate()
-		inst.name = "SingleRoom_421"
-		parent.add_child(inst)
-		# Center X = 8.7. North wall Z = 20.0.
-		inst.position = Vector3(8.7 * f_scale, 0, 20.0 * f_scale)
+	elif orig_num == 420: inst.position = Vector3(base_x * f_scale, 0, 15.0 * f_scale)
+	elif orig_num == 421: inst.position = Vector3(base_x * f_scale, 0, 20.0 * f_scale)
 
 func _create_static_box(parent: Node, node_name: String, pos: Vector3, size: Vector3, mat: Material) -> void:
 	var static_body = StaticBody3D.new()
@@ -527,8 +400,6 @@ func _create_static_box(parent: Node, node_name: String, pos: Vector3, size: Vec
 func _spawn_cassettes(parent: Node, f_scale: float) -> void:
 	var scene = load("res://entities/interactables/vhs_tape.tscn")
 	if not scene: return
-	
-	# Randomly place 5 cassettes in the vertical corridor
 	for i in range(5):
 		var inst = scene.instantiate()
 		inst.name = "Cassette_" + str(i)
@@ -536,7 +407,6 @@ func _spawn_cassettes(parent: Node, f_scale: float) -> void:
 		var rand_x = randf_range(-2.0, 4.0)
 		var rand_z = randf_range(-20.0, 40.0)
 		inst.position = Vector3(rand_x * f_scale, 0.5 * f_scale, rand_z * f_scale)
-		# Random rotation
 		inst.rotation.y = randf_range(0, PI * 2)
 
 func _spawn_cerberus(parent: Node, f_scale: float) -> void:
@@ -545,8 +415,4 @@ func _spawn_cerberus(parent: Node, f_scale: float) -> void:
 	var inst = scene.instantiate()
 	inst.name = "Cerberus"
 	parent.add_child(inst)
-	# Spawn in the vertical corridor
 	inst.position = Vector3(1.0 * f_scale, 0, 10.0 * f_scale)
-
-
-
