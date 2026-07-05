@@ -1,4 +1,4 @@
-﻿@tool
+@tool
 extends Node3D
 class_name HotelLevelGenerator
 
@@ -357,11 +357,17 @@ func _generate_double_room_401(parent: Node, f_scale: float) -> void:
 		var inst = scene.instantiate()
 		inst.name = "DoubleRoom_401"
 		parent.add_child(inst)
-		var door = inst.get_node_or_null("RoomDoor")
-		if door:
-			door.set_door_number("401")
 		# Center X = -7.65. North wall Z = -30.0.
 		inst.position = Vector3(-7.65 * f_scale, 0, -30.0 * f_scale)
+		var door_scene = load("res://entities/props/door.tscn")
+		if door_scene:
+			var door_inst = door_scene.instantiate()
+			door_inst.name = "RoomDoor"
+			inst.add_child(door_inst)
+			door_inst.position = Vector3(4.8, 0, 8.5)
+			door_inst.rotation.y = PI / 2.0
+			if door_inst.has_method("set_door_number"):
+				door_inst.set_door_number("401")
 
 func _generate_double_room_402(parent: Node, f_scale: float) -> void:
 	var scene = load("res://scenes/levels/hotel_siberia/blocks/double_room.tscn")
@@ -369,9 +375,6 @@ func _generate_double_room_402(parent: Node, f_scale: float) -> void:
 		var inst = scene.instantiate()
 		inst.name = "DoubleRoom_402"
 		parent.add_child(inst)
-		var door = inst.get_node_or_null("RoomDoor")
-		if door:
-			door.set_door_number("402")
 		# Center X = -7.65. North wall Z = -20.0.
 		inst.position = Vector3(-7.65 * f_scale, 0, -20.0 * f_scale)
 
@@ -381,9 +384,6 @@ func _generate_double_room_403(parent: Node, f_scale: float) -> void:
 		var inst = scene.instantiate()
 		inst.name = "DoubleRoom_403"
 		parent.add_child(inst)
-		var door = inst.get_node_or_null("RoomDoor")
-		if door:
-			door.set_door_number("403")
 		# Center X = -7.65. Base Z = 0.0 (Mirrored to go to -10.0)
 		inst.position = Vector3(-7.65 * f_scale, 0, 0.0 * f_scale)
 		inst.scale.z = -1.0
@@ -394,9 +394,6 @@ func _generate_double_room_405(parent: Node, f_scale: float) -> void:
 		var inst = scene.instantiate()
 		inst.name = "DoubleRoom_405"
 		parent.add_child(inst)
-		var door = inst.get_node_or_null("RoomDoor")
-		if door:
-			door.set_door_number("405")
 		# Center X = -7.65. North wall Z = 0.0.
 		inst.position = Vector3(-7.65 * f_scale, 0, 0.0 * f_scale)
 
@@ -406,9 +403,6 @@ func _generate_double_room_406(parent: Node, f_scale: float) -> void:
 		var inst = scene.instantiate()
 		inst.name = "DoubleRoom_406"
 		parent.add_child(inst)
-		var door = inst.get_node_or_null("RoomDoor")
-		if door:
-			door.set_door_number("406")
 		# Center X = -7.65. North wall Z = 10.0.
 		inst.position = Vector3(-7.65 * f_scale, 0, 10.0 * f_scale)
 
@@ -418,9 +412,6 @@ func _generate_double_room_408(parent: Node, f_scale: float) -> void:
 		var inst = scene.instantiate()
 		inst.name = "DoubleRoom_408"
 		parent.add_child(inst)
-		var door = inst.get_node_or_null("RoomDoor")
-		if door:
-			door.set_door_number("408")
 		# Center X = -7.65. Base Z = 30.0 (Mirrored to go to 20.0)
 		inst.position = Vector3(-7.65 * f_scale, 0, 30.0 * f_scale)
 		inst.scale.z = -1.0
@@ -431,9 +422,6 @@ func _generate_single_room_410(parent: Node, f_scale: float) -> void:
 		var inst = scene.instantiate()
 		inst.name = "SingleRoom_410"
 		parent.add_child(inst)
-		var door = inst.get_node_or_null("RoomDoor")
-		if door:
-			door.set_door_number("410")
 		# Center X = 8.7. North wall Z = -20.0.
 		inst.position = Vector3(8.7 * f_scale, 0, -20.0 * f_scale)
 
@@ -443,9 +431,6 @@ func _generate_single_room_411(parent: Node, f_scale: float) -> void:
 		var inst = scene.instantiate()
 		inst.name = "SingleRoom_411"
 		parent.add_child(inst)
-		var door = inst.get_node_or_null("RoomDoor")
-		if door:
-			door.set_door_number("411")
 		# Center X = 8.7. Mirrored, so Base Z = -10.0
 		inst.position = Vector3(8.7 * f_scale, 0, -10.0 * f_scale)
 		inst.scale.z = -1.0
@@ -456,9 +441,6 @@ func _generate_single_room_412(parent: Node, f_scale: float) -> void:
 		var inst = scene.instantiate()
 		inst.name = "SingleRoom_412"
 		parent.add_child(inst)
-		var door = inst.get_node_or_null("RoomDoor")
-		if door:
-			door.set_door_number("412")
 		# Center X = 8.7. North wall Z = -10.0.
 		inst.position = Vector3(8.7 * f_scale, 0, -10.0 * f_scale)
 
@@ -468,9 +450,6 @@ func _generate_single_room_413(parent: Node, f_scale: float) -> void:
 		var inst = scene.instantiate()
 		inst.name = "SingleRoom_413"
 		parent.add_child(inst)
-		var door = inst.get_node_or_null("RoomDoor")
-		if door:
-			door.set_door_number("413")
 		# Center X = 8.7. Mirrored, so Base Z = 0.0
 		inst.position = Vector3(8.7 * f_scale, 0, 0.0 * f_scale)
 		inst.scale.z = -1.0
@@ -481,9 +460,6 @@ func _generate_single_room_415(parent: Node, f_scale: float) -> void:
 		var inst = scene.instantiate()
 		inst.name = "SingleRoom_415"
 		parent.add_child(inst)
-		var door = inst.get_node_or_null("RoomDoor")
-		if door:
-			door.set_door_number("415")
 		# Center X = 8.7. North wall Z = 0.0.
 		inst.position = Vector3(8.7 * f_scale, 0, 0.0 * f_scale)
 
@@ -493,9 +469,6 @@ func _generate_single_room_416(parent: Node, f_scale: float) -> void:
 		var inst = scene.instantiate()
 		inst.name = "SingleRoom_416"
 		parent.add_child(inst)
-		var door = inst.get_node_or_null("RoomDoor")
-		if door:
-			door.set_door_number("416")
 		# Center X = 8.7. Mirrored, so Base Z = 10.0
 		inst.position = Vector3(8.7 * f_scale, 0, 10.0 * f_scale)
 		inst.scale.z = -1.0
@@ -506,9 +479,6 @@ func _generate_single_room_417(parent: Node, f_scale: float) -> void:
 		var inst = scene.instantiate()
 		inst.name = "SingleRoom_417"
 		parent.add_child(inst)
-		var door = inst.get_node_or_null("RoomDoor")
-		if door:
-			door.set_door_number("417")
 		# Center X = 8.7. Mirrored, so Base Z = 15.0
 		inst.position = Vector3(8.7 * f_scale, 0, 15.0 * f_scale)
 		inst.scale.z = -1.0
@@ -519,9 +489,6 @@ func _generate_single_room_420(parent: Node, f_scale: float) -> void:
 		var inst = scene.instantiate()
 		inst.name = "SingleRoom_420"
 		parent.add_child(inst)
-		var door = inst.get_node_or_null("RoomDoor")
-		if door:
-			door.set_door_number("420")
 		# Center X = 8.7. North wall Z = 15.0.
 		inst.position = Vector3(8.7 * f_scale, 0, 15.0 * f_scale)
 
@@ -531,9 +498,6 @@ func _generate_single_room_421(parent: Node, f_scale: float) -> void:
 		var inst = scene.instantiate()
 		inst.name = "SingleRoom_421"
 		parent.add_child(inst)
-		var door = inst.get_node_or_null("RoomDoor")
-		if door:
-			door.set_door_number("421")
 		# Center X = 8.7. North wall Z = 20.0.
 		inst.position = Vector3(8.7 * f_scale, 0, 20.0 * f_scale)
 
@@ -581,3 +545,5 @@ func _spawn_cerberus(parent: Node, f_scale: float) -> void:
 	parent.add_child(inst)
 	# Spawn in the vertical corridor
 	inst.position = Vector3(1.0 * f_scale, 0, 10.0 * f_scale)
+
+

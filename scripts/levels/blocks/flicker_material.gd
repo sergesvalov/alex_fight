@@ -6,9 +6,9 @@ var is_on: bool = true
 var mat: StandardMaterial3D
 
 func _ready() -> void:
+	set_process(true)
 	# Material is assigned to the mesh itself by the generator
-	if mesh and mesh.get_surface_count() > 0:
-		mat = mesh.surface_get_material(0)
+	if mesh: mat = mesh.material
 	
 	# Fallback if generator sets material_override
 	if not mat and material_override:
@@ -31,3 +31,5 @@ func _process(delta: float) -> void:
 		else:
 			mat.emission_energy_multiplier = randf_range(0.0, 0.2)
 			next_flicker = randf_range(0.05, 0.15)
+
+
