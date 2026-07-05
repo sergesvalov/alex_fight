@@ -702,3 +702,44 @@ Z (North)
   - `empty_box_mode`: (Only used on Level 1). If `true`, the generator skips all internal walls and rooms, creating only an empty concrete parallel-piped.
 - The `hotel_level_generator.gd` now runs immediately inside `_ready()` regardless of `Engine.is_editor_hint()`. This ensures geometry is always available at runtime.
 - **P.T. Non-Euclidean Loop**: The game deliberately loads only ONE floor at a time to save resources. When traveling up or down stairs, `seamless_teleporter.gd` loops the player locally and changes the scene. The 10 floors DO NOT physically exist stacked on top of each other in the game.
+
+## North Stairs Room Map (Coordinates)
+
+The North Stairs room is an enclosed space located at the far North end of the vertical corridor.
+
+**Global Coordinates (f_scale = 1.0):**
+- **Center of the Room** (Approximate): `X = 1.05`, `Z = -27.5`
+- **North Wall**: `Z = -30.1` (Provided by the global building `Wall_North`)
+- **South Wall**: `Z = -25.1` (Provided by `StairsSouthWall`, with two door holes)
+- **West Wall**: `X = -2.65` (Provided by `StairsWestWall`)
+- **East Wall**: `X = 4.75` (Provided by `StairsEastWall`)
+- **West Doorway**: Centered at `X = -1.75`, `Z = -25.1`, Width = `1.2m`.
+- **East Doorway**: Centered at `X = 3.85`, `Z = -25.1`, Width = `1.2m`.
+- **NW Landing**: 2.4m x 2.4m square, Height = 2.67m. Centered at `X = -1.35`, `Z = -28.8`.
+- **NE Landing**: 2.4m x 2.4m square, Height = 1.33m. Centered at `X = 3.45`, `Z = -28.8`.
+- **East Flight**: 1.2m wide (aligned with door). Rises from `Y = 0.0` at `Z = -25.2` (East Door) up to `Y = 1.33m` at `Z = -27.6` (NE Landing).
+- **North Flight**: 2.4m deep. Rises from `Y = 1.33m` at `X = 2.25` (Edge of NE Landing) up to `Y = 2.67m` at `X = -0.15` (Edge of NW Landing).
+- **West Flight**: 1.2m wide (aligned with door). Rises from `Y = 2.67m` at `Z = -27.6` (NW Landing) up to `Y = 4.0m` at `Z = -25.2` (West Door, Ceiling level).
+
+**Schematic Map:**
+```text
+      Global North Wall (Z = -30.1)
+      +-------------+-------------+-------------+
+      |  NW LANDING <|| NORTH ||||<  NE LANDING |
+      |  (2.4x2.4)  <|| STAIR ||||<  (2.4x2.4)  |
+W     |  H = 2.67m  <|| UP TO NW|<   H = 1.33m  |     E
+E     +-------------+-------------+-------------+     A
+S (-2.65)| |||||||| | NORTH STAIRS| ||||||||||| |(4.75)S
+T     |  | |||||||| | ROOM        | ||||||||||| |     T
+      |  |WEST STAIR|             | |EAST STAIR |     |
+W     |  |UP TO ROOF|             | | UP TO NE  |     W
+A     |  | |||||||| |             | ||||||||||| |     A
+L     |  | |||||||| |             | ||||||||||| |     L
+L     |  +----------+             +-------------+     L
+      |                                         |
+      +----    -------------------------    ----+
+       South Wall (Z = -25.1)
+   West Door (X = -1.75)           East Door (X = 3.85)
+           |                                |
+                        VERTICAL CORRIDOR
+```

@@ -103,11 +103,28 @@ func _build_floor_geometry(f_num: int, y_offset: float, suffix: String, c_color:
 	wall_mat.albedo_texture = wall_texture
 	wall_mat.uv1_scale = Vector3(15, 3, 1)
 
-	# 1. Floor
-	_create_static_box(parent, "Floor", Vector3(0, floor_y, 0), Vector3(x_width, floor_thick, z_length), floor_mat)
+	# 1 & 2. Floor and Ceiling (Split into 3 parts to leave a hole for North Stairs)
+	var z_south_len = 55.2 * f_scale
+	var z_south_pos = 2.4 * f_scale
+	var z_north_len = 4.8 * f_scale
+	var z_north_pos = -27.6 * f_scale
 	
-	# 2. Ceiling
-	_create_static_box(parent, "Ceiling", Vector3(0, ceil_y, 0), Vector3(x_width, floor_thick, z_length), ceil_mat)
+	var x_nw_len = 10.1 * f_scale
+	var x_nw_pos = -7.6 * f_scale
+	var x_ne_len = 8.0 * f_scale
+	var x_ne_pos = 8.65 * f_scale
+	
+	# South Main (covers everything from Z=-25.2 to Z=30.0)
+	_create_static_box(parent, "Floor_Main", Vector3(0, floor_y, z_south_pos), Vector3(x_width, floor_thick, z_south_len), floor_mat)
+	_create_static_box(parent, "Ceiling_Main", Vector3(0, ceil_y, z_south_pos), Vector3(x_width, floor_thick, z_south_len), ceil_mat)
+	
+	# North West (covers Z=-30.0 to -25.2, X=-12.65 to -2.55)
+	_create_static_box(parent, "Floor_NW", Vector3(x_nw_pos, floor_y, z_north_pos), Vector3(x_nw_len, floor_thick, z_north_len), floor_mat)
+	_create_static_box(parent, "Ceiling_NW", Vector3(x_nw_pos, ceil_y, z_north_pos), Vector3(x_nw_len, floor_thick, z_north_len), ceil_mat)
+	
+	# North East (covers Z=-30.0 to -25.2, X=4.65 to 12.65)
+	_create_static_box(parent, "Floor_NE", Vector3(x_ne_pos, floor_y, z_north_pos), Vector3(x_ne_len, floor_thick, z_north_len), floor_mat)
+	_create_static_box(parent, "Ceiling_NE", Vector3(x_ne_pos, ceil_y, z_north_pos), Vector3(x_ne_len, floor_thick, z_north_len), ceil_mat)
 	
 	# 3. Outer Walls
 	var half_x = x_width / 2.0
