@@ -10,7 +10,7 @@ class_name HotelLevelGenerator
 
 var carpet_texture = preload("res://assets/textures/hotel_carpet.jpg")
 var wall_texture = preload("res://assets/textures/hotel_wallpaper.jpg")
-var ceiling_texture = preload("res://assets/textures/hotel_ceiling.jpg")
+var ceiling_texture = preload("res://assets/textures/hotel_wallpaper.jpg")
 
 func _ready() -> void:
 	if not Engine.is_editor_hint():
@@ -23,19 +23,6 @@ func _ready() -> void:
 		var nav_region = get_parent()
 		if nav_region is NavigationRegion3D:
 			nav_region.bake_navigation_mesh()
-			
-		# Wait one more frame to ensure other scripts don't override the player position
-		await get_tree().process_frame
-		var player = get_node_or_null("../../Player")
-		if player:
-			var f_scale = GlobalConfig.get_floor_scale()
-			var p_spawn = player_spawn_pos * f_scale
-			# Force the player to the center of the generated room
-			player.global_position = p_spawn
-			# Zero out velocity if it's a character body to stop falling
-			if "velocity" in player:
-				player.velocity = Vector3.ZERO
-			print("Player explicitly moved to center: ", player.global_position)
 
 func _generate_level() -> void:
 	print("Generating SIMPLE hotel level geometry with StaticBodies...")
@@ -95,6 +82,24 @@ func _generate_level() -> void:
 	light.light_color = Color(1.0, 0.95, 0.9)
 	light.shadow_enabled = true
 	add_child(light)
+
+	# Call deferred to ensure nodes are physically in tree and physics updated
+	call_deferred("_move_player", f_scale)
+
+func _move_player(f_scale: float) -> void:
+	var player = get_node_or_null("../../Player")
+	if not player:
+		# Fallback if relative path fails
+		if get_tree() and get_tree().current_scene:
+			player = get_tree().current_scene.get_node_or_null("Player")
+	
+	if player:
+		# Use Y=2.0 to be absolutely sure the player's feet don't clip the floor
+		var p_spawn = Vector3(0, 2.0, 0) * f_scale
+		player.global_position = p_spawn
+		if "velocity" in player:
+			player.velocity = Vector3.ZERO
+		print("Player moved to: ", p_spawn)
 
 func _create_static_box(parent: Node, node_name: String, pos: Vector3, size: Vector3, mat: Material) -> void:
 	var static_body = StaticBody3D.new()
