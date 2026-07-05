@@ -8,8 +8,6 @@ albedo_texture = ExtResource("1_wallpaper")
 uv1_scale = Vector3(20, 2, 2)
 roughness = 0.9
 
-[sub_resource type="BoxOccluder3D" id="BoxOccluder3D_Wall"]
-size = Vector3(7.6, 3.5, 5.0)
 
 [node name="NorthStairsBlock" type="Node3D"]
 script = ExtResource("3_script")
@@ -37,3 +35,4 @@ material = SubResource("StandardMaterial3D_wall")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 4.9)
 operation = 2
 size = Vector3(2.0, 2.2, 1.0)
+

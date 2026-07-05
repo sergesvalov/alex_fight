@@ -8,8 +8,6 @@ albedo_texture = ExtResource("1_wallpaper")
 uv1_scale = Vector3(20, 2, 2)
 roughness = 0.9
 
-[sub_resource type="BoxOccluder3D" id="BoxOccluder3D_Wall"]
-size = Vector3(4.7, 3.5, 5.0)
 
 [node name="ElevatorShaftBlock" type="Node3D"]
 script = ExtResource("3_script")
@@ -43,6 +41,4 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.75, 2.5)
 light_color = Color(0.9, 0.95, 1, 1)
 omni_range = 8.0
 
-[node name="OccluderInstance3D" type="OccluderInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.75, 2.5)
-occluder = SubResource("BoxOccluder3D_Wall")
+
