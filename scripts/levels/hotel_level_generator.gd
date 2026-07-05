@@ -7,15 +7,16 @@ class_name HotelLevelGenerator
 @export var floor_thickness: float = 0.5
 @export var corridor_height: float = 4.0
 @export var wall_thickness: float = 0.2
+@export var carpet_color: Color = Color(1.0, 1.0, 1.0, 1.0)
+@export var map_texture: Texture2D = null
 
 var carpet_texture = preload("res://assets/textures/hotel_carpet.jpg")
 var wall_texture = preload("res://assets/textures/hotel_wallpaper.jpg")
 var ceiling_texture = preload("res://assets/textures/hotel_wallpaper.jpg")
 
 func _ready() -> void:
+	_generate_level()
 	if not Engine.is_editor_hint():
-		_generate_level()
-		
 		# Allow physics to settle
 		await get_tree().physics_frame
 		await get_tree().physics_frame
@@ -28,7 +29,7 @@ func _generate_level() -> void:
 	print("Generating SIMPLE hotel level geometry with StaticBodies...")
 	
 	for child in get_children():
-		child.queue_free()
+		child.free()
 		
 	var parent = Node3D.new()
 	parent.name = "GeneratedFloor_Main"
@@ -47,6 +48,7 @@ func _generate_level() -> void:
 	
 	var floor_mat = StandardMaterial3D.new()
 	floor_mat.albedo_texture = carpet_texture
+	floor_mat.albedo_color = carpet_color
 	floor_mat.uv1_scale = Vector3(10, 10, 10)
 	
 	var ceil_mat = StandardMaterial3D.new()
@@ -151,11 +153,14 @@ func _generate_level() -> void:
 	quad.size = Vector2(2.0, 1.5)
 	
 	var map_mat = StandardMaterial3D.new()
-	var map_tex = load("res://assets/textures/hotel_map.jpg")
-	if map_tex:
-		map_mat.albedo_texture = map_tex
+	if map_texture:
+		map_mat.albedo_texture = map_texture
 	else:
-		map_mat.albedo_color = Color(1.0, 0.0, 0.0)
+		var map_tex = load("res://assets/textures/hotel_map.jpg")
+		if map_tex:
+			map_mat.albedo_texture = map_tex
+		else:
+			map_mat.albedo_color = Color(1.0, 0.0, 0.0)
 	map_mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 	quad.material = map_mat
 	map_mesh.mesh = quad
