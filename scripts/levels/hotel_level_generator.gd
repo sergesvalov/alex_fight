@@ -53,6 +53,8 @@ func _generate_level() -> void:
 		
 	var c_color_below = Color(0.6, 0.2, 0.2)
 	var c_color_main = carpet_color
+	if floor_number == 4:
+		c_color_main = Color(1.0, 1.0, 1.0, 1.0)
 	var c_color_above = Color(0.2, 0.6, 0.2)
 	
 	if floor_number > 1: c_color_below = get_color_from_scene.call(floor_number - 1)
