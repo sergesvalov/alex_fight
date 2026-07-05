@@ -46,13 +46,13 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.25, 2.0, 2.5)
 size = Vector3(0.2, 4.0, 5.0)
 material = SubResource("StandardMaterial3D_wall")
 
-[node name="ElevatorSouthWall" type="CSGBox3D" parent="ElevatorGeometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.0, 4.9)
+[node name="ElevatorNorthWall" type="CSGBox3D" parent="ElevatorGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.0, 0.1)
 size = Vector3(4.7, 4.0, 0.2)
 material = SubResource("StandardMaterial3D_wall")
 
 [node name="ElevatorDoorHole" type="CSGBox3D" parent="ElevatorGeometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 4.9)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 0.1)
 operation = 2
 size = Vector3(2.0, 2.2, 1.0)
 

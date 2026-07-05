@@ -270,8 +270,9 @@ func _generate_elevator(parent: Node, f_scale: float, height: float, thickness: 
 	if scene:
 		var inst = scene.instantiate()
 		parent.add_child(inst)
-		# Center X = 7.2 (shifted right by 1.9m). North wall Z = -30.0.
-		inst.position = Vector3(7.2 * f_scale, 0, -30.0 * f_scale)
+		# Center X = 7.2 (shifted right by 1.9m). Base Z = -25.0 (mirrored).
+		inst.position = Vector3(7.2 * f_scale, 0, -25.0 * f_scale)
+		inst.scale.z = -1.0
 		
 		# Instantiate Elevator Door
 		var door_scene = load("res://entities/props/elevator_door.tscn")
@@ -279,7 +280,7 @@ func _generate_elevator(parent: Node, f_scale: float, height: float, thickness: 
 			var door_inst = door_scene.instantiate()
 			door_inst.name = "ElevatorDoor"
 			inst.add_child(door_inst)
-			door_inst.position = Vector3(0, 0, 4.9 * f_scale)
+			door_inst.position = Vector3(0, 0, 0.1 * f_scale)
 			door_inst.scale = Vector3(1.428, 1.0, 1.0)
 			
 		# Instantiate Button
@@ -545,5 +546,6 @@ func _spawn_cerberus(parent: Node, f_scale: float) -> void:
 	parent.add_child(inst)
 	# Spawn in the vertical corridor
 	inst.position = Vector3(1.0 * f_scale, 0, 10.0 * f_scale)
+
 
 
