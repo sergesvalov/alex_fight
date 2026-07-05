@@ -1,107 +1,150 @@
 import re
+import math
 
 def parse_vector3(s):
     v = s.replace("Vector3(", "").replace(")", "").split(",")
-    return float(v[0]), float(v[1]), float(v[2])
+    return float(v[0].strip()), float(v[1].strip()), float(v[2].strip())
 
 def parse_transform(s):
     v = s.replace("Transform3D(", "").replace(")", "").split(",")
-    return float(v[9]), float(v[10]), float(v[11])
+    return float(v[9].strip()), float(v[10].strip()), float(v[11].strip())
 
-rooms = []
-with open("rooms_geometry.txt", "r") as f:
-    lines = f.readlines()
+def parse_tscn(filepath):
+    walls = []
+    props = []
+    with open(filepath, 'r', encoding='utf-8') as f:
+        lines = f.readlines()
+        
     curr_name = ""
     curr_pos = None
     curr_size = None
+    curr_type = None
+    
     for line in lines:
         if line.startswith("[node name="):
-            if curr_name and curr_pos and curr_size:
-                rooms.append({"name": curr_name, "pos": curr_pos, "size": curr_size, "type": "box"})
-            curr_name = re.search(r'name="([^"]+)"', line).group(1)
+            if curr_name and curr_pos:
+                if curr_size:
+                    walls.append({"name": curr_name, "pos": curr_pos, "size": curr_size})
+                elif curr_type:
+                    props.append({"name": curr_name, "pos": curr_pos, "type": curr_type})
+                    
+            match = re.search(r'name="([^"]+)"', line)
+            curr_name = match.group(1) if match else ""
             curr_pos = None
             curr_size = None
+            curr_type = None
+            
+            if "CSGBox3D" in line:
+                curr_type = "wall"
+            elif "ExtResource" in line:
+                m_type = re.search(r'instance=ExtResource\("([^"]+)"\)', line)
+                if m_type:
+                    curr_type = m_type.group(1).split('_')[-1]
+                    
         elif line.startswith("transform ="):
             curr_pos = parse_transform(line.split("=", 1)[1])
         elif line.startswith("size ="):
             curr_size = parse_vector3(line.split("=", 1)[1])
-    if curr_name and curr_pos and curr_size:
-        rooms.append({"name": curr_name, "pos": curr_pos, "size": curr_size, "type": "box"})
+            
+    if curr_name and curr_pos:
+        if curr_size:
+            walls.append({"name": curr_name, "pos": curr_pos, "size": curr_size})
+        elif curr_type:
+            props.append({"name": curr_name, "pos": curr_pos, "type": curr_type})
+            
+    return walls, props
 
-props = []
+db_walls, db_props = parse_tscn("scenes/levels/hotel_siberia/blocks/double_room.tscn")
+sg_walls, sg_props = parse_tscn("scenes/levels/hotel_siberia/blocks/single_room.tscn")
+
+global_rooms = []
+with open("scripts/levels/hotel_level_generator.gd", "r", encoding='utf-8') as f:
+    lines = f.readlines()
+    curr_type = ""
+    for line in lines:
+        m = re.search(r'inst\.name = "(Double|Single)Room_(\d+)"', line)
+        if m:
+            curr_type = m.group(1).lower()
+        if curr_type and "inst.position = Vector3(" in line:
+            m_pos = re.search(r'Vector3\(([^,]+),([^,]+),([^)]+)\)', line)
+            if m_pos:
+                px = float(m_pos.group(1).replace("* f_scale","").strip())
+                py = float(m_pos.group(2).replace("* f_scale","").strip())
+                pz = float(m_pos.group(3).replace("* f_scale","").strip())
+                global_rooms.append({"type": curr_type, "pos": (px, py, pz)})
+                curr_type = ""
+
+all_walls = []
+all_props = []
+
+for r in global_rooms:
+    bx, by, bz = r["pos"]
+    walls = db_walls if r["type"] == "double" else sg_walls
+    props = db_props if r["type"] == "double" else sg_props
+    
+    for w in walls:
+        lx, ly, lz = w["pos"]
+        all_walls.append({"name": w["name"], "pos": (bx+lx, by+ly, bz+lz), "size": w["size"], "type": "box"})
+        
+    for p in props:
+        if p["type"] == "wall": continue
+        lx, ly, lz = p["pos"]
+        all_props.append({"name": p["name"], "pos": (bx+lx, by+ly, bz+lz), "type": p["type"]})
+
 prop_sizes = {
     "bed": (2.0, 0.5, 2.0),
     "wardrobe": (1.0, 2.0, 1.0),
     "table": (1.0, 1.0, 1.0),
     "chair": (0.5, 1.0, 0.5),
+    "door": (1.0, 2.2, 1.0),
 }
-with open("props_geometry.txt", "r") as f:
-    lines = f.readlines()
-    curr_name = ""
-    curr_pos = None
-    curr_type = ""
-    for line in lines:
-        if line.startswith("[node name="):
-            if curr_name and curr_pos:
-                props.append({"name": curr_name, "pos": curr_pos, "size": prop_sizes.get(curr_type, (1,1,1)), "type": curr_type})
-            curr_name = re.search(r'name="([^"]+)"', line).group(1)
-            if "ExtResource" in line:
-                curr_type = re.search(r'instance=ExtResource\("([^"]+)"\)', line)
-                if curr_type:
-                    curr_type = curr_type.group(1)
-            curr_pos = None
-        elif line.startswith("transform ="):
-            curr_pos = parse_transform(line.split("=", 1)[1])
-    if curr_name and curr_pos:
-        props.append({"name": curr_name, "pos": curr_pos, "size": prop_sizes.get(curr_type, (1,1,1)), "type": curr_type})
 
 def render_map(y_level):
     min_x, max_x = -15.0, 15.0
-    min_z, max_z = -45.0, 0.0
+    min_z, max_z = -45.0, 50.0
     step = 0.5
     
     w = int((max_x - min_x) / step)
     h = int((max_z - min_z) / step)
     grid = [[" " for _ in range(w)] for _ in range(h)]
     
-    # Render boxes
-    for r in rooms:
+    for r in all_walls:
         px, py, pz = r["pos"]
         sx, sy, sz = r["size"]
         
-        if y_level >= py - sy/2 and y_level <= py + sy/2:
-            x1 = int((px - sx/2 - min_x) / step)
-            x2 = int((px + sx/2 - min_x) / step)
-            z1 = int((pz - sz/2 - min_z) / step)
-            z2 = int((pz + sz/2 - min_z) / step)
-            
-            x1 = max(0, min(w-1, x1))
-            x2 = max(0, min(w-1, x2))
-            z1 = max(0, min(h-1, z1))
-            z2 = max(0, min(h-1, z2))
-            
-            char = "#" if "Wall" in r["name"] else "."
-            for zi in range(z1, z2):
-                for xi in range(x1, x2):
-                    grid[zi][xi] = char
-                    
-    # Render props
-    for p in props:
-        px, py, pz = p["pos"]
-        sx, sy, sz = p["size"]
+        if "Hole" in r["name"]: continue
         
         if y_level >= py - sy/2 and y_level <= py + sy/2:
-            x1 = int((px - sx/2 - min_x) / step)
-            x2 = int((px + sx/2 - min_x) / step)
-            z1 = int((pz - sz/2 - min_z) / step)
-            z2 = int((pz + sz/2 - min_z) / step)
+            x1 = int(math.floor((px - sx/2 - min_x) / step))
+            x2 = int(math.ceil((px + sx/2 - min_x) / step))
+            z1 = int(math.floor((pz - sz/2 - min_z) / step))
+            z2 = int(math.ceil((pz + sz/2 - min_z) / step))
             
             x1 = max(0, min(w-1, x1))
             x2 = max(0, min(w-1, x2))
             z1 = max(0, min(h-1, z1))
             z2 = max(0, min(h-1, z2))
             
-            char = p["type"][0].upper()
+            for zi in range(z1, z2):
+                for xi in range(x1, x2):
+                    grid[zi][xi] = "#"
+                    
+    for p in all_props:
+        px, py, pz = p["pos"]
+        sx, sy, sz = prop_sizes.get(p["type"], (1,1,1))
+        
+        if y_level >= py - sy/2 and y_level <= py + sy/2:
+            x1 = int(math.floor((px - sx/2 - min_x) / step))
+            x2 = int(math.ceil((px + sx/2 - min_x) / step))
+            z1 = int(math.floor((pz - sz/2 - min_z) / step))
+            z2 = int(math.ceil((pz + sz/2 - min_z) / step))
+            
+            x1 = max(0, min(w-1, x1))
+            x2 = max(0, min(w-1, x2))
+            z1 = max(0, min(h-1, z1))
+            z2 = max(0, min(h-1, z2))
+            
+            char = "D" if p["type"] == "door" else p["type"][0].upper()
             for zi in range(z1, z2):
                 for xi in range(x1, x2):
                     grid[zi][xi] = char
@@ -124,10 +167,15 @@ output += """
 - **W**: Wardrobe. A tall wooden storage unit.
 - **T**: Table. A standard desk/table.
 - **C**: Chair. An interactable physics object.
-- **Doorways**: The empty gaps in the walls between rooms and corridors represent the main doors and WC doors. 
+- **D**: Door. The interactive doors placed at room entrances and WCs. 
 """
 
-with open(".agents/AGENTS.md", "a") as f:
-    f.write(output)
+with open(".agents/AGENTS.md", "r", encoding="utf-8") as f:
+    agents_text = f.read()
 
-print("Appended maps to .agents/AGENTS.md")
+agents_text = re.sub(r'(?s)## Actual Geometry Maps.*', output, agents_text)
+
+with open(".agents/AGENTS.md", "w", encoding="utf-8") as f:
+    f.write(agents_text)
+
+print("Updated AGENTS.md successfully!")
