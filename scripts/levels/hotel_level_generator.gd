@@ -82,6 +82,9 @@ func _generate_level() -> void:
 	# 3.7 North Stairs
 	_generate_north_stairs(parent, f_scale)
 	
+	# 3.7.5 South Stairs Wall
+	_generate_south_stairs_wall(parent, f_scale, height, thickness, wall_mat)
+	
 	# 3.8 Double Room 401
 	_generate_double_room_401(parent, f_scale)
 	
@@ -271,6 +274,30 @@ func _generate_north_stairs(parent: Node, f_scale: float) -> void:
 		parent.add_child(inst)
 		# Center X = 1.05. North wall Z = -30.0.
 		inst.position = Vector3(1.05 * f_scale, 0, -30.0 * f_scale)
+
+func _generate_south_stairs_wall(parent: Node, f_scale: float, height: float, thickness: float, wall_mat: Material) -> void:
+	var z_pos = 25.0 * f_scale + (thickness / 2.0)
+	var door_w = 1.2 * f_scale
+	var door_h = 2.2 * f_scale
+	
+	# Corridor spans X from -2.75 to 4.85. Center is 1.05.
+	var x_left = -2.75 * f_scale
+	var x_right = 4.85 * f_scale
+	var x_center = 1.05 * f_scale
+	
+	var left_w = (x_center - door_w / 2.0) - x_left
+	var left_cx = x_left + (left_w / 2.0)
+	
+	var right_w = x_right - (x_center + door_w / 2.0)
+	var right_cx = x_right - (right_w / 2.0)
+	
+	_create_static_box(parent, "SouthStairsWall_Left", Vector3(left_cx, height / 2.0, z_pos), Vector3(left_w, height, thickness), wall_mat)
+	_create_static_box(parent, "SouthStairsWall_Right", Vector3(right_cx, height / 2.0, z_pos), Vector3(right_w, height, thickness), wall_mat)
+	
+	if height > door_h:
+		var lintel_h = height - door_h
+		var lintel_y = door_h + (lintel_h / 2.0)
+		_create_static_box(parent, "SouthStairsWall_Lintel", Vector3(x_center, lintel_y, z_pos), Vector3(door_w, lintel_h, thickness), wall_mat)
 
 func _generate_double_room_401(parent: Node, f_scale: float) -> void:
 	var scene = load("res://scenes/levels/hotel_siberia/blocks/double_room.tscn")
