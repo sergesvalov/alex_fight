@@ -162,7 +162,36 @@ func _generate_level() -> void:
 	# QuadMesh faces +Z. Rotate 90 degrees around Y to face +X (East).
 	map_mesh.rotation.y = PI / 2.0
 	parent.add_child(map_mesh)
-
+	# 6. Propaganda Screen (Flickering)
+	var prog_mesh = MeshInstance3D.new()
+	prog_mesh.name = "PropagandaScreen"
+	var prog_quad = QuadMesh.new()
+	prog_quad.size = Vector2(1.5, 2.0)
+	
+	var prog_mat = StandardMaterial3D.new()
+	var prog_tex = load("res://assets/textures/propaganda.jpg")
+	if prog_tex:
+		prog_mat.albedo_texture = prog_tex
+		prog_mat.emission_enabled = true
+		prog_mat.emission_texture = prog_tex
+		prog_mat.emission_energy_multiplier = 1.0
+	else:
+		prog_mat.albedo_color = Color(0.2, 0.2, 0.8)
+		prog_mat.emission_enabled = true
+		prog_mat.emission = Color(0.2, 0.2, 0.8)
+	prog_mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	prog_quad.material = prog_mat
+	prog_mesh.mesh = prog_quad
+	
+	# Attach flicker script
+	prog_mesh.set_script(load("res://scripts/levels/blocks/flicker_material.gd"))
+	
+	# Wall face is at X = -2.75. We place it slightly off the wall (X = -2.74) to avoid z-fighting.
+	# Height 2.0m, Z = -15.5 (centered between 401 and 402 doors).
+	prog_mesh.position = Vector3(-2.74 * f_scale, 2.0 * f_scale, -15.5 * f_scale)
+	# QuadMesh faces +Z. Rotate 90 degrees around Y to face +X (East).
+	prog_mesh.rotation.y = PI / 2.0
+	parent.add_child(prog_mesh)
 
 	# 7. Ad Screen
 	var ad_mesh = MeshInstance3D.new()
