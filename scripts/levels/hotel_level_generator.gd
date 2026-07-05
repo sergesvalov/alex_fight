@@ -265,8 +265,9 @@ func _generate_single_room_411(parent: Node, f_scale: float) -> void:
 		var inst = scene.instantiate()
 		inst.name = "SingleRoom_411"
 		parent.add_child(inst)
-		# Center X = 8.7. North wall Z = -15.0.
-		inst.position = Vector3(8.7 * f_scale, 0, -15.0 * f_scale)
+		# Center X = 8.7. Mirrored, so Base Z = -10.0
+		inst.position = Vector3(8.7 * f_scale, 0, -10.0 * f_scale)
+		inst.scale.z = -1.0
 
 func _generate_single_room_412(parent: Node, f_scale: float) -> void:
 	var scene = load("res://scenes/levels/hotel_siberia/blocks/single_room.tscn")
@@ -283,8 +284,9 @@ func _generate_single_room_413(parent: Node, f_scale: float) -> void:
 		var inst = scene.instantiate()
 		inst.name = "SingleRoom_413"
 		parent.add_child(inst)
-		# Center X = 8.7. North wall Z = -5.0.
-		inst.position = Vector3(8.7 * f_scale, 0, -5.0 * f_scale)
+		# Center X = 8.7. Mirrored, so Base Z = 0.0
+		inst.position = Vector3(8.7 * f_scale, 0, 0.0 * f_scale)
+		inst.scale.z = -1.0
 
 func _generate_single_room_415(parent: Node, f_scale: float) -> void:
 	var scene = load("res://scenes/levels/hotel_siberia/blocks/single_room.tscn")
@@ -301,8 +303,9 @@ func _generate_single_room_416(parent: Node, f_scale: float) -> void:
 		var inst = scene.instantiate()
 		inst.name = "SingleRoom_416"
 		parent.add_child(inst)
-		# Center X = 8.7. North wall Z = 5.0.
-		inst.position = Vector3(8.7 * f_scale, 0, 5.0 * f_scale)
+		# Center X = 8.7. Mirrored, so Base Z = 10.0
+		inst.position = Vector3(8.7 * f_scale, 0, 10.0 * f_scale)
+		inst.scale.z = -1.0
 
 func _generate_single_room_417(parent: Node, f_scale: float) -> void:
 	var scene = load("res://scenes/levels/hotel_siberia/blocks/single_room.tscn")
@@ -310,8 +313,9 @@ func _generate_single_room_417(parent: Node, f_scale: float) -> void:
 		var inst = scene.instantiate()
 		inst.name = "SingleRoom_417"
 		parent.add_child(inst)
-		# Center X = 8.7. North wall Z = 10.0.
-		inst.position = Vector3(8.7 * f_scale, 0, 10.0 * f_scale)
+		# Center X = 8.7. Mirrored, so Base Z = 15.0
+		inst.position = Vector3(8.7 * f_scale, 0, 15.0 * f_scale)
+		inst.scale.z = -1.0
 
 func _generate_single_room_420(parent: Node, f_scale: float) -> void:
 	var scene = load("res://scenes/levels/hotel_siberia/blocks/single_room.tscn")
