@@ -1,0 +1,39 @@
+﻿[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Texture2D" path="res://assets/textures/hotel_wallpaper.jpg" id="1_wallpaper"]
+[ext_resource type="Script" path="res://scripts/levels/blocks/block.gd" id="3_script"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wall"]
+albedo_texture = ExtResource("1_wallpaper")
+uv1_scale = Vector3(20, 2, 2)
+roughness = 0.9
+
+[sub_resource type="BoxOccluder3D" id="BoxOccluder3D_Wall"]
+size = Vector3(9.8, 3.5, 10.0)
+
+[node name="DoubleRoomBlock" type="Node3D"]
+script = ExtResource("3_script")
+
+[node name="RoomGeometry" type="CSGCombiner3D" parent="."]
+use_collision = true
+collision_layer = 2
+
+[node name="RoomNorthWall" type="CSGBox3D" parent="RoomGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.75, 0.1)
+size = Vector3(9.8, 3.5, 0.2)
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="RoomSouthWall" type="CSGBox3D" parent="RoomGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.75, 9.9)
+size = Vector3(9.8, 3.5, 0.2)
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="RoomEastWall" type="CSGBox3D" parent="RoomGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.8, 1.75, 5.0)
+size = Vector3(0.2, 3.5, 10.0)
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="RoomDoorHole" type="CSGBox3D" parent="RoomGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.8, 1.1, 8.5)
+operation = 2
+size = Vector3(1.0, 2.2, 2.0)
