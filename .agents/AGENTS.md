@@ -1,31 +1,26 @@
-﻿# Hotel Level Generator Guide
+# Hotel Level Generator Guide
 
 This file provides architectural guidelines and debugging instructions for AI agents working on the hotel level generator in this project.
 
-## Architecture & Responsibilities
+## Architecture & Responsibilities (NEW GENERATOR)
 
-1. **Static Rooms vs. Dynamic Walls**:
-   - Rooms (SingleRoom, DoubleRoom) are instanced from static .tscn files. They DO NOT have front walls (walls facing the corridor).
-   - The front walls and the holes for the doors are generated dynamically by hotel_level_generator_geometry.gd using CSGBox3D.
+The previous architecture relied on external scripts drawing corridor walls dynamically while rooms lacked front walls. **This is NO LONGER TRUE.**
+
+1. **Master Generator (`hotel_level_generator.gd`)**:
+   - Acts as the central director. It dynamically builds global boundary walls, floors, ceilings, and special corridor blockers (like the South Stairs wall).
+   - Instantiates pre-built room CSG blocks directly into the level.
    
-2. **Scaling Logic (GlobalConfig.gd)**:
-   - The level is scaled dynamically based on player_height (p_scale) and floor_ceiling_height (f_scale).
-   - GlobalConfig.gd has a room_layouts dictionary. This dictionary uses an anchor system to position furniture relative to the room bounds.
-   - For doors (MainDoor, WCDoor), anchor_x and anchor_z are set to 0. This means their local coordinates simply scale by f_scale. This guarantees they perfectly align with the dynamically generated corridor walls and holes (which are also scaled by f_scale).
-   - Furniture uses anchors (e.g. anchor_x = 1) to maintain its exact distance from the walls (scaled by p_scale to avoid clipping into the expanding walls).
+2. **Self-Contained CSG Rooms**:
+   - Rooms are instantiated from `blocks/double_room.tscn` and `blocks/single_room.tscn`.
+   - Rooms **DO** contain their own front walls (facing the corridor) and door holes, built using `CSGCombiner3D`. 
+   - Double rooms have an East wall. Single rooms have a West wall.
+   - Single rooms intentionally lack an East wall because they align flush with the global building East wall.
 
-## Debugging Workflow
-
-If you modify the generation logic, math offsets, or scaling, you must verify that the doors still perfectly align with the holes.
-
-How to verify:
-1. Run the test suite using Godot headless mode.
-2. The test suite automatically runs the debug_geometry.gd script. It also validates that entity spawning does not silently fail or crash.
-3. If you want to use the script directly in your own code or tests, you can call:
-    var mismatches = DebugGeometry.print_room_alignments(generated_floor_node)
-   This will print all Door AABBs and Hole AABBs, and report any mismatches greater than 5cm on both X and Z axes, as well as floating doors.
-
-WARNING: NEVER blindly multiply door positions by f_scale if they are already anchored or if the generator does not multiply its offsets. Always consult hotel_level_generator.gd to see which base variables (like wall_thickness or room_door_z_offset) are scaled, and ensure the local door logic matches!
+3. **Mirroring for Shared Plumbing**:
+   - Hotel plumbing is often shared between adjacent rooms. 
+   - We achieve this by mirroring specific rooms along the `Z` axis (`scale.z = -1.0`).
+   - For example, Double Room 403 is mirrored so its WC touches Double Room 405's WC at `Z = 0.0`.
+   - Single Rooms 411, 413, 416, and 417 are mirrored to ensure their WCs align back-to-back with neighboring single rooms, or cross-corridor with double rooms.
 
 ## Hotel Level Geometry Maps
 
@@ -94,53 +89,6 @@ Z (North)
   |                       |                  (Z = 5.0m)                   |
   +-----------------------+-----------------------------------------------+ Z (South)
 ```
-
-
-
-### Правила формирования геометрии для ИИ-генератора (Generation Rules)
-
-Любой генератор геометрии (например, `hotel_level_generator_geometry.gd`), работающий с Северным блоком гостиницы, ДОЛЖЕН соблюдать следующие абсолютные математические правила:
-
-#### 1. Базовые константы и ось Z
-* Вся геометрия строится на шаге `Z = 5.0м`. Любые координаты начала и конца комнат по оси Z обязаны быть кратны `5.0`.
-* Полная длина Северного блока от Северной внешней стены до Южной внешней стены составляет ровно `60.0м`.
-* В локальных координатах генератора, если мы считаем Южную стену за `Z = 0.0` (или Северную за `Z = -60.0`), все комнаты должны укладываться в этот 60-метровый отрезок без единого миллиметра зазоров по оси Z.
-
-#### 2. Левый блок (Двухместные номера / DBL)
-* Состоит из 6 номеров (401, 402, 403, 405, 406, 408).
-* Длина каждого номера по оси Z строго равна `10.0м`.
-* Номера генерируются сплошным блоком без зазоров между ними (6 * 10.0м = 60.0м).
-* Верхняя (северная) стена номера 401 совпадает с Северной стеной здания. Нижняя (южная) стена номера 408 совпадает с Южной стеной здания.
-
-#### 3. Правый блок (Одноместные номера / SNG)
-* Состоит из 9 номеров (410, 411, 412, 413, 415, 416, 417, 420, 421).
-* Длина каждого номера по оси Z строго равна `5.0м`.
-* Номера генерируются сплошным блоком без зазоров.
-* Блок начинается с отступом `10.0м` от Северной стены (это пространство занято Лифтом и Техническим помещением).
-* Блок заканчивается с отступом `5.0м` до Южной стены (это пространство занято коробкой Южной лестницы).
-* Каждые 2 номера SNG идеально выравниваются по границам с 1 номером DBL. Например, SNG 420 и 421 вместе имеют высоту 10.0м и идеально соответствуют нижней и верхней границе номера 406 (для 420 и 417) и 408 (для 421).
-* *Важно*: Номер 421 занимает позицию `[Z=5.0 до Z=10.0]` от Южной стены. Он выровнен с *верхней* половиной номера 408.
-
-#### 4. Центральный Вертикальный Коридор
-* Проходит между Левым и Правым блоком.
-* Начинается от отметки `10.0м` от Северной стены.
-* Заканчивается на отметке `~5.0м` от Южной стены. Важно: коридор "проваливается" чуть ниже нижней стены номера 421, образуя небольшую ступеньку вниз, на которой располагается дверь `▼` на Южную лестницу.
-
-#### 5. Северный блок (Горизонтальный коридор, Лифт, Северная лестница, Тех. помещение)
-* Занимает пространство от Северной стены до отметки `10.0м` (первые 2 модуля по оси Z).
-* **Северная лестница**: Коробка размером `5.0м` по оси Z, находящаяся строго над Вертикальным коридором (примыкает к Северной стене).
-* **Горизонтальный коридор**: Проходит под Северной лестницей и Лифтом. Его размер по оси Z = `5.0м` (от 5.0м до 10.0м от Северной стены). Он пронзает этаж направо вплоть до Технического помещения.
-* **Лифт**: Примыкает к Северной стене, расположен справа от Северной лестницы. Размер по оси Z = `5.0м`. Имеет удвоенную ширину по оси X, нависая над Горизонтальным коридором.
-* **Техническое помещение**: Размещено у самой правой (восточной) стены здания. Это узкая полоса, которая занимает оба модуля по высоте (и от 0 до 5м, и от 5 до 10м от Северной стены), суммарно `10.0м` по оси Z. Левая стена Технического помещения является концом Горизонтального коридора.
-
-#### 6. Южный блок (Южная лестница)
-* Занимает пространство от `0.0м` до `5.0м` от Южной стены (последний модуль по оси Z).
-* Ширина коробки (по оси X) перекрывает Вертикальный коридор и полностью перекрывает Правый блок номеров (уходит вправо под номер 421).
-* Левая стена коробки лестницы примыкает к правой стене нижней половины номера 408.
-* Верхняя (северная) граница лестницы под номером 421 идеально ровная (и является нижней стеной номера 421).
-* Верхняя (северная) граница лестницы под Вертикальным коридором имеет небольшую ступеньку-выемку (notch) вниз, где располагается дверь входа на лестницу.
-
-
 
 ## Actual Geometry Maps
 
@@ -257,7 +205,7 @@ Z (North)
 ##..................##..............#..............##
 ##..................##.............................##
 ##..................##..............#..............##
-##.........###...#####..............#################
+##.........###...###########.########################
 ##.........#........##.............................##
 ##.........#........##.............................##
 ##.........#........##.............................##
@@ -270,4 +218,3 @@ Z (North)
 #####################################################
                                                      
 ```
-

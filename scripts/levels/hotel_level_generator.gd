@@ -130,15 +130,15 @@ func _generate_level() -> void:
 	# 3.22 Single Room 421
 	_generate_single_room_421(parent, f_scale)
 	
-	# 4. Light
-	var light = OmniLight3D.new()
-	light.name = "MainRoomLight"
-	light.position = Vector3(0, height - 0.5, 0)
-	light.omni_range = 50.0
-	light.light_energy = 2.0
-	light.light_color = Color(1.0, 0.95, 0.9)
-	light.shadow_enabled = true
-	add_child(light)
+	# 4. Light (Disabled to leave only room lights)
+	# var light = OmniLight3D.new()
+	# light.name = "MainRoomLight"
+	# light.position = Vector3(0, height - 0.5, 0)
+	# light.omni_range = 50.0
+	# light.light_energy = 2.0
+	# light.light_color = Color(1.0, 0.95, 0.9)
+	# light.shadow_enabled = true
+	# add_child(light)
 
 	# 5. Floor Map
 	var map_mesh = MeshInstance3D.new()
