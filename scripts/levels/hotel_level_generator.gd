@@ -5,7 +5,7 @@ class_name HotelLevelGenerator
 @export var floor_number: int = 4
 @export var player_spawn_pos: Vector3 = Vector3(0, 1.0, 0)
 @export var floor_thickness: float = 0.5
-@export var corridor_height: float = 3.0
+@export var corridor_height: float = 4.0
 @export var wall_thickness: float = 0.2
 
 var carpet_texture = preload("res://assets/textures/hotel_carpet.jpg")
@@ -73,6 +73,9 @@ func _generate_level() -> void:
 	_create_static_box(parent, "Wall_North", Vector3(0, wall_y, -half_z - thickness/2.0), Vector3(x_width + thickness*2, height, thickness), wall_mat)
 	_create_static_box(parent, "Wall_South", Vector3(0, wall_y, half_z + thickness/2.0), Vector3(x_width + thickness*2, height, thickness), wall_mat)
 	
+	# 3.5 Maintenance Room
+	_generate_maintenance_room(parent, f_scale, height, thickness, wall_mat)
+	
 	# 4. Light
 	var light = OmniLight3D.new()
 	light.name = "MainRoomLight"
@@ -100,6 +103,29 @@ func _move_player(f_scale: float) -> void:
 		if "velocity" in player:
 			player.velocity = Vector3.ZERO
 		print("Player moved to: ", p_spawn)
+
+func _generate_maintenance_room(parent: Node, f_scale: float, height: float, thickness: float, wall_mat: Material) -> void:
+	var wall_y = height / 2.0
+	
+	# Inner South Wall (runs along Z = -20.0, from X = 7.75 to 10.75)
+	# Center X = 9.25, Size X = 3.0
+	_create_static_box(parent, "Maint_Inner_South", Vector3(9.25 * f_scale, wall_y, -20.0 * f_scale), Vector3(3.0 * f_scale, height, thickness), wall_mat)
+	
+	# Inner West Wall (runs along X = 7.75, from Z = -30.0 to -20.0)
+	# Door hole at Z from -24.0 to -22.0, up to height 2.2
+	
+	# Part 1: Solid North Part (Z = -30.0 to -24.0). Center Z = -27.0, Size Z = 6.0
+	_create_static_box(parent, "Maint_Inner_West_North", Vector3(7.75 * f_scale, wall_y, -27.0 * f_scale), Vector3(thickness, height, 6.0 * f_scale), wall_mat)
+	
+	# Part 2: Solid South Part (Z = -22.0 to -20.0). Center Z = -21.0, Size Z = 2.0
+	_create_static_box(parent, "Maint_Inner_West_South", Vector3(7.75 * f_scale, wall_y, -21.0 * f_scale), Vector3(thickness, height, 2.0 * f_scale), wall_mat)
+	
+	# Part 3: Door Lintel (Z = -24.0 to -22.0)
+	var door_h = 2.2 * f_scale
+	if height > door_h:
+		var lintel_h = height - door_h
+		var lintel_y = door_h + (lintel_h / 2.0)
+		_create_static_box(parent, "Maint_Inner_West_Lintel", Vector3(7.75 * f_scale, lintel_y, -23.0 * f_scale), Vector3(thickness, lintel_h, 2.0 * f_scale), wall_mat)
 
 func _create_static_box(parent: Node, node_name: String, pos: Vector3, size: Vector3, mat: Material) -> void:
 	var static_body = StaticBody3D.new()
