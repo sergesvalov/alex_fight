@@ -268,6 +268,52 @@ func _generate_elevator(parent: Node, f_scale: float, height: float, thickness: 
 		parent.add_child(inst)
 		# Center X = 7.2 (shifted right by 1.9m). North wall Z = -30.0.
 		inst.position = Vector3(7.2 * f_scale, 0, -30.0 * f_scale)
+		
+		# Instantiate Elevator Door
+		var door_scene = load("res://entities/props/elevator_door.tscn")
+		if door_scene:
+			var door_inst = door_scene.instantiate()
+			door_inst.name = "ElevatorDoor"
+			inst.add_child(door_inst)
+			door_inst.position = Vector3(0, 0, 4.9 * f_scale)
+			door_inst.scale = Vector3(1.428, 1.0, 1.0)
+			
+		# Instantiate Button
+		var btn_script = load("res://scripts/interactables/elevator_button.gd")
+		if btn_script:
+			var btn = AnimatableBody3D.new()
+			btn.name = "ButtonFloor4"
+			btn.collision_layer = 3
+			btn.set_script(btn_script)
+			
+			var btn_shape = CollisionShape3D.new()
+			var shape = BoxShape3D.new()
+			shape.size = Vector3(0.04, 0.1, 0.1)
+			btn_shape.shape = shape
+			btn.add_child(btn_shape)
+			
+			var btn_mesh = MeshInstance3D.new()
+			var mesh = BoxMesh.new()
+			var mat = StandardMaterial3D.new()
+			mat.albedo_color = Color(0.8, 0.8, 0.8)
+			mesh.material = mat
+			mesh.size = Vector3(0.04, 0.1, 0.1)
+			btn_mesh.mesh = mesh
+			btn.add_child(btn_mesh)
+			
+			var label = Label3D.new()
+			label.text = "4"
+			label.font_size = 24
+			label.outline_size = 4
+			# Face East
+			label.transform.basis = Basis(Vector3.UP, -PI/2)
+			label.position = Vector3(0.021, 0, 0)
+			btn.add_child(label)
+			
+			inst.add_child(btn)
+			# Put on West wall panel (X = -2.13 so it's slightly protruding from the -2.14 panel)
+			btn.position = Vector3(-2.13 * f_scale, 1.2 * f_scale, 2.5 * f_scale)
+
 
 func _generate_north_stairs(parent: Node, f_scale: float) -> void:
 	var scene = load("res://scenes/levels/hotel_siberia/blocks/north_stairs.tscn")

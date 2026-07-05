@@ -1,4 +1,4 @@
-﻿[gd_scene load_steps=12 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="Texture2D" path="res://assets/textures/hotel_wallpaper.jpg" id="1_wallpaper"]
 [ext_resource type="Texture2D" path="res://assets/textures/elevator_panel.png" id="2_panel"]
@@ -63,27 +63,9 @@ omni_range = 8.0
 
 
 
-[node name="ElevatorPanel" type="CSGBox3D" parent="ElevatorGeometry"]
+[node name="ElevatorPanel" type="CSGBox3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.14, 1.2, 2.5)
 size = Vector3(0.02, 0.8, 0.4)
 material = SubResource("StandardMaterial3D_panel")
 
-[node name="ButtonFloor4" type="AnimatableBody3D" parent="ElevatorGeometry/ElevatorPanel"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.01, 0.0, 0.0)
-collision_layer = 3
-script = ExtResource("4_btn")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="ElevatorGeometry/ElevatorPanel/ButtonFloor4"]
-shape = SubResource("BoxShape3D_button")
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="ElevatorGeometry/ElevatorPanel/ButtonFloor4"]
-mesh = SubResource("BoxMesh_button")
-
-[node name="Label3D" type="Label3D" parent="ElevatorGeometry/ElevatorPanel/ButtonFloor4"]
-transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, 0.021, 0, 0)
-text = "4"
-font_size = 24
-outline_size = 4
-
-[node name="ElevatorDoor" parent="." instance=ExtResource("6_door")]
-transform = Transform3D(1.428, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0, 4.9)
