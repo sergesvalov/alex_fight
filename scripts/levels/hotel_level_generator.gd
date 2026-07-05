@@ -137,6 +137,84 @@ func _generate_level() -> void:
 	light.shadow_enabled = true
 	add_child(light)
 
+	# 5. Floor Map
+	var map_mesh = MeshInstance3D.new()
+	map_mesh.name = "FloorMap"
+	var quad = QuadMesh.new()
+	quad.size = Vector2(2.0, 1.5)
+	
+	var map_mat = StandardMaterial3D.new()
+	var map_tex = load("res://assets/textures/hotel_map.jpg")
+	if map_tex:
+		map_mat.albedo_texture = map_tex
+	else:
+		map_mat.albedo_color = Color(1.0, 0.0, 0.0)
+	map_mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	quad.material = map_mat
+	map_mesh.mesh = quad
+	
+	# Wall face is at X = -2.75. We place it slightly off the wall (X = -2.74) to avoid z-fighting.
+	# Height 2.0m, Z = 0.0 (exactly between 403 and 405).
+	map_mesh.position = Vector3(-2.74 * f_scale, 2.0 * f_scale, 0.0 * f_scale)
+	# QuadMesh faces +Z. Rotate 90 degrees around Y to face +X (East).
+	map_mesh.rotation.y = PI / 2.0
+	parent.add_child(map_mesh)
+
+	# 6. Talking Head Screen
+	var screen_mesh = MeshInstance3D.new()
+	screen_mesh.name = "TalkingHeadScreen"
+	var screen_quad = QuadMesh.new()
+	screen_quad.size = Vector2(2.5, 1.5)
+	
+	var screen_mat = StandardMaterial3D.new()
+	var screen_tex = load("res://assets/textures/propaganda.jpg")
+	if screen_tex:
+		screen_mat.albedo_texture = screen_tex
+		screen_mat.emission_enabled = true
+		screen_mat.emission_texture = screen_tex
+		screen_mat.emission_energy_multiplier = 1.2
+	else:
+		screen_mat.albedo_color = Color(0.2, 0.2, 0.8)
+		screen_mat.emission_enabled = true
+		screen_mat.emission = Color(0.2, 0.2, 0.8)
+	screen_mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	screen_quad.material = screen_mat
+	screen_mesh.mesh = screen_quad
+	
+	# Wall face is at X = -2.75. We place it slightly off the wall (X = -2.74) to avoid z-fighting.
+	# Height 2.0m, Z = -20.0 (exactly between 401 and 402).
+	screen_mesh.position = Vector3(-2.74 * f_scale, 2.0 * f_scale, -20.0 * f_scale)
+	# QuadMesh faces +Z. Rotate 90 degrees around Y to face +X (East).
+	screen_mesh.rotation.y = PI / 2.0
+	parent.add_child(screen_mesh)
+
+	# 7. Ad Screen
+	var ad_mesh = MeshInstance3D.new()
+	ad_mesh.name = "AdScreen"
+	var ad_quad = QuadMesh.new()
+	ad_quad.size = Vector2(2.0, 1.5)
+	
+	var ad_mat = StandardMaterial3D.new()
+	var ad_tex = load("res://assets/textures/coca_cola.jpg")
+	if ad_tex:
+		ad_mat.albedo_texture = ad_tex
+		ad_mat.emission_enabled = true
+		ad_mat.emission_texture = ad_tex
+		ad_mat.emission_energy_multiplier = 1.0
+	else:
+		ad_mat.albedo_color = Color(0.8, 0.2, 0.2)
+		ad_mat.emission_enabled = true
+		ad_mat.emission = Color(0.8, 0.2, 0.2)
+	ad_mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	ad_quad.material = ad_mat
+	ad_mesh.mesh = ad_quad
+	
+	# Wall face is at X = -2.75. Slightly off to avoid z-fighting.
+	# Height 2.0m, Z = 10.0 (exactly between 405 and 406).
+	ad_mesh.position = Vector3(-2.74 * f_scale, 2.0 * f_scale, 10.0 * f_scale)
+	ad_mesh.rotation.y = PI / 2.0
+	parent.add_child(ad_mesh)
+
 	# Call deferred to ensure nodes are physically in tree and physics updated
 	call_deferred("_move_player", f_scale)
 
