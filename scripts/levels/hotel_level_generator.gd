@@ -103,6 +103,30 @@ func _generate_level() -> void:
 	# 3.14 Single Room 410
 	_generate_single_room_410(parent, f_scale)
 	
+	# 3.15 Single Room 411
+	_generate_single_room_411(parent, f_scale)
+	
+	# 3.16 Single Room 412
+	_generate_single_room_412(parent, f_scale)
+	
+	# 3.17 Single Room 413
+	_generate_single_room_413(parent, f_scale)
+	
+	# 3.18 Single Room 415
+	_generate_single_room_415(parent, f_scale)
+	
+	# 3.19 Single Room 416
+	_generate_single_room_416(parent, f_scale)
+	
+	# 3.20 Single Room 417
+	_generate_single_room_417(parent, f_scale)
+	
+	# 3.21 Single Room 420
+	_generate_single_room_420(parent, f_scale)
+	
+	# 3.22 Single Room 421
+	_generate_single_room_421(parent, f_scale)
+	
 	# 4. Light
 	var light = OmniLight3D.new()
 	light.name = "MainRoomLight"
@@ -234,6 +258,78 @@ func _generate_single_room_410(parent: Node, f_scale: float) -> void:
 		parent.add_child(inst)
 		# Center X = 8.7. North wall Z = -20.0.
 		inst.position = Vector3(8.7 * f_scale, 0, -20.0 * f_scale)
+
+func _generate_single_room_411(parent: Node, f_scale: float) -> void:
+	var scene = load("res://scenes/levels/hotel_siberia/blocks/single_room.tscn")
+	if scene:
+		var inst = scene.instantiate()
+		inst.name = "SingleRoom_411"
+		parent.add_child(inst)
+		# Center X = 8.7. North wall Z = -15.0.
+		inst.position = Vector3(8.7 * f_scale, 0, -15.0 * f_scale)
+
+func _generate_single_room_412(parent: Node, f_scale: float) -> void:
+	var scene = load("res://scenes/levels/hotel_siberia/blocks/single_room.tscn")
+	if scene:
+		var inst = scene.instantiate()
+		inst.name = "SingleRoom_412"
+		parent.add_child(inst)
+		# Center X = 8.7. North wall Z = -10.0.
+		inst.position = Vector3(8.7 * f_scale, 0, -10.0 * f_scale)
+
+func _generate_single_room_413(parent: Node, f_scale: float) -> void:
+	var scene = load("res://scenes/levels/hotel_siberia/blocks/single_room.tscn")
+	if scene:
+		var inst = scene.instantiate()
+		inst.name = "SingleRoom_413"
+		parent.add_child(inst)
+		# Center X = 8.7. North wall Z = -5.0.
+		inst.position = Vector3(8.7 * f_scale, 0, -5.0 * f_scale)
+
+func _generate_single_room_415(parent: Node, f_scale: float) -> void:
+	var scene = load("res://scenes/levels/hotel_siberia/blocks/single_room.tscn")
+	if scene:
+		var inst = scene.instantiate()
+		inst.name = "SingleRoom_415"
+		parent.add_child(inst)
+		# Center X = 8.7. North wall Z = 0.0.
+		inst.position = Vector3(8.7 * f_scale, 0, 0.0 * f_scale)
+
+func _generate_single_room_416(parent: Node, f_scale: float) -> void:
+	var scene = load("res://scenes/levels/hotel_siberia/blocks/single_room.tscn")
+	if scene:
+		var inst = scene.instantiate()
+		inst.name = "SingleRoom_416"
+		parent.add_child(inst)
+		# Center X = 8.7. North wall Z = 5.0.
+		inst.position = Vector3(8.7 * f_scale, 0, 5.0 * f_scale)
+
+func _generate_single_room_417(parent: Node, f_scale: float) -> void:
+	var scene = load("res://scenes/levels/hotel_siberia/blocks/single_room.tscn")
+	if scene:
+		var inst = scene.instantiate()
+		inst.name = "SingleRoom_417"
+		parent.add_child(inst)
+		# Center X = 8.7. North wall Z = 10.0.
+		inst.position = Vector3(8.7 * f_scale, 0, 10.0 * f_scale)
+
+func _generate_single_room_420(parent: Node, f_scale: float) -> void:
+	var scene = load("res://scenes/levels/hotel_siberia/blocks/single_room.tscn")
+	if scene:
+		var inst = scene.instantiate()
+		inst.name = "SingleRoom_420"
+		parent.add_child(inst)
+		# Center X = 8.7. North wall Z = 15.0.
+		inst.position = Vector3(8.7 * f_scale, 0, 15.0 * f_scale)
+
+func _generate_single_room_421(parent: Node, f_scale: float) -> void:
+	var scene = load("res://scenes/levels/hotel_siberia/blocks/single_room.tscn")
+	if scene:
+		var inst = scene.instantiate()
+		inst.name = "SingleRoom_421"
+		parent.add_child(inst)
+		# Center X = 8.7. North wall Z = 20.0.
+		inst.position = Vector3(8.7 * f_scale, 0, 20.0 * f_scale)
 
 func _create_static_box(parent: Node, node_name: String, pos: Vector3, size: Vector3, mat: Material) -> void:
 	var static_body = StaticBody3D.new()
