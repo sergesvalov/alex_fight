@@ -87,6 +87,20 @@ func _generate_level() -> void:
 			var mi = child.get_node_or_null("MeshInstance3D")
 			if mi:
 				mi.mesh.material = wall_mat
+				
+	# 3.6 Elevator
+	var elev_scene = preload("res://scenes/levels/hotel_siberia/blocks/elevator_shaft.tscn")
+	var elev_inst = elev_scene.instantiate()
+	parent.add_child(elev_inst)
+	# The origin of elevator_shaft.tscn was defined at local center (X=5.3, Z=-27.5)
+	elev_inst.transform.origin = Vector3(5.3 * f_scale, 0, -27.5 * f_scale)
+	elev_inst.scale = Vector3(f_scale, f_scale, f_scale)
+	
+	for child in elev_inst.get_children():
+		if child is StaticBody3D:
+			var mi = child.get_node_or_null("MeshInstance3D")
+			if mi:
+				mi.mesh.material = wall_mat
 	
 	# 4. Light
 	var light = OmniLight3D.new()
