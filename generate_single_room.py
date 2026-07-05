@@ -41,17 +41,17 @@ operation = 2
 size = Vector3(2.0, 2.2, 1.0)
 
 [node name="WCSouthWall" type="CSGBox3D" parent="RoomGeometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.35, 2.0, 2.5)
-size = Vector3(4.8, 4.0, 0.2)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.55, 2.0, 2.5)
+size = Vector3(2.4, 4.0, 0.2)
 material = SubResource("StandardMaterial3D_wall")
 
 [node name="WCEastWall" type="CSGBox3D" parent="RoomGeometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.05, 2.0, 1.3)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.35, 2.0, 1.3)
 size = Vector3(0.2, 4.0, 2.4)
 material = SubResource("StandardMaterial3D_wall")
 
 [node name="WCDoorHole" type="CSGBox3D" parent="RoomGeometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.35, 1.1, 2.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.55, 1.1, 2.5)
 operation = 2
 size = Vector3(1.0, 2.2, 2.0)
 
@@ -65,11 +65,11 @@ light_color = Color(1, 0.9, 0.8, 1)
 shadow_enabled = true
 
 [node name="WCLightMesh" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.35, 3.95, 1.3)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.55, 3.95, 1.3)
 mesh = SubResource("BoxMesh_light")
 
 [node name="WCLight" type="OmniLight3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.35, 3.7, 1.3)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.55, 3.7, 1.3)
 light_color = Color(1, 0.9, 0.8, 1)
 shadow_enabled = true
 
