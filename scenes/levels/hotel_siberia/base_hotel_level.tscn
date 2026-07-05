@@ -17,8 +17,7 @@
 [ext_resource type="PackedScene" uid="uid://wardrobe_123" path="res://entities/props/wardrobe.tscn" id="wardrobe"]
 
 [ext_resource type="Script" path="res://scripts/levels/seamless_teleporter.gd" id="stair_script"]
-[ext_resource type="PackedScene" path="res://scenes/levels/hotel_siberia/rooms/double_room.tscn" id="double_room"]
-[ext_resource type="PackedScene" path="res://scenes/levels/hotel_siberia/rooms/single_room.tscn" id="single_room"]
+
 [ext_resource type="PackedScene" path="res://entities/props/dead_body.tscn" id="dead_body"]
 
 [ext_resource type="Script" path="res://scripts/levels/hotel_level_generator.gd" id="99_generator"]
