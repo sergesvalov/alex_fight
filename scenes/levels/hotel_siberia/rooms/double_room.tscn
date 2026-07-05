@@ -137,3 +137,11 @@ occluder = SubResource("BoxOccluder3D_WallW")
 
 
 
+
+[node name="CorridorHole" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.0, 1.025, 0.5)
+operation = 2
+size = Vector3(1.2, 2.05, 1.0)
+
+[node name="MainDoor" parent="." instance=ExtResource("7_door")]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 4.3, 0, 0.5)

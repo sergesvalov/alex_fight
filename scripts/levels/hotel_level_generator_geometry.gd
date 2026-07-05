@@ -54,11 +54,9 @@ func _generate_rooms_side(f_num: int, parent: Node3D, is_left: bool, corridor_st
 		
 		if is_left:
 			room = double_room_large_scene.instantiate() if data["type"] == "large" else double_room_scene.instantiate()
-			HotelDoorGenerator.create_room_main_door(room, Vector3(4.3, 0, 0.5), true)
 			HotelDoorGenerator.create_room_wc_door(room, Vector3(1.55, 0, -3.6), true)
 		else:
 			room = single_room_scene.instantiate()
-			HotelDoorGenerator.create_room_main_door(room, Vector3(-3.05, 0, -0.25), false)
 			HotelDoorGenerator.create_room_wc_door(room, Vector3(-2.2, 0, -0.25), false)
 			
 		room.name = prefix + room_number
@@ -87,28 +85,13 @@ func _generate_rooms_side(f_num: int, parent: Node3D, is_left: bool, corridor_st
 		if "carpet_color" in room:
 			room.carpet_color = carpet_color
 			
-		var flip_mult = -1.0 if is_flipped else 1.0
-		var current_door_offset = (room_door_z_offset if is_left else -0.25 * GlobalConfig.get_floor_scale()) * flip_mult
-		var half_opening = room_door_opening_width / 2.0
-		var door_center_z = c_z + current_door_offset
-		var door_top_z = door_center_z + half_opening
-		var door_bottom_z = door_center_z - half_opening
-		
-		if prev_z > door_top_z:
-			_create_wall(parent, "CorrWall_" + side_str + str(i), Vector3(wall_x, 0, (prev_z + door_top_z) / 2.0), prev_z - door_top_z)
-			
-		var lintel_height = corridor_height - room_door_height
-		if lintel_height > 0.01:
-			var lintel_y = room_door_height + lintel_height / 2.0
-			_create_csg_box(parent, "CorrWall_" + side_str + "Lintel_" + str(i), Vector3(wall_x, lintel_y, door_center_z), Vector3(wall_thickness, lintel_height, room_door_opening_width), false, false)
-
-		prev_z = door_bottom_z
-		
+	# Generate continuous corridor wall using CSG Subtraction from rooms
 	var f_scale = GlobalConfig.get_floor_scale()
 	var end_wall_z = -30.0 * f_scale if is_left else -20.0 * f_scale
-		
-	if prev_z > end_wall_z:
-		_create_wall(parent, "CorrWall_" + side_str + "end", Vector3(wall_x, 0, (end_wall_z + prev_z) / 2.0), prev_z - end_wall_z)
+	var wall_length = corridor_start_z - end_wall_z
+	var wall_center_z = (corridor_start_z + end_wall_z) / 2.0
+	
+	_create_wall(parent, "CorrWall_Solid_" + side_str, Vector3(wall_x, 0, wall_center_z), wall_length)
 
 func _generate_map_decals(parent: Node3D) -> void:
 	# Place near the elevator (North end) where it's a solid wall on both sides
