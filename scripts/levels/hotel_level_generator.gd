@@ -130,6 +130,10 @@ func _generate_level() -> void:
 	# 3.22 Single Room 421
 	_generate_single_room_421(parent, f_scale)
 	
+	# 3.23 Items and Enemies
+	_spawn_cassettes(parent, f_scale)
+	_spawn_cerberus(parent, f_scale)
+	
 	# 4. Light (Disabled to leave only room lights)
 	# var light = OmniLight3D.new()
 	# light.name = "MainRoomLight"
@@ -508,3 +512,27 @@ func _create_static_box(parent: Node, node_name: String, pos: Vector3, size: Vec
 	static_body.add_child(coll)
 	
 	parent.add_child(static_body)
+
+func _spawn_cassettes(parent: Node, f_scale: float) -> void:
+	var scene = load("res://entities/interactables/vhs_tape.tscn")
+	if not scene: return
+	
+	# Randomly place 5 cassettes in the vertical corridor
+	for i in range(5):
+		var inst = scene.instantiate()
+		inst.name = "Cassette_" + str(i)
+		parent.add_child(inst)
+		var rand_x = randf_range(-2.0, 4.0)
+		var rand_z = randf_range(-20.0, 40.0)
+		inst.position = Vector3(rand_x * f_scale, 0.5 * f_scale, rand_z * f_scale)
+		# Random rotation
+		inst.rotation.y = randf_range(0, PI * 2)
+
+func _spawn_cerberus(parent: Node, f_scale: float) -> void:
+	var scene = load("res://entities/enemies/cerberus/cerberus.tscn")
+	if not scene: return
+	var inst = scene.instantiate()
+	inst.name = "Cerberus"
+	parent.add_child(inst)
+	# Spawn in the vertical corridor
+	inst.position = Vector3(1.0 * f_scale, 0, 10.0 * f_scale)
