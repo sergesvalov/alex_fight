@@ -42,25 +42,25 @@ operation = 2
 size = Vector3(1.2, 2.2, 1.0)
 
 [node name="NWLanding" type="CSGBox3D" parent="StairsGeometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.4, 1.333, 1.2)
-size = Vector3(2.4, 2.667, 2.4)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.4, 2.567, 1.2)
+size = Vector3(2.4, 0.2, 2.4)
 
 [node name="NELanding" type="CSGBox3D" parent="StairsGeometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.4, 0.667, 1.2)
-size = Vector3(2.4, 1.333, 2.4)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.4, 1.233, 1.2)
+size = Vector3(2.4, 0.2, 2.4)
 
 [node name="EastFlight" type="CSGPolygon3D" parent="StairsGeometry"]
 transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 2.2, 0, 2.4)
-polygon = PackedVector2Array(0, 1.333, 2.4, 0, 0, 0)
+polygon = PackedVector2Array(0, 1.333, 2.4, 0, 2.4, -0.2, 0, 1.133)
 depth = 1.2
 
 [node name="NorthFlight" type="CSGPolygon3D" parent="StairsGeometry"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2.4)
-polygon = PackedVector2Array(1.2, 1.333, -1.2, 2.667, -1.2, 0, 1.2, 0)
+polygon = PackedVector2Array(1.2, 1.333, -1.2, 2.667, -1.2, 2.467, 1.2, 1.133)
 depth = 2.4
 
 [node name="WestFlight" type="CSGPolygon3D" parent="StairsGeometry"]
 transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -3.4, 0, 2.4)
-polygon = PackedVector2Array(0, 2.667, 2.4, 4.0, 2.4, 0, 0, 0)
+polygon = PackedVector2Array(0, 2.667, 2.4, 4.0, 2.4, 3.8, 0, 2.467)
 depth = 1.2
 
