@@ -85,6 +85,9 @@ func _generate_level() -> void:
 	# 3.8 Double Room 401
 	_generate_double_room_401(parent, f_scale)
 	
+	# 3.9 Double Room 402
+	_generate_double_room_402(parent, f_scale)
+	
 	# 4. Light
 	var light = OmniLight3D.new()
 	light.name = "MainRoomLight"
@@ -160,6 +163,15 @@ func _generate_double_room_401(parent: Node, f_scale: float) -> void:
 		parent.add_child(inst)
 		# Center X = -7.65. North wall Z = -30.0.
 		inst.position = Vector3(-7.65 * f_scale, 0, -30.0 * f_scale)
+
+func _generate_double_room_402(parent: Node, f_scale: float) -> void:
+	var scene = load("res://scenes/levels/hotel_siberia/blocks/double_room.tscn")
+	if scene:
+		var inst = scene.instantiate()
+		inst.name = "DoubleRoom_402"
+		parent.add_child(inst)
+		# Center X = -7.65. North wall Z = -20.0.
+		inst.position = Vector3(-7.65 * f_scale, 0, -20.0 * f_scale)
 
 func _create_static_box(parent: Node, node_name: String, pos: Vector3, size: Vector3, mat: Material) -> void:
 	var static_body = StaticBody3D.new()
