@@ -16,11 +16,12 @@ The previous architecture relied on external scripts drawing corridor walls dyna
    - Double rooms have an East wall. Single rooms have a West wall.
    - Single rooms intentionally lack an East wall because they align flush with the global building East wall.
 
-3. **Mirroring for Shared Plumbing**:
+3. **Mirroring and Orientations**:
    - Hotel plumbing is often shared between adjacent rooms. 
    - We achieve this by mirroring specific rooms along the `Z` axis (`scale.z = -1.0`).
    - For example, Double Room 403 is mirrored so its WC touches Double Room 405's WC at `Z = 0.0`.
    - Single Rooms 411, 413, 416, and 417 are mirrored to ensure their WCs align back-to-back with neighboring single rooms, or cross-corridor with double rooms.
+   - **Elevator Shaft (`elevator_shaft.tscn`)**: Mirrored along the Z axis (`scale.z = -1.0`) to correctly orient its interior (panel, lights) while keeping the doorway (`ElevatorDoorHole`) on the South face (local Z=0.1) pointing towards the horizontal corridor.
 
 ## Hotel Level Geometry Maps
 
@@ -44,7 +45,7 @@ Z (North)
   +-----------------------+---------------+-----------------------+-------+
   |                       |  NORTH STAIRS |       ELEVATOR        | MAINT |
   |                       |  (Z = 5.0m)   |       (Z = 5.0m)      |       |
-  |          401          +-------D-------+-----------------------+ ROOM  |
+  |          401          +-------D-------+-----------D-----------+ ROOM  |
   |         (DBL)         |                                       |       |
   |      (Z = 10.0m)      |        HORIZ CORRIDOR (Z = 5.0m)      D (10m) |
   +-----------------------+               +-----------------------+-------+
