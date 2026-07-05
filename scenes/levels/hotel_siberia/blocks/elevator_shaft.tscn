@@ -1,7 +1,14 @@
-﻿[gd_scene load_steps=5 format=3]
+﻿[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Texture2D" path="res://assets/textures/hotel_wallpaper.jpg" id="1_wallpaper"]
+[ext_resource type="Texture2D" path="res://assets/textures/elevator_panel.png" id="2_panel"]
 [ext_resource type="Script" path="res://scripts/levels/blocks/block.gd" id="3_script"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_panel"]
+albedo_texture = ExtResource("2_panel")
+emission_enabled = true
+emission_texture = ExtResource("2_panel")
+emission_energy_multiplier = 0.5
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wall"]
 albedo_texture = ExtResource("1_wallpaper")
@@ -42,3 +49,8 @@ light_color = Color(0.9, 0.95, 1, 1)
 omni_range = 8.0
 
 
+
+[node name="ElevatorPanel" type="CSGBox3D" parent="ElevatorGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.14, 1.2, 2.5)
+size = Vector3(0.02, 0.8, 0.4)
+material = SubResource("StandardMaterial3D_panel")
