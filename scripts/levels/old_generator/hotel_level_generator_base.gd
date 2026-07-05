@@ -1,6 +1,6 @@
 @tool
 extends Node3D
-class_name HotelLevelGeneratorBase
+#class_name HotelLevelGeneratorBase
 
 # region Export Variables
 

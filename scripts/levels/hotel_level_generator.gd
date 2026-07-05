@@ -1,54 +1,22 @@
 @tool
-extends HotelLevelGeneratorGeometry
+extends Node3D
 class_name HotelLevelGenerator
 
-# region Initialization
+@export var floor_number: int = 4
+@export var player_spawn_pos: Vector3 = Vector3(0, 1.0, 0)
+@export var floor_thickness: float = 0.5
+@export var corridor_height: float = 3.0
+@export var wall_thickness: float = 0.2
+
+var carpet_texture = preload("res://assets/textures/hotel_carpet.jpg")
+var wall_texture = preload("res://assets/textures/hotel_wallpaper.jpg")
+var ceiling_texture = preload("res://assets/textures/hotel_ceiling.jpg")
 
 func _ready() -> void:
 	if not Engine.is_editor_hint():
-		var f_scale = GlobalConfig.get_floor_scale()
-		var p_scale = GlobalConfig.get_player_scale()
-		
-		double_room_step *= f_scale
-		single_room_step *= f_scale
-		corridor_width *= f_scale
-		corridor_height *= f_scale
-		wall_thickness *= f_scale
-		floor_height *= f_scale
-		stairwell_south_offset *= f_scale
-		total_corridor_end_margin *= f_scale
-		side_corridor_z_start *= f_scale
-		side_corridor_z_end *= f_scale
-		side_corridor_depth *= f_scale
-		elev_shaft_depth *= f_scale
-		maint_room_depth *= f_scale
-		double_room_x *= f_scale
-		double_room_start_z *= f_scale
-		double_room_wall_len *= f_scale
-		single_room_x *= f_scale
-		single_room_start_z *= f_scale
-		single_room_wall_len *= f_scale
-		room_door_z_offset *= f_scale
-		
-		# Door and hole variables strictly follow player height
-		room_door_width *= p_scale
-		room_door_height *= p_scale
-		room_door_opening_width *= p_scale
-		util_door_width *= p_scale
-		util_door_height *= p_scale
-		door_hole_width_margin *= p_scale
-		maint_door_hole_width_margin *= p_scale
-		room_hole_margin *= p_scale
-		
-		player_spawn_pos *= f_scale
-		enemies_spawn_z_offset *= f_scale
-		patrol_point_step *= f_scale
-		patrol_end_margin *= f_scale
-		patrol_fallback_z *= f_scale
-		
 		_generate_level()
-		_apply_stylization()
 		
+		# Allow physics to settle before spawning/navmesh (matching old logic)
 		await get_tree().physics_frame
 		await get_tree().physics_frame
 		
@@ -56,69 +24,89 @@ func _ready() -> void:
 		if nav_region is NavigationRegion3D:
 			nav_region.bake_navigation_mesh()
 
-func _apply_stylization() -> void:
-	HotelLevelStylizer.apply_stylization(self)
-
-# endregion
-
-# region Core Generation Logic
-
 func _generate_level() -> void:
-	print("Generating hotel level geometry...")
-	_clear_generated_nodes()
+	print("Generating SIMPLE hotel level geometry...")
 	
-	_create_floor_group("GeneratedFloor_Main", 0.0, true)
-	_create_floor_group("GeneratedFloor_Above", floor_height, false)
-	_create_floor_group("GeneratedFloor_Below", -floor_height, false)
-
-func _create_floor_group(name: String, y_pos: float, is_main: bool) -> void:
+	# Clean up any previously generated nodes in editor
+	for child in get_children():
+		child.queue_free()
+		
 	var parent = CSGCombiner3D.new()
-	parent.name = name
-	parent.transform.origin.y = y_pos
+	parent.name = "GeneratedFloor_Main"
 	parent.use_collision = true
 	parent.collision_layer = 2
 	add_child(parent)
-	parent.owner = get_tree().edited_scene_root
+	if Engine.is_editor_hint():
+		parent.owner = get_tree().edited_scene_root
+		
+	var f_scale = GlobalConfig.get_floor_scale()
 	
-	var f_num = floor_number
-	if name.ends_with("_Above"):
-		f_num += 1
-	elif name.ends_with("_Below"):
-		f_num -= 1
-		
-	var orig_carpet = carpet_color
-	var orig_map = map_texture
-	var orig_ad = ad_texture
-		
-	if not is_main:
-		f_num = HotelLevelStylizer.get_external_floor(self, f_num)
-		HotelLevelStylizer._apply_external_styles(self, f_num)
-		
-	_generate_floor(f_num, parent, is_main)
+	# Dimensions based on 5-meter modular grid and AGENTS.md
+	# Z length = 60.0m (from -30 to 30)
+	var z_length = 60.0 * f_scale
+	# X width = 21.5m (from -10.75 to 10.75 based on old generator)
+	var x_width = 21.5 * f_scale
+	var height = corridor_height * f_scale
+	var thickness = wall_thickness * f_scale
+	var floor_thick = floor_thickness * f_scale
 	
-	carpet_color = orig_carpet
-	map_texture = orig_map
-	ad_texture = orig_ad
+	var floor_y = -floor_thick / 2.0
+	var ceil_y = height + (floor_thick / 2.0)
+	
+	var floor_mat = StandardMaterial3D.new()
+	floor_mat.albedo_texture = carpet_texture
+	floor_mat.uv1_scale = Vector3(10, 10, 10)
+	
+	var ceil_mat = StandardMaterial3D.new()
+	ceil_mat.albedo_texture = ceiling_texture
+	ceil_mat.uv1_scale = Vector3(10, 10, 10)
+	
+	var wall_mat = StandardMaterial3D.new()
+	wall_mat.albedo_texture = wall_texture
+	wall_mat.uv1_scale = Vector3(15, 3, 1)
 
-func _generate_floor(f_num: int, parent: Node3D, is_main: bool) -> void:
-	var corridor_start_z = HotelLevelCoordinates.get_corridor_start_z()
-	var total_corridor_end = HotelLevelCoordinates.get_total_corridor_end()
+	# 1. Floor
+	_create_box(parent, "Floor", Vector3(0, floor_y, 0), Vector3(x_width, floor_thick, z_length), floor_mat)
 	
-	_generate_corridor_shell(parent, corridor_start_z, total_corridor_end)
-	_generate_outer_shell(parent)
-	_generate_north_block(parent, total_corridor_end)
+	# 2. Ceiling
+	_create_box(parent, "Ceiling", Vector3(0, ceil_y, 0), Vector3(x_width, floor_thick, z_length), ceil_mat)
 	
-	_generate_rooms_side(f_num, parent, true, corridor_start_z, total_corridor_end)
-	_generate_rooms_side(f_num, parent, false, corridor_start_z, total_corridor_end)
+	# 3. Outer Walls
+	var half_x = x_width / 2.0
+	var half_z = z_length / 2.0
+	var wall_y = height / 2.0
 	
-	_generate_south_block(parent, corridor_start_z)
+	_create_box(parent, "Wall_West", Vector3(-half_x - thickness/2.0, wall_y, 0), Vector3(thickness, height, z_length), wall_mat)
+	_create_box(parent, "Wall_East", Vector3(half_x + thickness/2.0, wall_y, 0), Vector3(thickness, height, z_length), wall_mat)
+	_create_box(parent, "Wall_North", Vector3(0, wall_y, -half_z - thickness/2.0), Vector3(x_width + thickness*2, height, thickness), wall_mat)
+	_create_box(parent, "Wall_South", Vector3(0, wall_y, half_z + thickness/2.0), Vector3(x_width + thickness*2, height, thickness), wall_mat)
 	
-	_generate_map_decals(parent)
-	_generate_corridor_lights(parent, corridor_start_z, total_corridor_end, f_num)
-	
-	if is_main:
-		HotelLevelEntitySpawner.generate_entities(self, total_corridor_end)
+	# 4. Light
+	var light = OmniLight3D.new()
+	light.name = "MainRoomLight"
+	light.position = Vector3(0, height - 0.5, 0)
+	light.omni_range = 50.0
+	light.light_energy = 2.0
+	light.light_color = Color(1.0, 0.95, 0.9)
+	light.shadow_enabled = true
+	add_child(light)
+	if Engine.is_editor_hint():
+		light.owner = get_tree().edited_scene_root
 		
-	print("Level geometry generated for floor " + str(f_num))
+	# 5. Spawn Player in Center
+	var player = get_node_or_null("../../Player")
+	if player:
+		# player_spawn_pos should be scaled by f_scale
+		var p_spawn = player_spawn_pos * f_scale
+		player.transform.origin = p_spawn
+		print("Player spawned at: ", p_spawn)
 
-# endregion
+func _create_box(parent: Node, node_name: String, pos: Vector3, size: Vector3, mat: Material) -> void:
+	var box = CSGBox3D.new()
+	box.name = node_name
+	box.position = pos
+	box.size = size
+	box.material = mat
+	parent.add_child(box)
+	if Engine.is_editor_hint():
+		box.owner = get_tree().edited_scene_root

@@ -1,6 +1,6 @@
 @tool
 extends HotelLevelGeneratorBase
-class_name HotelLevelGeneratorGeometry
+#class_name HotelLevelGeneratorGeometry
 
 # region Corridor Shell & Rooms
 
@@ -54,10 +54,10 @@ func _generate_rooms_side(f_num: int, parent: Node3D, is_left: bool, corridor_st
 		
 		if is_left:
 			room = double_room_large_scene.instantiate() if data["type"] == "large" else double_room_scene.instantiate()
-			HotelDoorGenerator.create_room_wc_door(room, Vector3(1.55, 0, -3.6), true)
+			# HotelDoorGenerator.create_room_wc_door(room, Vector3(1.55, 0, -3.6), true)
 		else:
 			room = single_room_scene.instantiate()
-			HotelDoorGenerator.create_room_wc_door(room, Vector3(-2.2, 0, -0.25), false)
+			# HotelDoorGenerator.create_room_wc_door(room, Vector3(-2.2, 0, -0.25), false)
 			
 		room.name = prefix + room_number
 		room.transform.origin = Vector3(room_x, room_y_offset, c_z)
@@ -179,9 +179,9 @@ func _generate_south_block(parent: Node3D, stair_z: float) -> void:
 		stair_inst.owner = get_tree().edited_scene_root
 		
 		# Generate the door into the south stairwell
-		var inst = HotelDoorGenerator.create_stairwell_door(parent, Vector3(0, 0, 25.0 * f_scale), 0, false)
-		if inst and Engine.is_editor_hint() and get_tree().edited_scene_root:
-			inst.owner = get_tree().edited_scene_root
+		# var inst = HotelDoorGenerator.create_stairwell_door(parent, Vector3(0, 0, 25.0 * f_scale), 0, false)
+		# if inst and Engine.is_editor_hint() and get_tree().edited_scene_root:
+		# 	inst.owner = get_tree().edited_scene_root
 
 func _generate_stairwell_junction(parent: Node3D, z_pos: float, is_north: bool) -> void:
 	var prefix = "North" if is_north else "South"
@@ -200,9 +200,10 @@ func _generate_stairwell_junction(parent: Node3D, z_pos: float, is_north: bool) 
 	_create_csg_hole(wall_node, prefix + "StairwellJunctionHole", Vector3(0, hole_y - (wall_h / 2.0), 0), Vector3(hole_width, hole_height, wall_thick + room_hole_margin))
 	
 	if is_north:
-		var inst = HotelDoorGenerator.create_stairwell_door(parent, Vector3(0, 0, z_pos), PI, true)
-		if inst and Engine.is_editor_hint() and get_tree().edited_scene_root:
-			inst.owner = get_tree().edited_scene_root
+		pass
+		# var inst = HotelDoorGenerator.create_stairwell_door(parent, Vector3(0, 0, z_pos), PI, true)
+		# if inst and Engine.is_editor_hint() and get_tree().edited_scene_root:
+		# 	inst.owner = get_tree().edited_scene_root
 
 
 func _generate_elevator_shaft(parent: Node3D) -> void:
@@ -213,7 +214,7 @@ func _generate_elevator_shaft(parent: Node3D) -> void:
 	inst.rotation_degrees.y = 180
 	# Placed in the space between North Stairs and Maint Room
 	inst.transform.origin = Vector3(5.5 * GlobalConfig.get_floor_scale(), 0, elev_z)
-	HotelDoorGenerator.create_elevator_door(inst, Vector3.ZERO)
+	# HotelDoorGenerator.create_elevator_door(inst, Vector3.ZERO)
 	parent.add_child(inst)
 	inst.owner = get_tree().edited_scene_root
 
