@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="Alex Fight"
-run/main_scene="res://scenes/levels/hotel_siberia/hotel_level_4.tscn"
+run/main_scene="res://scenes/levels/hotel_siberia/hotel_level_1.tscn"
 config/features=PackedStringArray("4.7", "Mobile")
 config/icon="res://icon.svg"
 

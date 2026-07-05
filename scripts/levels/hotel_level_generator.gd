@@ -9,6 +9,7 @@ class_name HotelLevelGenerator
 @export var wall_thickness: float = 0.2
 @export var carpet_color: Color = Color(1.0, 1.0, 1.0, 1.0)
 @export var map_texture: Texture2D = null
+@export var empty_box_mode: bool = false
 
 var carpet_texture = preload("res://assets/textures/hotel_carpet.jpg")
 var wall_texture = preload("res://assets/textures/hotel_wallpaper.jpg")
@@ -47,7 +48,8 @@ func _generate_level() -> void:
 	var ceil_y = height + (floor_thick / 2.0)
 	
 	var floor_mat = StandardMaterial3D.new()
-	floor_mat.albedo_texture = carpet_texture
+	if not empty_box_mode:
+		floor_mat.albedo_texture = carpet_texture
 	floor_mat.albedo_color = carpet_color
 	floor_mat.uv1_scale = Vector3(10, 10, 10)
 	
@@ -72,8 +74,11 @@ func _generate_level() -> void:
 	
 	_create_static_box(parent, "Wall_West", Vector3(-half_x - thickness/2.0, wall_y, 0), Vector3(thickness, height, z_length), wall_mat)
 	_create_static_box(parent, "Wall_East", Vector3(half_x + thickness/2.0, wall_y, 0), Vector3(thickness, height, z_length), wall_mat)
-	_create_static_box(parent, "Wall_North", Vector3(0, wall_y, -half_z - thickness/2.0), Vector3(x_width + thickness*2, height, thickness), wall_mat)
-	_create_static_box(parent, "Wall_South", Vector3(0, wall_y, half_z + thickness/2.0), Vector3(x_width + thickness*2, height, thickness), wall_mat)
+	_create_static_box(parent, "Wall_North", Vector3(0, wall_y, -half_z - thickness/2.0), Vector3(x_width + thickness * 2.0, height, thickness), wall_mat)
+	_create_static_box(parent, "Wall_South", Vector3(0, wall_y, half_z + thickness/2.0), Vector3(x_width + thickness * 2.0, height, thickness), wall_mat)
+	
+	if empty_box_mode:
+		return
 	
 	# 3.5 Maintenance Room
 	_generate_maintenance_room(parent, f_scale, height, thickness, wall_mat)
