@@ -1,4 +1,4 @@
-﻿[gd_scene load_steps=5 format=3]
+﻿[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Texture2D" path="res://assets/textures/hotel_wallpaper.jpg" id="1_wallpaper"]
 [ext_resource type="Script" path="res://scripts/levels/blocks/block.gd" id="3_script"]
@@ -7,6 +7,16 @@
 albedo_texture = ExtResource("1_wallpaper")
 uv1_scale = Vector3(20, 2, 2)
 roughness = 0.9
+
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_light"]
+emission_enabled = true
+emission = Color(1, 1, 0.8, 1)
+emission_energy_multiplier = 5.0
+
+[sub_resource type="BoxMesh" id="BoxMesh_light"]
+material = SubResource("StandardMaterial3D_light")
+size = Vector3(0.6, 0.05, 0.6)
 
 [node name="DoubleRoomBlock" type="Node3D"]
 script = ExtResource("3_script")
@@ -49,3 +59,25 @@ material = SubResource("StandardMaterial3D_wall")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.35, 1.1, 4.9)
 operation = 2
 size = Vector3(1.0, 2.2, 2.0)
+
+[node name="MainRoomLightMesh" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.45, 3.45, 5.0)
+mesh = SubResource("BoxMesh_light")
+
+[node name="MainRoomLight" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.45, 3.2, 5.0)
+light_color = Color(1, 0.980392, 0.882353, 1)
+light_energy = 2.0
+shadow_enabled = true
+omni_range = 10.0
+
+[node name="WCLightMesh" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.4, 3.45, 2.45)
+mesh = SubResource("BoxMesh_light")
+
+[node name="WCLight" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.4, 3.2, 2.45)
+light_color = Color(1, 0.980392, 0.882353, 1)
+light_energy = 1.0
+shadow_enabled = true
+omni_range = 5.0
