@@ -33,6 +33,12 @@ mesh = SubResource("BoxMesh_door")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 1.1, 0)
 shape = SubResource("BoxShape3D_door")
 
+[node name="RoomNumberLabel" type="Label3D" parent="AnimatableBody3D"]
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0.5, 1.6, -0.051)
+text = ""
+font_size = 64
+outline_size = 4
+
 [node name="SfxOpen" type="AudioStreamPlayer3D" parent="."]
 stream = ExtResource("2_open")
 max_distance = 15.0

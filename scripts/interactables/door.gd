@@ -10,6 +10,11 @@ var is_open: bool = false
 var is_moving: bool = false
 var open_angle: float = -PI / 2.0
 
+func set_door_number(number: String) -> void:
+	var label = get_node_or_null("RoomNumberLabel")
+	if label:
+		label.text = number
+
 func interact(player: Node) -> void:
     if is_moving:
         return
