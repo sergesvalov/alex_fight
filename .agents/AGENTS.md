@@ -692,3 +692,13 @@ Z (North)
 - **T**: Table. A standard desk/table.
 - **C**: Chair. An interactable physics object.
 - **D**: Door. The interactive doors placed at room entrances and WCs. 
+
+## Level Instancing & 10 Floors (Added July 2026)
+- The game now has 10 individual Godot scenes for each floor (`scenes/levels/hotel_siberia/hotel_level_1.tscn` to `hotel_level_10.tscn`).
+- Each scene inherits from `base_hotel_level.tscn` but modifies its `HotelGeometry` properties in the inspector to customize:
+  - `floor_number`: Determines the elevator panel display.
+  - `carpet_color`: Sets a unique visual theme for the floor.
+  - `map_texture`: Replaces the floor map image on the wall.
+  - `empty_box_mode`: (Only used on Level 1). If `true`, the generator skips all internal walls and rooms, creating only an empty concrete parallel-piped.
+- The `hotel_level_generator.gd` now runs immediately inside `_ready()` regardless of `Engine.is_editor_hint()`. This ensures geometry is always available at runtime.
+- **P.T. Non-Euclidean Loop**: The game deliberately loads only ONE floor at a time to save resources. When traveling up or down stairs, `seamless_teleporter.gd` loops the player locally and changes the scene. The 10 floors DO NOT physically exist stacked on top of each other in the game.

@@ -32,4 +32,3 @@ func interact(player):
         GameStateManager.reset_floor(4)
         
     get_tree().change_scene_to_file(target_scene)
-
