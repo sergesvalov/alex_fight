@@ -360,15 +360,6 @@ func _generate_double_room_401(parent: Node, f_scale: float) -> void:
 		parent.add_child(inst)
 		# Center X = -7.65. North wall Z = -30.0.
 		inst.position = Vector3(-7.65 * f_scale, 0, -30.0 * f_scale)
-		var door_scene = load("res://entities/props/door.tscn")
-		if door_scene:
-			var door_inst = door_scene.instantiate()
-			door_inst.name = "RoomDoor"
-			inst.add_child(door_inst)
-			door_inst.position = Vector3(4.8, 0, 8.5)
-			door_inst.rotation.y = PI / 2.0
-			if door_inst.has_method("set_door_number"):
-				door_inst.set_door_number("401")
 
 func _generate_double_room_402(parent: Node, f_scale: float) -> void:
 	var scene = load("res://scenes/levels/hotel_siberia/blocks/double_room.tscn")
