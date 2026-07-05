@@ -43,6 +43,10 @@ $aabbs += @{ name="Stairs_Inner_South_East"; x_min=2.05; x_max=4.85; z_min=-25.0
 $aabbs += @{ name="Stairs_Inner_South_Lintel"; x_min=0.05; x_max=2.05; z_min=-25.0-$thickness/2; z_max=-25.0+$thickness/2; y_min=2.2 }
 
 # Double Room 401
+$aabbs += @{ name="Room401_WC_West"; x_min=-7.75-$thickness/2; x_max=-7.75+$thickness/2; z_min=-30.0; z_max=-25.0 }
+$aabbs += @{ name="Room401_WC_South_West"; x_min=-7.75; x_max=-6.0; z_min=-25.0-$thickness/2; z_max=-25.0+$thickness/2 }
+$aabbs += @{ name="Room401_WC_South_East"; x_min=-5.0; x_max=-2.85; z_min=-25.0-$thickness/2; z_max=-25.0+$thickness/2 }
+$aabbs += @{ name="Room401_WC_South_Lintel"; x_min=-6.0; x_max=-5.0; z_min=-25.0-$thickness/2; z_max=-25.0+$thickness/2; y_min=2.2 }
 $aabbs += @{ name="Room401_Inner_North"; x_min=-12.55; x_max=-2.75; z_min=-29.9-$thickness/2; z_max=-29.9+$thickness/2 }
 $aabbs += @{ name="Room401_Inner_South"; x_min=-12.55; x_max=-2.75; z_min=-20.0-$thickness/2; z_max=-20.0+$thickness/2 }
 $aabbs += @{ name="Room401_Inner_East_North"; x_min=-2.85-$thickness/2; x_max=-2.85+$thickness/2; z_min=-30.0; z_max=-22.5 }
@@ -85,3 +89,5 @@ foreach ($y in $levels) {
 `n"
 }
 $map_str | Out-File -Encoding UTF8 new_map.txt
+
+

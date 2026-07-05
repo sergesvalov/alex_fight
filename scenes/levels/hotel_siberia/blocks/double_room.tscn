@@ -8,9 +8,6 @@ albedo_texture = ExtResource("1_wallpaper")
 uv1_scale = Vector3(20, 2, 2)
 roughness = 0.9
 
-[sub_resource type="BoxOccluder3D" id="BoxOccluder3D_Wall"]
-size = Vector3(9.8, 3.5, 10.0)
-
 [node name="DoubleRoomBlock" type="Node3D"]
 script = ExtResource("3_script")
 
@@ -35,5 +32,20 @@ material = SubResource("StandardMaterial3D_wall")
 
 [node name="RoomDoorHole" type="CSGBox3D" parent="RoomGeometry"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.8, 1.1, 8.5)
+operation = 2
+size = Vector3(1.0, 2.2, 2.0)
+
+[node name="WCWestWall" type="CSGBox3D" parent="RoomGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 1.75, 2.6)
+size = Vector3(0.2, 3.5, 4.8)
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="WCSouthWall" type="CSGBox3D" parent="RoomGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.35, 1.75, 4.9)
+size = Vector3(4.7, 3.5, 0.2)
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="WCDoorHole" type="CSGBox3D" parent="RoomGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.35, 1.1, 4.9)
 operation = 2
 size = Vector3(1.0, 2.2, 2.0)
