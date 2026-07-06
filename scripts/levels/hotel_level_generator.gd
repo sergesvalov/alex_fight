@@ -2,6 +2,10 @@
 extends Node3D
 class_name HotelLevelGenerator
 
+# Small vertical offset to prevent Z-fighting between the ceiling of one floor
+# and the floor slab of the floor above on Android (gl_compatibility / 16-bit depth).
+const CEIL_BIAS: float = 0.001
+
 @export var floor_number: int = 4
 @export var player_spawn_pos: Vector3 = Vector3(0, 1.0, 0)
 @export var floor_thickness: float = 0.5
@@ -87,21 +91,29 @@ func _build_floor_geometry(f_num: int, y_offset: float, suffix: String, c_color:
 	var floor_thick = floor_thickness * f_scale
 	
 	var floor_y = -floor_thick / 2.0
-	var ceil_y = height + (floor_thick / 2.0)
+	# Pull ceiling down by CEIL_BIAS so its top face is never co-planar with
+	# the bottom face of the floor slab one storey above (Android Z-fighting fix).
+	var ceil_y = height + (floor_thick / 2.0) - CEIL_BIAS
 	
 	var floor_mat = StandardMaterial3D.new()
 	if not is_empty:
 		floor_mat.albedo_texture = carpet_texture
 	floor_mat.albedo_color = c_color
 	floor_mat.uv1_scale = Vector3(10, 10, 10)
+	# Force depth writes on gl_compatibility to prevent texture flickering on Android.
+	floor_mat.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_ALWAYS
 	
 	var ceil_mat = StandardMaterial3D.new()
 	ceil_mat.albedo_texture = ceiling_texture
 	ceil_mat.uv1_scale = Vector3(10, 10, 10)
+	# Force depth writes and explicit backface culling to prevent bleed-through on Android.
+	ceil_mat.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_ALWAYS
+	ceil_mat.cull_mode = BaseMaterial3D.CULL_BACK
 	
 	var wall_mat = StandardMaterial3D.new()
 	wall_mat.albedo_texture = wall_texture
 	wall_mat.uv1_scale = Vector3(15, 3, 1)
+	wall_mat.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_ALWAYS
 
 	# 1 & 2. Floor and Ceiling (Split into 3 parts to leave a hole for North Stairs)
 	var z_south_len = 55.2 * f_scale

@@ -12,6 +12,8 @@ albedo_texture = ExtResource("2_panel")
 emission_enabled = true
 emission_texture = ExtResource("2_panel")
 emission_energy_multiplier = 0.5
+depth_draw_mode = 1
+cull_mode = 0
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_button"]
 size = Vector3(0.04, 0.1, 0.1)
