@@ -1,8 +1,10 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Texture2D" path="res://assets/textures/hotel_wallpaper.jpg" id="1_wallpaper"]
 [ext_resource type="Script" path="res://scripts/levels/blocks/block.gd" id="3_script"]
 [ext_resource type="PackedScene" path="res://entities/props/door.tscn" id="10_door"]
+[ext_resource type="PackedScene" uid="uid://bed_123" path="res://entities/props/bed.tscn" id="5_bed"]
+[ext_resource type="PackedScene" uid="uid://table_123" path="res://entities/props/table.tscn" id="6_table"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wall"]
 albedo_texture = ExtResource("1_wallpaper")
@@ -84,3 +86,14 @@ mesh = SubResource("BoxMesh_light")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.25, 3.7, 3.5)
 light_color = Color(1, 0.9, 0.8, 1)
 shadow_enabled = true
+
+# Кровать: повёрнута -90° по Y → длина (2.0м) идёт по оси X (восток-запад).
+# Изголовье у восточной стены (X≈3.6), ножная часть на западе (X≈1.65).
+# Ширина (1.14м) — вдоль оси Z, центр Z=3.0.
+[node name="Bed" parent="." instance=ExtResource("5_bed")]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 2.65, 0.0, 3.0)
+
+# Стол: повёрнут +90° по Y → длинная сторона (1.0м) вдоль восточной стены (ось Z).
+# Прижат к восточной стене (X≈3.35), севернее кровати (Z=1.2).
+[node name="Table" parent="." instance=ExtResource("6_table")]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 3.35, 0.0, 1.2)
