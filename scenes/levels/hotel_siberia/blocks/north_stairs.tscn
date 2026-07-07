@@ -6,60 +6,48 @@
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wall"]
 albedo_texture = ExtResource("1_wallpaper")
-uv1_scale = Vector3(20, 2, 2)
+uv1_scale = Vector3(8, 2, 1)
 roughness = 0.9
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_floor"]
 albedo_texture = ExtResource("2_carpet")
-uv1_scale = Vector3(10, 10, 10)
+uv1_scale = Vector3(5, 5, 5)
+uv1_triplanar = true
 
 # =============================================================================
-# NorthStairsBlock — П-образная лестница
-# =============================================================================
+# NorthStairsBlock — П-образная двухмаршевая лестница
 #
-# Блок инстанциируется в генераторе:
-#   inst.position = Vector3(1.05, 0, -30.0)
+# Инстанциируется генератором: inst.position = Vector3(1.05, 0, -30.0)
 #
-# Дыра в полу (глобальные координаты): X=[-2.55..+4.65], Z=[-30.0..-25.2]
-# В локальных координатах блока: X=[-3.6..+3.6], Z=[0..+4.8]
-# (local.X = global.X - 1.05; local.Z = global.Z - (-30.0))
+# Задача: соединить этаж N (Y=0) с этажом N+1 (Y=4.5)
+#   • corridor_height = 4.0, floor_thickness = 0.5 => y_step = 4.5
+#   • Входная дверь (восток): Y=0, local X≈+2.8, Z≈4.9
+#   • Выходная дверь (запад): Y=4.5, local X≈-2.8, Z≈4.9
 #
-# Задача: поднять игрока с Y=0 (нижний этаж, вход через восточный проём)
-#         до Y=4.0 (верхний этаж, выход через западный проём).
-#         corridor_height = 4.0 (base), floor_thickness = 0.5.
+# Схема (вид сверху, south = +Z):
 #
-# Структура (три пролёта, две промежуточные площадки):
+#   local Z:  0 (north)                  4.9 (south=corridor)
+#              |                           |
+#   X=-3.7  [West Wall]                  [W]
+#              |                           |
+#   X=-3.5  [  WestFlight: Y=4.5→2.25   ][TopLanding]---door--
+#              |  (пролёт вниз с юга на север)
+#   X= 0.0  [CenterDivider]             [CD]
+#              |                           |
+#   X=+3.5  [  EastFlight: Y=0→2.25     ][BottomEntry]--door--
+#              |                           |
+#   X=+3.7  [East Wall]                  [E]
 #
-#   Вид сверху (south = +Z):
+#   MidLanding (плоская площадка): Y=2.25, Z=0..1.5, full X width
 #
-#   X: -3.7         -0.1  0  +0.1          +3.7
-#      |              |       |              |
-#  Z=0 +-- NW Wall ---+--div--+-- NE Wall ---+  (north end)
-#      |              |       |              |
-#  Z=1.0  NW Landing  |       |  NE Landing  |
-#      |  Y=2.667      |       |  Y=1.333     |
-#  Z=2.0  WestFlight  |       |  EastFlight  |
-#      |  (↑ to Y=4.0 |       |  (↑ to 1.333)|
-#  Z=3.0              |       |              |
-#      |              +--NorthFlight (bridge)--+
-#  Z=4.0              |       |              |
-#      |  TopLanding  |       |  Entry floor |
-#  Z=4.8 +-- South Wall --DoorWest--DoorEast-+  (south = corridor)
+# Рампы используют CSGPolygon3D без поворота:
+#   polygon.x  → world +X (ширина рампы)
+#   polygon.y  → world +Y (высота)
+#   depth      → world +Z (длина рампы)
 #
-# Y heights:
-#   Entry (east door bottom):  Y = 0.0
-#   NE Landing surface:        Y = 1.333  (4.0 / 3)
-#   NW Landing surface:        Y = 2.667  (4.0 * 2/3)
-#   Top Landing surface:       Y = 4.0   (exit to upper floor)
-#
-# CSGPolygon3D orientation trick (for N-S ramps):
-#   Transform3D(0,0,-1, 0,1,0, 1,0,0, ox,oy,oz)
-#   => basis.x = world(0,0,-1)  : polygon.x axis → world -Z direction
-#   => basis.y = world(0,1,0)   : polygon.y axis → world +Y
-#   => basis.z = world(1,0,0)   : depth extrusion → world +X
-#   origin at (ox,oy,oz) in local space
-#
-# For E-W ramp (NorthFlight), no rotation needed — polygon.x → world +X, depth → world +Z.
+# EastFlight: X=+0.1..+3.5, Z=1.5..4.5, Y: 0 (south) → 2.25 (north)
+# WestFlight: X=-3.5..-0.1, Z=1.5..4.5, Y: 4.5 (south) → 2.25 (north)
+# MidLanding: X=-3.5..+3.5, Z=0..1.5, Y=2.25 (surface)
 # =============================================================================
 
 [node name="NorthStairsBlock" type="Node3D"]
@@ -69,157 +57,100 @@ script = ExtResource("3_script")
 use_collision = true
 collision_layer = 2
 
-# =============================================================
-# OUTER WALLS
-# =============================================================
+# --- OUTER WALLS ---
 
-# West wall: full height H=4.5, spans Z=0..5.0, X=-3.7 (thin)
-[node name="StairsWestWall" type="CSGBox3D" parent="StairsGeometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.7, 2.25, 2.5)
-size = Vector3(0.2, 4.5, 5.0)
+[node name="WallWest" type="CSGBox3D" parent="StairsGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.7, 3.6, 2.45)
+size = Vector3(0.2, 7.2, 4.9)
 material = SubResource("StandardMaterial3D_wall")
 
-# East wall: full height H=4.5, spans Z=0..5.0, X=+3.7
-[node name="StairsEastWall" type="CSGBox3D" parent="StairsGeometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.7, 2.25, 2.5)
-size = Vector3(0.2, 4.5, 5.0)
+[node name="WallEast" type="CSGBox3D" parent="StairsGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.7, 3.6, 2.45)
+size = Vector3(0.2, 7.2, 4.9)
 material = SubResource("StandardMaterial3D_wall")
 
-# North wall: fully closed (no doors), Z=0.1 (local north boundary)
-[node name="StairsNorthWall" type="CSGBox3D" parent="StairsGeometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.25, 0.1)
-size = Vector3(7.6, 4.5, 0.2)
+[node name="WallNorth" type="CSGBox3D" parent="StairsGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.6, 0.1)
+size = Vector3(7.6, 7.2, 0.2)
 material = SubResource("StandardMaterial3D_wall")
 
-# South wall: faces corridor at Z=4.9. Two door holes punched below.
-# Made taller on west side to frame the upper exit hole.
-[node name="StairsSouthWall" type="CSGBox3D" parent="StairsGeometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.25, 4.9)
-size = Vector3(7.6, 4.5, 0.2)
+# South wall: high enough to contain both doors (bottom Y=0..2.2 east, top Y=4.5..6.7 west)
+[node name="WallSouth" type="CSGBox3D" parent="StairsGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.6, 4.9)
+size = Vector3(7.6, 7.2, 0.2)
 material = SubResource("StandardMaterial3D_wall")
 
-# West-side wall extension above door: Y=4.5..6.7 so upper exit hole fits
-[node name="StairsSouthWallTopWest" type="CSGBox3D" parent="StairsGeometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.0, 5.85, 4.9)
-size = Vector3(3.6, 2.7, 0.2)
-material = SubResource("StandardMaterial3D_wall")
-
-# Lower door hole (EAST side): player enters from corridor at Y=0
-#   X center=+2.8, Y center=1.1, Z=4.9  —  size 1.2 x 2.2 x 1.0
-[node name="StairsDoorHoleEast" type="CSGBox3D" parent="StairsGeometry"]
+# East door hole: lower entrance from corridor, Y=0..2.2, X=+1.4..+4.2
+[node name="DoorHoleEast" type="CSGBox3D" parent="StairsGeometry"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.8, 1.1, 4.9)
 operation = 2
-size = Vector3(1.2, 2.2, 1.0)
+size = Vector3(1.4, 2.2, 1.0)
 
-# Upper door hole (WEST side): player exits to upper floor at Y=4.0
-#   X center=-2.8, Y center=5.1 (bottom=4.0, top=6.2), Z=4.9  —  size 1.2 x 2.2 x 1.0
-[node name="StairsDoorHoleWest" type="CSGBox3D" parent="StairsGeometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.8, 5.1, 4.9)
+# West door hole: upper exit to next floor, Y=4.5..6.7, X=-1.4..-4.2
+[node name="DoorHoleWest" type="CSGBox3D" parent="StairsGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.8, 5.6, 4.9)
 operation = 2
-size = Vector3(1.2, 2.2, 1.0)
+size = Vector3(1.4, 2.2, 1.0)
 
-# =============================================================
-# CENTER DIVIDER (splits east and west shafts)
-# =============================================================
-# Runs north-to-south from Z=0 to Z=4.2 (stops before south wall to allow crossing)
-# Full height H=4.5
+# Center divider: separates east and west shafts, from north wall to mid-landing zone
 [node name="CenterDivider" type="CSGBox3D" parent="StairsGeometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.25, 2.1)
-size = Vector3(0.2, 4.5, 4.2)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.6, 2.95)
+size = Vector3(0.2, 7.2, 3.9)
 material = SubResource("StandardMaterial3D_wall")
 
-# =============================================================
-# CEILING & FLOOR
-# =============================================================
-
-# Ceiling: closes the top of the stairwell at Y=4.5
-[node name="StairsCeiling" type="CSGBox3D" parent="StairsGeometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.6, 2.5)
-size = Vector3(7.6, 0.2, 5.0)
+# --- CEILING ---
+# Closes the shaft above the upper exit level (Y > 7.0)
+[node name="Ceiling" type="CSGBox3D" parent="StairsGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7.2, 2.45)
+size = Vector3(7.6, 0.2, 4.9)
 material = SubResource("StandardMaterial3D_wall")
 
-# =============================================================
-# FLAT LANDINGS
-# =============================================================
-
-# NE Landing: east side, north end. Surface Y=1.333.
-#   X=[+0.1..+3.5], Z=[0.5..1.9] → center X=1.8, Z=1.2, size 3.4 x 0.2 x 1.4
-[node name="NELanding" type="CSGBox3D" parent="StairsGeometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.8, 1.233, 1.2)
-size = Vector3(3.4, 0.2, 1.4)
+# --- MID LANDING (flat platform at Y=2.25) ---
+# Spans full width, at the north end (Z=0..1.5)
+[node name="MidLanding" type="CSGBox3D" parent="StairsGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.15, 0.75)
+size = Vector3(7.4, 0.2, 1.5)
 material = SubResource("StandardMaterial3D_floor")
 
-# NW Landing: west side, north end. Surface Y=2.667.
-#   X=[-3.5..-0.1], Z=[0.5..1.9] → center X=-1.8, Z=1.2, size 3.4 x 0.2 x 1.4
-[node name="NWLanding" type="CSGBox3D" parent="StairsGeometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.8, 2.567, 1.2)
-size = Vector3(3.4, 0.2, 1.4)
-material = SubResource("StandardMaterial3D_floor")
-
-# Top landing: west side, south end. Surface Y=4.0. Player exits here.
-#   X=[-3.5..-0.1], Z=[3.6..4.8] → center X=-1.8, Z=4.2, size 3.4 x 0.2 x 1.2
-[node name="TopLanding" type="CSGBox3D" parent="StairsGeometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.8, 3.9, 4.2)
-size = Vector3(3.4, 0.2, 1.2)
-material = SubResource("StandardMaterial3D_floor")
-
-# =============================================================
-# RAMP FLIGHTS (CSGPolygon3D)
-# =============================================================
+# --- RAMP FLIGHTS (CSGPolygon3D) ---
 #
-# EastFlight: east shaft, south→north, Y rises 0 → 1.333
-#   Transform: -90° around Y → polygon.x = world -Z, depth = world +X
-#   Origin: X=+0.5, Y=0, Z=4.5  (south end of east shaft, at floor level)
-#   polygon.x=0   → world Z=4.5 (south, Y=0.0)
-#   polygon.x=3.0 → world Z=1.5 (north, Y=1.333 = NE Landing surface)
-#   Slab: 4 vertices (closed quad with top-ramp face and bottom)
+# Rotation -90° around Y: Transform3D(0,0,-1, 0,1,0, 1,0,0, ox,oy,oz)
+#   polygon.x → world -Z  (slope direction, south→north)
+#   polygon.y → world +Y  (height)
+#   depth     → world +X  (width of the ramp slab)
+#
+# EastFlight: origin (X=+0.1, Y=0, Z=4.5)
+#   polygon.x=0   → Z=4.5 (south entry, Y=0.0)
+#   polygon.x=3.0 → Z=1.5 (north, MidLanding Y=2.25)
+#   depth=3.4 → X=0.1..3.5 (east shaft)
 
 [node name="EastFlight" type="CSGPolygon3D" parent="StairsGeometry"]
-transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 0.5, 0, 4.5)
-polygon = PackedVector2Array(0, 0, 3.0, 1.333, 3.0, 1.133, 0, -0.2)
-depth = 3.0
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 0.1, 0, 4.5)
+polygon = PackedVector2Array(0, 0, 3.0, 2.25, 3.0, 2.05, 0, -0.2)
+depth = 3.4
 material = SubResource("StandardMaterial3D_floor")
 
-# NorthFlight: cross-over at north end, connects NE Landing (east, Y=1.333)
-#   to NW Landing (west, Y=2.667), traveling along world +X axis.
-#   No rotation: polygon.x → world +X, polygon.y → world +Y, depth → world +Z.
-#   Origin: X=-3.5, Y=0, Z=0.6  (west start)
-#   polygon.x=0   → world X=-3.5, Y=2.667 (NW Landing side)
-#   polygon.x=7.0 → world X=+3.5, Y=1.333 (NE Landing side)
-#   Depth=1.2 in world +Z: Z=0.6..1.8 (perp strip near north wall)
-
-[node name="NorthFlight" type="CSGPolygon3D" parent="StairsGeometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.5, 0, 0.6)
-polygon = PackedVector2Array(0, 2.667, 7.0, 1.333, 7.0, 1.133, 0, 2.467)
-depth = 1.2
-material = SubResource("StandardMaterial3D_floor")
-
-# WestFlight: west shaft, north→south, Y rises 2.667 → 4.0
-#   Transform: -90° around Y → polygon.x = world -Z, depth = world +X
-#   Origin: X=-3.5, Y=0, Z=4.5  (south end of west shaft, at top-landing level)
-#   polygon.x=0   → world Z=4.5 (south, Y=4.0 = TopLanding surface)
-#   polygon.x=3.0 → world Z=1.5 (north, Y=2.667 = NW Landing surface)
-#   Slab goes from top (south, high Y) down to NW landing (north, lower Y).
-#   Four vertices: top face of ramp + underside
+# WestFlight: -90degY rotation, origin (X=-3.5, Y=0, Z=4.5)
+#   polygon.x=0    → world Z=4.5 (south, Y=4.5 = top exit level)
+#   polygon.x=3.0  → world Z=1.5 (north, Y=2.25 = mid landing)
+#   depth=3.4 → world +X: X=-3.5..-0.1
 
 [node name="WestFlight" type="CSGPolygon3D" parent="StairsGeometry"]
 transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -3.5, 0, 4.5)
-polygon = PackedVector2Array(0, 4.0, 3.0, 2.667, 3.0, 2.467, 0, 3.8)
-depth = 3.0
+polygon = PackedVector2Array(0, 4.5, 3.0, 2.25, 3.0, 2.05, 0, 4.3)
+depth = 3.4
 material = SubResource("StandardMaterial3D_floor")
 
-# =============================================================
-# LIGHTS
-# =============================================================
+# --- LIGHTS ---
 
-[node name="LightBottom" type="OmniLight3D" parent="."]
+[node name="LightEntry" type="OmniLight3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.0, 1.5, 3.5)
-omni_range = 6.0
+omni_range = 7.0
 
 [node name="LightMid" type="OmniLight3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.0, 1.0)
-omni_range = 6.0
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.5, 0.8)
+omni_range = 7.0
 
 [node name="LightTop" type="OmniLight3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.0, 5.0, 3.5)
-omni_range = 6.0
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.0, 6.0, 3.5)
+omni_range = 7.0
