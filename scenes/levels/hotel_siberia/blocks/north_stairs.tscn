@@ -48,29 +48,23 @@ collision_layer = 2
 
 # --- OUTER WALLS ---
 
-# West wall: X=-3.7, Z=0..5.0, Y=0..4.5
+# West wall: X=-3.7, Z=0..5.0, Y=0..7.0
 [node name="StairsWestWall" type="CSGBox3D" parent="StairsGeometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.7, 2.25, 2.5)
-size = Vector3(0.2, 4.5, 5.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.7, 3.5, 2.5)
+size = Vector3(0.2, 7.0, 5.0)
 material = SubResource("StandardMaterial3D_wall")
 
-# East wall: X=+3.7, Z=0..5.0, Y=0..4.5
+# East wall: X=+3.7, Z=0..5.0, Y=0..7.0
 [node name="StairsEastWall" type="CSGBox3D" parent="StairsGeometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.7, 2.25, 2.5)
-size = Vector3(0.2, 4.5, 5.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.7, 3.5, 2.5)
+size = Vector3(0.2, 7.0, 5.0)
 material = SubResource("StandardMaterial3D_wall")
 
-# South wall (faces corridor): Z=4.9, Y=0..4.5
+# South wall (faces corridor): Z=4.9, Y=0..7.0
 # Will have two door holes cut below
 [node name="StairsSouthWall" type="CSGBox3D" parent="StairsGeometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.25, 4.9)
-size = Vector3(7.6, 4.5, 0.2)
-material = SubResource("StandardMaterial3D_wall")
-
-# Extension above south wall for upper exit door (Y=4.5..7.0)
-[node name="StairsSouthWallTop" type="CSGBox3D" parent="StairsGeometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.75, 4.9)
-size = Vector3(7.6, 2.5, 0.2)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.5, 4.9)
+size = Vector3(7.6, 7.0, 0.2)
 material = SubResource("StandardMaterial3D_wall")
 
 # East door hole (lower entry): X=+2.8, Y=0..2.2
@@ -116,7 +110,7 @@ material = SubResource("StandardMaterial3D_floor")
 
 [node name="EastFlight" type="CSGPolygon3D" parent="StairsGeometry"]
 transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 2.2, 0, 2.4)
-polygon = PackedVector2Array(0, 1.3, 2.4, -0.2, 2.4, 0, 0, 1.5)
+polygon = PackedVector2Array(0, 1.5, 2.4, 0, 2.4, -0.2, 0, 1.3)
 depth = 1.2
 material = SubResource("StandardMaterial3D_floor")
 
@@ -140,8 +134,20 @@ material = SubResource("StandardMaterial3D_floor")
 
 [node name="WestFlight" type="CSGPolygon3D" parent="StairsGeometry"]
 transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -3.4, 0, 2.4)
-polygon = PackedVector2Array(0, 2.8, 2.4, 4.3, 2.4, 4.5, 0, 3.0)
+polygon = PackedVector2Array(0, 3.0, 2.4, 4.5, 2.4, 4.3, 0, 2.8)
 depth = 1.2
+material = SubResource("StandardMaterial3D_floor")
+
+# EastFloor: flat section from Z=0.0 to Z=4.9 at Y=0.0 (ground floor)
+[node name="EastFloor" type="CSGBox3D" parent="StairsGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.8, -0.1, 2.45)
+size = Vector3(1.2, 0.2, 4.9)
+material = SubResource("StandardMaterial3D_floor")
+
+# WestFloor: flat section from Z=0.0 to Z=4.9 at Y=4.5 to west exit door
+[node name="WestFloor" type="CSGBox3D" parent="StairsGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.8, 4.4, 2.45)
+size = Vector3(1.2, 0.2, 4.9)
 material = SubResource("StandardMaterial3D_floor")
 
 # --- LIGHTS ---
