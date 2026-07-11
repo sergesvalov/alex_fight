@@ -18,6 +18,8 @@ const CEIL_BIAS: float = 0.001
 var carpet_texture = preload("res://assets/textures/hotel_carpet.jpg")
 var wall_texture = preload("res://assets/textures/hotel_wallpaper.jpg")
 var ceiling_texture = preload("res://assets/textures/hotel_wallpaper.jpg")
+var floor_texture = preload("res://assets/textures/hotel_carpet.jpg")
+var _panel_tex_cache = preload("res://assets/textures/elevator_panel.png")
 
 func _ready() -> void:
 	_generate_level()

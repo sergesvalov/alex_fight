@@ -1,7 +1,7 @@
 [gd_scene load_steps=12 format=3]
 
-[ext_resource type="Texture2D" path="res://assets/textures/hotel_wallpaper.jpg" id="1_wallpaper"]
-[ext_resource type="Texture2D" path="res://assets/textures/elevator_panel.png" id="2_panel"]
+[ext_resource type="Texture2D" uid="uid://dummy_wallpaper" path="res://assets/textures/hotel_wallpaper.jpg" id="1_wallpaper"]
+[ext_resource type="Texture2D" uid="uid://dummy_panel" path="res://assets/textures/elevator_panel.png" id="2_panel"]
 [ext_resource type="Script" path="res://scripts/levels/blocks/block.gd" id="3_script"]
 [ext_resource type="Script" path="res://scripts/interactables/elevator_button.gd" id="4_btn"]
 [ext_resource type="Script" path="res://scripts/levels/blocks/elevator_controller.gd" id="5_ctrl"]
