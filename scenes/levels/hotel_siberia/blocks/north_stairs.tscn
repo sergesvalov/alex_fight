@@ -117,9 +117,3 @@ omni_range = 6.0
 [node name="LightTop" type="OmniLight3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.0, 5.0, 3.5)
 omni_range = 6.0
-
-[node name="DoorEast" parent="." instance=ExtResource("4_door")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.8, 0, 4.9)
-
-[node name="DoorWest" parent="." instance=ExtResource("4_door")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.85, 4.5, 4.9)
