@@ -86,6 +86,10 @@ pipeline {
                                     echo '❌ АВТОТЕСТ ЛЕСТНИЦ И ПРОЕМОВ ПРОВАЛЕН!'
                                     exit 1
                                 }
+                                godot --headless tests/test_stairs_map.tscn || {
+                                    echo '❌ АВТОТЕСТ КАРТЫ ЛЕСТНИЦ ПРОВАЛЕН!'
+                                    exit 1
+                                }
                                 echo '✅ ВСЕ АВТОТЕСТЫ ПРОЙДЕНЫ!'
                                 '''
                             } else {
