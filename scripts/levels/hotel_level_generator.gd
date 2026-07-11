@@ -55,26 +55,27 @@ func _generate_level() -> void:
 				temp.queue_free()
 		return Color(1, 1, 1) # Default
 		
-	var c_color_below = Color(0.6, 0.2, 0.2)
-	var c_color_main = carpet_color
-	if floor_number == 4:
-		c_color_main = Color(1.0, 1.0, 1.0, 1.0)
-	var c_color_above = Color(0.2, 0.6, 0.2)
-	
-	if floor_number > 1: c_color_below = get_color_from_scene.call(floor_number - 1)
-	if floor_number < 10: c_color_above = get_color_from_scene.call(floor_number + 1)
-	
-	# 1. Main floor (Y = 0)
-	_build_floor_geometry(floor_number, 0.0, "Main", c_color_main, map_texture, empty_box_mode, f_scale)
-	
-	# 2. Floor below
-	if floor_number > 1:
-		var below_empty = (floor_number - 1 == 1)
-		_build_floor_geometry(floor_number - 1, -y_step, "Below", c_color_below, null, below_empty, f_scale)
-		
-	# 3. Floor above
-	if floor_number < 10:
-		_build_floor_geometry(floor_number + 1, y_step, "Above", c_color_above, null, false, f_scale)
+	for i in range(1, 11):
+		var y_offset = (i - floor_number) * y_step
+		var suffix = str(i)
+		if i == floor_number:
+			suffix = "Main"
+			
+		var c_color = carpet_color
+		if i == 4:
+			c_color = Color(1.0, 1.0, 1.0, 1.0)
+		elif i != floor_number:
+			c_color = get_color_from_scene.call(i)
+			
+		var m_tex = null
+		if i == floor_number:
+			m_tex = map_texture
+			
+		var is_empty = false
+		if i == 1:
+			is_empty = true
+			
+		_build_floor_geometry(i, y_offset, suffix, c_color, m_tex, is_empty, f_scale)
 		
 	call_deferred("_move_player", f_scale)
 
