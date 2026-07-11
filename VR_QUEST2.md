@@ -1,6 +1,6 @@
 # VR Адаптация Alex Fight → Oculus Quest 2
 
-> **Статус:** Не начато (план составлен 2026-07-06)  
+> **Статус:** Реализовано (2026-07-11)
 > **Движок:** Godot 4.7 · **Платформа:** Meta Quest 2 (Android ARM64, OpenXR)
 
 ---
@@ -274,16 +274,16 @@ adb install build/alex_fight_vr.apk
 
 ## Порядок выполнения
 
-- [ ] Установить плагин Godot OpenXR Vendors
-- [ ] Настроить `project.godot` + `openxr_action_map.tres`
-- [ ] Переделать `player.tscn`: CameraRig → XROrigin3D + XRCamera3D + XRController3D×2
-- [ ] Обновить `player_camera.gd` — VR/non-VR детект
-- [ ] Обновить `player_movement.gd` — стик + направление по голове
-- [ ] Обновить `player_weapon.gd` — правая рука + триггер
-- [ ] Обновить `player_controller.gd` — инит XR интерфейса
-- [ ] Создать `vr_hud.tscn` — world-space HUD через SubViewport
-- [ ] Настроить `export_presets.cfg` для Meta
-- [ ] Тест в XR-эмуляторе Godot (без шлема)
+- [ ] Установить плагин Godot OpenXR Vendors (пользователь)
+- [x] Настроить `project.godot` + `openxr_action_map.tres`
+- [x] Переделать `player.tscn`: CameraRig → XROrigin3D + XRCamera3D + XRController3D×2
+- [x] Обновить `player_camera.gd` — VR/non-VR детект
+- [x] Обновить `player_movement.gd` — стик + направление по голове
+- [x] Обновить `player_weapon.gd` — правая рука + триггер
+- [x] Обновить `player_controller.gd` — инит XR интерфейса
+- [x] Создать `vr_hud.tscn` — world-space HUD (сделано динамически в коде)
+- [x] Настроить `export_presets.cfg` для Meta
+- [x] Тест в XR-эмуляторе Godot (без шлема)
 - [ ] Тест на реальном Quest 2
 
 ---
