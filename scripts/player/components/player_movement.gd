@@ -65,10 +65,20 @@ func process_movement(delta: float) -> void:
 
 func _apply_movement(input: Vector2, delta: float) -> void:
     var speed: float = sprint_speed if is_sprinting else walk_speed
-    var direction: Vector3 = (
-        player.transform.basis.x * input.x +
-        player.transform.basis.z * input.y
-    ).normalized()
+    var direction: Vector3 = Vector3.ZERO
+    
+    if player.is_vr:
+        var head = player.get_node_or_null("XROrigin3D/XRCamera3D")
+        if head:
+            var flat_basis = head.global_transform.basis
+            flat_basis.y = Vector3.ZERO
+            flat_basis = flat_basis.orthonormalized()
+            direction = (flat_basis.x * input.x + flat_basis.z * input.y).normalized()
+    else:
+        direction = (
+            player.transform.basis.x * input.x +
+            player.transform.basis.z * input.y
+        ).normalized()
     
     player.velocity.x = direction.x * speed
     player.velocity.z = direction.z * speed

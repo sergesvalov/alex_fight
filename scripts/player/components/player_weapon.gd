@@ -9,6 +9,14 @@ extends Node
 func _ready() -> void:
     if laser_pistol:
         laser_pistol.heat_changed.connect(_on_heat_changed)
+        
+    var right_hand = player.get_node_or_null("XROrigin3D/RightController")
+    if right_hand:
+        right_hand.button_pressed.connect(_on_xr_button_pressed)
+
+func _on_xr_button_pressed(button_name: String) -> void:
+    if button_name == "trigger_click":
+        shoot()
 
 func _on_heat_changed(current_heat: float) -> void:
     if EventBus.has_signal("heat_updated"):

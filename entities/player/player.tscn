@@ -112,3 +112,13 @@ script = ExtResource("inter_script")
 
 [node name="PlayerWeapon" type="Node" parent="."]
 script = ExtResource("weap_script")
+
+[node name="XROrigin3D" type="XROrigin3D" parent="."]
+
+[node name="XRCamera3D" type="XRCamera3D" parent="XROrigin3D"]
+
+[node name="LeftController" type="XRController3D" parent="XROrigin3D"]
+tracker = &"left_hand"
+
+[node name="RightController" type="XRController3D" parent="XROrigin3D"]
+tracker = &"right_hand"

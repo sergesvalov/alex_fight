@@ -32,6 +32,12 @@ window/size/viewport_width=1280
 window/size/viewport_height=720
 window/stretch/mode="canvas_items"
 window/stretch/aspect="keep"
+window/vsync/vsync_mode=0
+
+[xr]
+
+openxr/enabled=true
+openxr/default_action_map="res://openxr_action_map.tres"
 
 [physics]
 
@@ -42,6 +48,7 @@ window/stretch/aspect="keep"
 
 renderer/rendering_method="mobile"
 renderer/rendering_method.mobile="gl_compatibility"
+vrs/mode=1
 environment/defaults/default_environment="res://default_env.tres"
 limits/global_shader_variables/buffer_size=65536
 scaling_3d/mode=2

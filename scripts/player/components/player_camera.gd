@@ -16,10 +16,12 @@ func _ready() -> void:
         Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 func process_input(event: InputEvent) -> void:
+    if player.is_vr: return
     if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED and event is InputEventMouseMotion:
         _rotate_camera(-event.relative.x, -event.relative.y)
 
 func process_swipe(relative: Vector2) -> void:
+    if player.is_vr: return
     # Mobile is restricted to horizontal rotation only
     _rotate_camera(-relative.x, 0.0)
 
