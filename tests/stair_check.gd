@@ -1,64 +1,60 @@
-## Headless check script: verify stairwell entrance is clear
-## Usage: godot --headless tests/stair_check.tscn
-extends Node
+## Headless check script: verify north stairs CSG builds correctly
+## Usage: godot --headless -s tests/stair_check.gd
+extends SceneTree
 
-func _ready() -> void:
-	print("=== STAIRWELL ENTRANCE CHECK ===")
-	var stair_scene = load("res://scenes/levels/hotel_siberia/stairwell_north.tscn")
+func _init() -> void:
+	print("=== STAIRWELL CSG CHECK ===")
+	var stair_scene = load("res://scenes/levels/hotel_siberia/blocks/north_stairs.tscn")
 	if not stair_scene:
-		print("[FAILED] stairwell_north.tscn not found")
-		get_tree().quit(1)
+		print("[FAILED] north_stairs.tscn not found")
+		quit(1)
 		return
 
 	var stair = stair_scene.instantiate()
-	add_child(stair)
+	var root_node = Node3D.new()
+	root_node.add_child(stair)
 
-	# Wait for CSG to bake
-	await get_tree().physics_frame
-	await get_tree().physics_frame
-
-	var pass_all := true
-
-	# Check that nothing blocks the entrance corridor (Z >= -0.5, Y < 4)
-	# by scanning every CSGBox3D in the scene and checking if it extends into Z > -0.5
-	# with a cross-section that would block corridor passage (Y 0-2, X -3 to +3)
-	for child in stair.get_children():
-		if child is CSGBox3D and child.name != "MainLanding":
-			var origin = child.transform.origin
-			var half = child.size / 2.0
-			var z_min = origin.z - half.z
-			var z_max = origin.z + half.z
-			var y_min = origin.y - half.y
-			var y_max = origin.y + half.y
-			var x_min = origin.x - half.x
-			var x_max = origin.x + half.x
-			# Check if this box overlaps with entrance zone: Z in (-0.5, 0), Y in (0, 2.5), X in (-3, 3)
-			var blocks_entrance = (
-				z_max > -0.5 and z_min < 0.0 and
-				y_max > 0.0 and y_min < 2.5 and
-				x_max > -3.0 and x_min < 3.0
-			)
-			if blocks_entrance:
-				print("[FAILED] Node '", child.name, "' overlaps with entrance zone!")
-				print("         Pos=", origin, " Size=", child.size)
-				print("         Z-range=[", z_min, ",", z_max, "]")
-				pass_all = false
-
-	if pass_all:
-		print("[OK] Stairwell entrance (Z 0 to -0.5) is clear - no blocking geometry")
+	# Force CSG to bake
+	var csg = stair.get_node_or_null("StairsGeometry")
+	if not csg:
+		print("[FAILED] StairsGeometry node not found!")
+		quit(1)
+		return
+		
+	csg._update_shape()
 	
-	# Also report all nodes and their Z ranges for manual inspection
-	print("\n--- Node Z-ranges for manual review ---")
-	for child in stair.get_children():
-		if child is CSGBox3D:
-			var origin = child.transform.origin
-			var half = child.size / 2.0
-			print("  ", child.name, ": Z [", origin.z - half.z, ", ", origin.z + half.z, "]  Y [", origin.y - half.y, ", ", origin.y + half.y, "]")
-
+	var meshes = csg.get_meshes()
+	if meshes.size() < 2:
+		print("[FAILED] CSG get_meshes() did not return mesh array")
+		quit(1)
+		return
+		
+	var mesh = meshes[1] as ArrayMesh
+	if not mesh:
+		print("[FAILED] CSG did not generate an ArrayMesh")
+		quit(1)
+		return
+		
+	var faces = mesh.get_faces()
+	if faces.size() == 0:
+		print("❌ [FAILED] CSG Combiner returned 0 vertices! The boolean logic crashed!")
+		
+		print("\n--- Diagnostic: Isolating broken nodes ---")
+		var flights = ["EastFlight", "NorthFlight", "WestFlight", "SouthWall_WestUnder", "SouthWall_WestOver", "SouthWall_EastOver"]
+		for flight_name in flights:
+			var node = csg.get_node_or_null(flight_name)
+			if node:
+				var parent = node.get_parent()
+				parent.remove_child(node)
+				csg._update_shape()
+				var m = csg.get_meshes()
+				if m.size() >= 2 and m[1].get_faces().size() > 0:
+					print("💡 FOUND IT! Removing '", flight_name, "' fixes the mesh!")
+				parent.add_child(node)
+				
+		quit(1)
+		return
+		
+	print("✅ [OK] CSG Combiner successfully generated ", faces.size(), " vertices.")
 	print("================================")
-	if pass_all:
-		print("✅ ALL CHECKS PASSED")
-		get_tree().quit(0)
-	else:
-		print("❌ SOME CHECKS FAILED")
-		get_tree().quit(1)
+	quit(0)

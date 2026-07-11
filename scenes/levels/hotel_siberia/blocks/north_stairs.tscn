@@ -60,24 +60,36 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.7, 3.5, 2.5)
 size = Vector3(0.2, 7.0, 5.0)
 material = SubResource("StandardMaterial3D_wall")
 
-# South wall (faces corridor): Z=4.9, Y=0..7.0
-# Will have two door holes cut below
-[node name="StairsSouthWall" type="CSGBox3D" parent="StairsGeometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.5, 4.9)
-size = Vector3(7.6, 7.0, 0.2)
+# South wall pieces (constructed manually to avoid CSG subtractions)
+[node name="SouthWall_Left" type="CSGBox3D" parent="StairsGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.6, 3.5, 4.9)
+size = Vector3(0.4, 7.0, 0.2)
 material = SubResource("StandardMaterial3D_wall")
 
-# East door hole (lower entry): X=+2.8, Y=0..2.2
-[node name="StairsDoorHoleEast" type="CSGBox3D" parent="StairsGeometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.8, 1.11, 4.9)
-operation = 2
-size = Vector3(1.2, 2.18, 1.0)
+[node name="SouthWall_Center" type="CSGBox3D" parent="StairsGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.5, 4.9)
+size = Vector3(4.4, 7.0, 0.2)
+material = SubResource("StandardMaterial3D_wall")
 
-# West door hole (upper exit): X=-2.8, Y=4.5..6.7
-[node name="StairsDoorHoleWest" type="CSGBox3D" parent="StairsGeometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.8, 5.61, 4.9)
-operation = 2
-size = Vector3(1.2, 2.18, 1.0)
+[node name="SouthWall_Right" type="CSGBox3D" parent="StairsGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.6, 3.5, 4.9)
+size = Vector3(0.4, 7.0, 0.2)
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="SouthWall_WestUnder" type="CSGBox3D" parent="StairsGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.8, 2.25, 4.9)
+size = Vector3(1.2, 4.5, 0.2)
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="SouthWall_WestOver" type="CSGBox3D" parent="StairsGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.8, 6.85, 4.9)
+size = Vector3(1.2, 0.3, 0.2)
+material = SubResource("StandardMaterial3D_wall")
+
+[node name="SouthWall_EastOver" type="CSGBox3D" parent="StairsGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.8, 4.6, 4.9)
+size = Vector3(1.2, 4.8, 0.2)
+material = SubResource("StandardMaterial3D_wall")
 
 # --- LANDINGS ---
 
@@ -110,7 +122,7 @@ material = SubResource("StandardMaterial3D_floor")
 
 [node name="EastFlight" type="CSGPolygon3D" parent="StairsGeometry"]
 transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, 2.2, 0, 2.4)
-polygon = PackedVector2Array(0, 1.5, 2.4, 0, 2.4, -0.2, 0, 1.3)
+polygon = PackedVector2Array(0, 1.3, 2.4, -0.2, 2.4, 0, 0, 1.5)
 depth = 1.2
 material = SubResource("StandardMaterial3D_floor")
 
@@ -134,7 +146,7 @@ material = SubResource("StandardMaterial3D_floor")
 
 [node name="WestFlight" type="CSGPolygon3D" parent="StairsGeometry"]
 transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -3.4, 0, 2.4)
-polygon = PackedVector2Array(0, 3.0, 2.4, 4.5, 2.4, 4.3, 0, 2.8)
+polygon = PackedVector2Array(0, 2.8, 2.4, 4.3, 2.4, 4.5, 0, 3.0)
 depth = 1.2
 material = SubResource("StandardMaterial3D_floor")
 
