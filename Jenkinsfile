@@ -79,10 +79,14 @@ pipeline {
                                 echo "Запуск headless автотестов Godot..."
                                 sh '''
                                 godot --headless tests/test_runner.tscn || {
-                                    echo '❌ АВТОТЕСТЫ ПРОВАЛЕНЫ!'
+                                    echo '❌ АВТОТЕСТ МЕНЕДЖЕРА УРОВНЕЙ ПРОВАЛЕН!'
                                     exit 1
                                 }
-                                echo '✅ АВТОТЕСТЫ ПРОЙДЕНЫ!'
+                                godot --headless tests/test_stairs_doors.tscn || {
+                                    echo '❌ АВТОТЕСТ ЛЕСТНИЦ И ПРОЕМОВ ПРОВАЛЕН!'
+                                    exit 1
+                                }
+                                echo '✅ ВСЕ АВТОТЕСТЫ ПРОЙДЕНЫ!'
                                 '''
                             } else {
                                 echo "Автотесты пропущены (RUN_TESTS = false)"
