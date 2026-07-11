@@ -14,7 +14,7 @@ func _ready() -> void:
     var rooms = []
     var hotel_geo = $NavigationRegion3D/HotelGeometry
     for child in hotel_geo.get_children():
-        if child is HotelRoom:
+        if child.name.begins_with("DoubleRoom") or child.name.begins_with("SingleRoom"):
             rooms.append(child)
             
     if GameStateManager.entered_from_stairs:
@@ -77,7 +77,7 @@ func _on_all_tapes_collected() -> void:
     var rooms = []
     var hotel_geo = $NavigationRegion3D/HotelGeometry
     for child in hotel_geo.get_children():
-        if child is HotelRoom:
+        if child.name.begins_with("DoubleRoom") or child.name.begins_with("SingleRoom"):
             rooms.append(child)
             
     if rooms.size() > 0:
