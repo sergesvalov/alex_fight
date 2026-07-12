@@ -10,8 +10,6 @@ var room_layouts = {
 		"bounds_pos_z": 2.4,
 		"bounds_neg_z": -2.4,
 		"props": {
-			"Table": {"pos": Vector3(2.0, 0.0, -2.5), "anchor_x": 1, "anchor_z": -1},
-			"Chair1": {"pos": Vector3(2.0, 0.0, -1.8), "anchor_x": 1, "anchor_z": -1},
 			"RoomLabel": {"pos": Vector3(-2.8, 2.2, 0.5), "anchor_x": 0, "anchor_z": 0}
 		}
 	},
