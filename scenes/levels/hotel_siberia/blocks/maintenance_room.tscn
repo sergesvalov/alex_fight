@@ -3,6 +3,7 @@
 [ext_resource type="Texture2D" path="res://assets/textures/hotel_wallpaper.jpg" id="1_wallpaper"]
 [ext_resource type="PackedScene" path="res://entities/props/door.tscn" id="2_door"]
 [ext_resource type="Script" path="res://scripts/levels/blocks/block.gd" id="3_script"]
+[ext_resource type="PackedScene" uid="uid://wardrobe_123" path="res://entities/props/wardrobe.tscn" id="4_wardrobe"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wall"]
 albedo_texture = ExtResource("1_wallpaper")
@@ -55,3 +56,9 @@ transform = Transform3D(-6.11959e-08, 0, -1.4, 0, 1, 0, 1.4, 0, -6.11959e-08, 0,
 [node name="OccluderInstance3D" type="OccluderInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.75, 1.5)
 occluder = SubResource("BoxOccluder3D_Wall")
+
+[node name="Wardrobe1" parent="." instance=ExtResource("4_wardrobe")]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 3.6, 0.0, 0.9)
+
+[node name="Wardrobe2" parent="." instance=ExtResource("4_wardrobe")]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 3.6, 0.0, 2.1)
