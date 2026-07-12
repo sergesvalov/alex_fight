@@ -165,47 +165,6 @@ func _build_floor_geometry(f_num: int, y_offset: float, suffix: String, c_color:
 	# 3.7 North Stairs
 	_generate_north_stairs(parent, f_scale)
 
-func _generate_roof(y_offset: float, f_scale: float) -> void:
-	var parent = Node3D.new()
-	parent.name = "GeneratedRoof"
-	parent.position.y = y_offset
-	add_child(parent)
-	
-	var z_length = 60.0 * f_scale
-	var x_width = 25.3 * f_scale
-	var thickness = wall_thickness * f_scale
-	var floor_thick = floor_thickness * f_scale
-	
-	var roof_mat = StandardMaterial3D.new()
-	roof_mat.albedo_color = Color(0.5, 0.5, 0.5) # Flat grey
-	
-	# Roof slabs (same logic as floor slabs)
-	var floor_y = -floor_thick / 2.0
-	var z_south_len = 55.18 * f_scale
-	var z_south_pos = 2.41 * f_scale
-	var z_north_len = 4.82 * f_scale
-	var z_north_pos = -27.59 * f_scale
-	
-	var x_nw_len = 10.1 * f_scale
-	var x_nw_pos = -7.6 * f_scale
-	var x_ne_len = 8.0 * f_scale
-	var x_ne_pos = 8.65 * f_scale
-	
-	_create_static_box(parent, "Roof_Main", Vector3(0, floor_y, z_south_pos), Vector3(x_width, floor_thick, z_south_len), roof_mat)
-	_create_static_box(parent, "Roof_NW", Vector3(x_nw_pos, floor_y, z_north_pos), Vector3(x_nw_len, floor_thick, z_north_len), roof_mat)
-	_create_static_box(parent, "Roof_NE", Vector3(x_ne_pos, floor_y, z_north_pos), Vector3(x_ne_len, floor_thick, z_north_len), roof_mat)
-	
-	# Parapets (Outer walls)
-	var parapet_height = 1.0 * f_scale + floor_thick
-	var parapet_y = (1.0 * f_scale - floor_thick) / 2.0
-	var half_x = x_width / 2.0
-	var half_z = z_length / 2.0
-	
-	_create_static_box(parent, "Parapet_West", Vector3(-half_x - thickness/2.0, parapet_y, 0), Vector3(thickness, parapet_height, z_length), roof_mat)
-	_create_static_box(parent, "Parapet_East", Vector3(half_x + thickness/2.0, parapet_y, 0), Vector3(thickness, parapet_height, z_length), roof_mat)
-	_create_static_box(parent, "Parapet_North", Vector3(0, parapet_y, -half_z - thickness/2.0), Vector3(x_width + thickness * 2.0, parapet_height, thickness), roof_mat)
-	_create_static_box(parent, "Parapet_South", Vector3(0, parapet_y, half_z + thickness/2.0), Vector3(x_width + thickness * 2.0, parapet_height, thickness), roof_mat)
-
 	if is_empty:
 		return
 	
@@ -459,26 +418,27 @@ func _generate_single_room(parent: Node, f_scale: float, f_num: int, orig_num: i
 	elif orig_num == 420: inst.position = Vector3(base_x * f_scale, 0, 15.0 * f_scale)
 	elif orig_num == 421: inst.position = Vector3(base_x * f_scale, 0, 20.0 * f_scale)
 
-func _create_static_box(parent: Node, node_name: String, pos: Vector3, size: Vector3, mat: Material) -> void:
-	var static_body = StaticBody3D.new()
-	static_body.name = node_name
-	static_body.position = pos
-	static_body.collision_layer = 2 # Matches old floor layer
+func _create_static_box(parent: Node, b_name: String, pos: Vector3, size: Vector3, mat: Material = null) -> void:
+	var body = StaticBody3D.new()
+	body.name = b_name
+	body.position = pos
+	body.collision_layer = 2 # Matches old floor layer
+	
+	var c_shape = CollisionShape3D.new()
+	var box_shape = BoxShape3D.new()
+	box_shape.size = size
+	c_shape.shape = box_shape
+	body.add_child(c_shape)
 	
 	var mesh_inst = MeshInstance3D.new()
 	var box_mesh = BoxMesh.new()
 	box_mesh.size = size
-	box_mesh.material = mat
+	if mat:
+		box_mesh.material = mat
 	mesh_inst.mesh = box_mesh
-	static_body.add_child(mesh_inst)
+	body.add_child(mesh_inst)
 	
-	var coll = CollisionShape3D.new()
-	var box_shape = BoxShape3D.new()
-	box_shape.size = size
-	coll.shape = box_shape
-	static_body.add_child(coll)
-	
-	parent.add_child(static_body)
+	parent.add_child(body)
 
 func _spawn_cassettes(parent: Node, f_scale: float) -> void:
 	var scene = load("res://entities/interactables/vhs_tape.tscn")
