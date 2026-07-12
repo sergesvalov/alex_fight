@@ -37,7 +37,6 @@ window/vsync/vsync_mode=0
 [xr]
 
 openxr/enabled=false
-openxr/enabled.vr=true
 shaders/enabled=true
 openxr/startup_alert=false
 openxr/default_action_map="res://openxr_action_map.tres"
@@ -50,7 +49,7 @@ openxr/default_action_map="res://openxr_action_map.tres"
 [rendering]
 
 renderer/rendering_method="mobile"
-renderer/rendering_method.mobile="mobile"
+renderer/rendering_method.mobile="gl_compatibility"
 vrs/mode=1
 environment/defaults/default_environment="res://default_env.tres"
 limits/global_shader_variables/buffer_size=65536

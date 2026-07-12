@@ -61,6 +61,8 @@ pipeline {
                         sh "if [ -f export_presets.cfg ]; then sed -i -E \"s/version\\/name=\\\".*\\\"/version\\/name=\\\"1.0.${env.BUILD_NUMBER}\\\"/\" export_presets.cfg; fi"
 
                         // --- Import Assets ---
+                        echo "Подготовка дефолтного конфига для импорта и тестов (PC)..."
+                        sh "cp configs/project.pc.godot project.godot"
                         echo "Импорт ассетов Godot (создание кэша .godot/)..."
                         sh "if [ -f project.godot ]; then godot --headless --editor --quit || true; fi"
 
@@ -122,6 +124,8 @@ pipeline {
                             echo "Запуск экспорта Android-проектов (Phone & VR)..."
                             sh '''
                             if grep -q 'name="Android"' export_presets.cfg 2>/dev/null; then
+                                echo "Копируем конфиг телефона..."
+                                cp configs/project.phone.godot project.godot
                                 godot --headless --export-release "Android" build/alex_fight.apk || true
                                 if [ ! -f "build/alex_fight.apk" ]; then echo 'APK build failed!'; exit 1; fi
                             else
@@ -129,6 +133,8 @@ pipeline {
                             fi
                             
                             if grep -q 'name="Android Quest 2"' export_presets.cfg 2>/dev/null; then
+                                echo "Копируем конфиг VR..."
+                                cp configs/project.vr.godot project.godot
                                 godot --headless --export-release "Android Quest 2" build/alex_fight_vr.apk || true
                                 if [ ! -f "build/alex_fight_vr.apk" ]; then echo 'VR APK build failed!'; exit 1; fi
                             else
@@ -142,6 +148,8 @@ pipeline {
                                 echo "Запуск экспорта Windows-проекта для теста..."
                                 sh '''
                                 if grep -q 'name="Windows Desktop"' export_presets.cfg 2>/dev/null; then
+                                    echo "Копируем конфиг ПК..."
+                                    cp configs/project.pc.godot project.godot
                                     mkdir -p build/windows
                                     godot --headless --export-release "Windows Desktop" build/windows/alex_fight.exe || true
                                     if [ ! -f "build/windows/alex_fight.exe" ]; then echo 'Windows build failed!'; exit 1; fi
@@ -163,6 +171,8 @@ pipeline {
                                 echo "Запуск экспорта macOS-проекта..."
                                 sh '''
                                 if grep -q 'name="macOS"' export_presets.cfg 2>/dev/null; then
+                                    echo "Копируем конфиг ПК..."
+                                    cp configs/project.pc.godot project.godot
                                     mkdir -p build/mac
                                     godot --headless --export-release "macOS" build/mac/alex_fight_mac.zip || true
                                     if [ ! -f "build/mac/alex_fight_mac.zip" ]; then echo 'macOS build failed!'; exit 1; fi
