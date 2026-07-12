@@ -153,17 +153,17 @@ func _build_floor_geometry(f_num: int, y_offset: float, suffix: String, c_color:
 	if f_num == 1:
 		_create_static_box(parent, "Floor_NorthStairs", Vector3(1.05 * f_scale, floor_y, -27.6 * f_scale), Vector3(7.6 * f_scale, floor_thick, 4.8 * f_scale), floor_mat)
 
-	if is_empty:
-		return
-	
-	# 3.5 Maintenance Room
-	_generate_maintenance_room(parent, f_scale, height, thickness, wall_mat)
-	
 	# 3.6 Elevator
 	_generate_elevator(parent, f_scale, height, thickness, wall_mat, f_num)
 	
 	# 3.7 North Stairs
 	_generate_north_stairs(parent, f_scale)
+
+	if is_empty:
+		return
+	
+	# 3.5 Maintenance Room
+	_generate_maintenance_room(parent, f_scale, height, thickness, wall_mat)
 	
 	# 3.7.5 South Stairs Wall
 	_generate_south_stairs_wall(parent, f_scale, height, thickness, wall_mat)
