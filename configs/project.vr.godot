@@ -50,11 +50,11 @@ openxr/default_action_map="res://openxr_action_map.tres"
 
 renderer/rendering_method="mobile"
 renderer/rendering_method.mobile="mobile"
-vrs/mode=1
+vrs/mode=0
 environment/defaults/default_environment="res://default_env.tres"
 limits/global_shader_variables/buffer_size=65536
-scaling_3d/mode=2
-scaling_3d/scale=0.75
+scaling_3d/mode=0
+scaling_3d/scale=1.0
 occlusion_culling/use_occlusion_culling=true
 textures/vram_compression/import_etc2_astc=true
 
