@@ -15,11 +15,11 @@ const CEIL_BIAS: float = 0.001
 @export var map_texture: Texture2D = null
 @export var empty_box_mode: bool = false
 
-var carpet_texture = preload("res://assets/textures/hotel_carpet.jpg")
-var wall_texture = preload("res://assets/textures/hotel_wallpaper.jpg")
-var retro_wall_texture = preload("res://assets/textures/retro_wallpaper.png")
-var ceiling_texture = preload("res://assets/textures/hotel_wallpaper.jpg")
-var floor_texture = preload("res://assets/textures/hotel_carpet.jpg")
+var carpet_texture = load("res://assets/textures/hotel_carpet.jpg")
+var wall_texture = load("res://assets/textures/hotel_wallpaper.jpg")
+var retro_wall_texture = load("res://assets/textures/retro_wallpaper.png")
+var ceiling_texture = load("res://assets/textures/hotel_wallpaper.jpg")
+var floor_texture = load("res://assets/textures/hotel_carpet.jpg")
 
 func _ready() -> void:
 	GameStateManager.all_tapes_collected.connect(_on_all_tapes_collected)
@@ -509,7 +509,7 @@ func _generate_roof(y_offset: float, f_scale: float) -> void:
 	var floor_thick = floor_thickness * f_scale
 	
 	var roof_mat = StandardMaterial3D.new()
-	var roof_tex = preload("res://assets/textures/roof_concrete.png")
+	var roof_tex = load("res://assets/textures/roof_concrete.png")
 	roof_mat.albedo_texture = roof_tex
 	roof_mat.uv1_scale = Vector3(10, 10, 10)
 	roof_mat.albedo_color = Color(0.8, 0.8, 0.8)
