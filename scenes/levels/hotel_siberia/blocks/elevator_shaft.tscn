@@ -70,7 +70,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.14, 1.2, 2.5)
 size = Vector3(0.02, 0.8, 0.4)
 material = SubResource("StandardMaterial3D_panel")
 
-[node name="ButtonFloor4" type="StaticBody3D" parent="ElevatorPanel"]
+[node name="ButtonFloor4" type="AnimatableBody3D" parent="ElevatorPanel"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.01, 0.1, 0)
 collision_layer = 5
 script = ExtResource("4_btn")
