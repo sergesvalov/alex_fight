@@ -53,8 +53,39 @@ func _ready() -> void:
 		
 	# Setup audio
 	sfx_hum = AudioStreamPlayer3D.new()
+	var stream = load("res://assets/audio/elevator_music.wav")
+	if stream is AudioStreamWAV:
+		stream.loop_mode = AudioStreamWAV.LOOP_FORWARD
+	sfx_hum.stream = stream
 	add_child(sfx_hum)
 	add_to_group("elevator_controller")
+	
+	# Setup interior detection
+	var interior_area = Area3D.new()
+	interior_area.collision_layer = 0
+	interior_area.collision_mask = 1 # Player layer
+	var coll = CollisionShape3D.new()
+	var shape = BoxShape3D.new()
+	shape.size = Vector3(3.5, 4.0, 4.0)
+	coll.shape = shape
+	interior_area.add_child(coll)
+	interior_area.position = Vector3(0, 2.0, 2.5)
+	add_child(interior_area)
+	interior_area.body_entered.connect(func(b): if b.name == "Player": player_inside = true)
+	interior_area.body_exited.connect(func(b): if b.name == "Player": player_inside = false)
+
+var player_inside: bool = false
+
+func _process(_delta: float) -> void:
+	var door = get_node_or_null("ElevatorDoor/AnimatableBody3D")
+	var is_door_closed = (door and not door.is_open)
+	
+	if player_inside and is_door_closed:
+		if not sfx_hum.playing:
+			sfx_hum.play()
+	else:
+		if sfx_hum.playing:
+			sfx_hum.stop()
 
 func _on_button_pressed(floor_num: int) -> void:
 	print("Elevator button pressed for floor: ", floor_num)
@@ -70,9 +101,6 @@ func _run_elevator_sequence(target_floor: int) -> void:
 		
 	print("Elevator moving to floor ", target_floor)
 	
-	if sfx_hum.stream:
-		sfx_hum.play()
-		
 	# 2. Delay for movement
 	await get_tree().create_timer(1.0).timeout
 	
@@ -118,8 +146,6 @@ func _run_elevator_sequence(target_floor: int) -> void:
 
 func _arrive_and_open() -> void:
 	print("Elevator arrived!")
-	if sfx_hum.playing:
-		sfx_hum.stop()
 		
 	var door_animatable = get_node_or_null("ElevatorDoor/AnimatableBody3D")
 	if door_animatable and not door_animatable.is_open:
