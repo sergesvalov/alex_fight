@@ -439,17 +439,35 @@ func _create_static_box(parent: Node, node_name: String, pos: Vector3, size: Vec
 	
 	parent.add_child(static_body)
 
+func _find_wardrobes(node: Node, arr: Array) -> void:
+	if node.name.begins_with("Wardrobe"):
+		arr.append(node)
+	for child in node.get_children():
+		_find_wardrobes(child, arr)
+
 func _spawn_cassettes(parent: Node, f_scale: float) -> void:
 	var scene = load("res://entities/interactables/vhs_tape.tscn")
 	if not scene: return
-	for i in range(5):
+	
+	var wardrobes = []
+	_find_wardrobes(parent, wardrobes)
+	var chosen_wardrobe = null
+	if wardrobes.size() > 0:
+		chosen_wardrobe = wardrobes[randi() % wardrobes.size()]
+		
+	for i in range(3):
 		var inst = scene.instantiate()
 		inst.name = "Cassette_" + str(i)
 		parent.add_child(inst)
-		var rand_x = randf_range(-2.0, 4.0)
-		var rand_z = randf_range(-20.0, 40.0)
-		inst.position = Vector3(rand_x * f_scale, 0.5 * f_scale, rand_z * f_scale)
-		inst.rotation.y = randf_range(0, PI * 2)
+		
+		if i == 0 and chosen_wardrobe != null:
+			inst.global_transform = chosen_wardrobe.global_transform
+			inst.global_position += chosen_wardrobe.global_basis * Vector3(0.0, 1.15, 0.05)
+		else:
+			var rand_x = randf_range(-2.0, 4.0)
+			var rand_z = randf_range(-20.0, 40.0)
+			inst.position = Vector3(rand_x * f_scale, 0.5 * f_scale, rand_z * f_scale)
+			inst.rotation.y = randf_range(0, PI * 2)
 
 func _spawn_cerberus(parent: Node, f_scale: float) -> void:
 	var scene = load("res://entities/enemies/cerberus/cerberus.tscn")
