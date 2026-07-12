@@ -1,5 +1,9 @@
 pipeline {
     agent { label 'built-in' } // Для старых версий Jenkins (до 2.319) используйте label 'master'
+    
+    options {
+        timeout(time: 1, unit: 'HOURS')
+    }
 
     parameters {
         booleanParam(name: 'RUN_TESTS', defaultValue: false, description: 'Запускать ли автотесты Godot перед сборкой')
