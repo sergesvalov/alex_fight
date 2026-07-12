@@ -28,6 +28,15 @@ func _ready() -> void:
         var right_hand = $XROrigin3D/RightController
         right_hand.add_child(weapon_holder)
         weapon_holder.position = Vector3.ZERO
+        weapon_holder.rotation = Vector3(deg_to_rad(-45), 0, 0)
+        
+        # Move RayCastGun to RightController so aiming the controller actually aims the gun
+        var ray_gun = $CameraRig/Camera3D/RayCastGun
+        ray_gun.get_parent().remove_child(ray_gun)
+        right_hand.add_child(ray_gun)
+        ray_gun.position = Vector3.ZERO
+        ray_gun.rotation = Vector3(deg_to_rad(-45), 0, 0)
+        weapon_holder.position = Vector3.ZERO
         # Optional: rotate weapon so it aligns with the VR controller's natural pointing angle
         # Usually, an X rotation of roughly -40 to -60 degrees helps it feel like a gun in hand.
         # But for now, we'll zero it out and see if the user likes it.
@@ -41,6 +50,16 @@ func _ready() -> void:
         var flashlight = $CameraRig/Camera3D/Flashlight
         flashlight.get_parent().remove_child(flashlight)
         $XROrigin3D/XRCamera3D.add_child(flashlight)
+        
+        # Move Interaction RayCast3D to RightController so we interact with hand, not face
+        var inter_ray = $CameraRig/Camera3D/RayCast3D
+        inter_ray.get_parent().remove_child(inter_ray)
+        right_hand.add_child(inter_ray)
+        inter_ray.position = Vector3.ZERO
+        inter_ray.rotation = Vector3(deg_to_rad(-45), 0, 0)
+        
+        # Completely remove the old desktop camera to prevent renderer conflicts that break 3D
+        $CameraRig/Camera3D.queue_free()
         
         # Setup VR HUD
         call_deferred("_setup_vr_hud")
@@ -110,13 +129,26 @@ func _physics_process(delta: float) -> void:
     if is_vr:
         var left_hand = get_node_or_null("XROrigin3D/LeftController")
         if left_hand and left_hand.get_tracker_name() != "":
-            movement.set_move_input(left_hand.get_vector2("primary"))
+            var joy_left = left_hand.get_vector2("primary")
+            if joy_left == Vector2.ZERO: joy_left = left_hand.get_vector2("default")
+            # Invert Y because OpenXR returns positive Y for UP, but Godot Input expects negative Y for UP (forward)
+            movement.set_move_input(Vector2(joy_left.x, -joy_left.y))
             
         var right_hand = get_node_or_null("XROrigin3D/RightController")
         if right_hand and right_hand.get_tracker_name() != "":
             var right_joy = right_hand.get_vector2("primary")
-            if abs(right_joy.x) > 0.1:
-                rotate_y(-right_joy.x * 2.5 * delta)
+            if right_joy == Vector2.ZERO: right_joy = right_hand.get_vector2("default")
+            
+            if abs(right_joy.x) > 0.2: # Increased deadzone slightly
+                var angle = -right_joy.x * 2.5 * delta
+                var xr_origin = $XROrigin3D
+                var xr_cam = $XROrigin3D/XRCamera3D
+                var head_pos = xr_cam.global_position
+                
+                # Rotate XROrigin3D around the physical head's position
+                xr_origin.global_translate(-head_pos)
+                xr_origin.global_rotate(Vector3.UP, angle)
+                xr_origin.global_translate(head_pos)
         
     movement.process_movement(delta)
 
