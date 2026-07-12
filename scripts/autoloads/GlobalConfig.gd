@@ -1,3 +1,4 @@
+@tool
 extends Node
 
 # Configuration for room furniture positioning to keep them relative to walls when scaling
