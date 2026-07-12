@@ -1,7 +1,6 @@
-@tool
-extends SceneTreeScript
+extends Node
 
-func _run() -> void:
+func _ready() -> void:
 	print("--- ELEVATOR DOOR ALIGNMENT TEST ---")
 	
 	var shaft = load("res://scenes/levels/hotel_siberia/blocks/elevator_shaft.tscn").instantiate()
@@ -93,4 +92,4 @@ func _run() -> void:
 				line += "W"
 		print(line)
 		
-	quit()
+	get_tree().quit(0)
