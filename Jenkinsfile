@@ -98,6 +98,10 @@ pipeline {
                                     echo '❌ АВТОТЕСТ ГРАНИЦ СЕВЕРНОЙ ЛЕСТНИЦЫ ПРОВАЛЕН!'
                                     exit 1
                                 }
+                                godot --headless tests/test_north_stairs_map.tscn || {
+                                    echo '❌ АВТОТЕСТ КАРТЫ СЕВЕРНОЙ ЛЕСТНИЦЫ ПРОВАЛЕН!'
+                                    exit 1
+                                }
                                 echo '✅ ВСЕ АВТОТЕСТЫ ПРОЙДЕНЫ!'
                                 '''
                             } else {
