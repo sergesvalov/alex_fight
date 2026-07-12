@@ -1,8 +1,8 @@
 [gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://scripts/interactables/sliding_door.gd" id="1_script"]
-[ext_resource type="AudioStream" uid="uid://cx6i46k766v1k" path="res://assets/audio/sfx/door_open.wav" id="2_open"]
-[ext_resource type="AudioStream" uid="uid://dnss02q85jypb" path="res://assets/audio/sfx/door_close.wav" id="3_close"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/door_open.wav" id="2_open"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/door_close.wav" id="3_close"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_door"]
 albedo_color = Color(0.4, 0.4, 0.45, 1)
