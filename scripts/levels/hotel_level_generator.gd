@@ -118,10 +118,10 @@ func _build_floor_geometry(f_num: int, y_offset: float, suffix: String, c_color:
 	wall_mat.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_ALWAYS
 
 	# 1 & 2. Floor and Ceiling (Split into 3 parts to leave a hole for North Stairs)
-	var z_south_len = 55.2 * f_scale
-	var z_south_pos = 2.4 * f_scale
-	var z_north_len = 4.8 * f_scale
-	var z_north_pos = -27.6 * f_scale
+	var z_south_len = 55.18 * f_scale
+	var z_south_pos = 2.41 * f_scale
+	var z_north_len = 4.82 * f_scale
+	var z_north_pos = -27.59 * f_scale
 	
 	var x_nw_len = 10.1 * f_scale
 	var x_nw_pos = -7.6 * f_scale
