@@ -8,6 +8,7 @@ pipeline {
     parameters {
         booleanParam(name: 'RUN_TESTS', defaultValue: false, description: 'Запускать ли автотесты Godot перед сборкой')
         booleanParam(name: 'BUILD_MAC', defaultValue: false, description: 'Собирать ли версию для macOS')
+        booleanParam(name: 'BUILD_WINDOWS', defaultValue: true, description: 'Собирать ли версию для ПК (Windows)')
     }
 
     environment {
@@ -137,20 +138,24 @@ pipeline {
                         }
                         
                         stage('Build PC (Windows)') {
-                            echo "Запуск экспорта Windows-проекта для теста..."
-                            sh '''
-                            if grep -q 'name="Windows Desktop"' export_presets.cfg 2>/dev/null; then
-                                mkdir -p build/windows
-                                godot --headless --export-release "Windows Desktop" build/windows/alex_fight.exe || true
-                                if [ ! -f "build/windows/alex_fight.exe" ]; then echo 'Windows build failed!'; exit 1; fi
-                                
-                                echo "Архивируем сборку ПК в ZIP..."
-                                apt-get update && apt-get install -y zip
-                                cd build/windows && zip -r ../alex_fight_pc_test.zip * && cd ../..
-                            else
-                                echo "Пресет 'Windows Desktop' не найден. Сборка под ПК пропущена."
-                            fi
-                            '''
+                            if (params.BUILD_WINDOWS) {
+                                echo "Запуск экспорта Windows-проекта для теста..."
+                                sh '''
+                                if grep -q 'name="Windows Desktop"' export_presets.cfg 2>/dev/null; then
+                                    mkdir -p build/windows
+                                    godot --headless --export-release "Windows Desktop" build/windows/alex_fight.exe || true
+                                    if [ ! -f "build/windows/alex_fight.exe" ]; then echo 'Windows build failed!'; exit 1; fi
+                                    
+                                    echo "Архивируем сборку ПК в ZIP..."
+                                    apt-get update && apt-get install -y zip
+                                    cd build/windows && zip -r ../alex_fight_pc_test.zip * && cd ../..
+                                else
+                                    echo "Пресет 'Windows Desktop' не найден. Сборка под ПК пропущена."
+                                fi
+                                '''
+                            } else {
+                                echo "Сборка для Windows пропущена (BUILD_WINDOWS = false)"
+                            }
                         }
 
                         stage('Build Mac (macOS)') {
