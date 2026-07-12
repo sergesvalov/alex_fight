@@ -1,13 +1,59 @@
-[gd_scene load_steps=2 format=3 uid="uid://wardrobe_123"]
+[gd_scene load_steps=5 format=3 uid="uid://wardrobe_123"]
+
+[ext_resource type="Script" path="res://scripts/interactables/wardrobe_door.gd" id="1_script"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wood"]
 albedo_color = Color(0.25, 0.15, 0.05, 1)
 
-[node name="Wardrobe" type="CSGCombiner3D"]
+[sub_resource type="BoxMesh" id="BoxMesh_door"]
+material = SubResource("StandardMaterial3D_wood")
+size = Vector3(0.58, 2.1, 0.05)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_door"]
+size = Vector3(0.58, 2.1, 0.05)
+
+[node name="Wardrobe" type="Node3D"]
+
+[node name="Geometry" type="CSGCombiner3D" parent="."]
 use_collision = true
 collision_layer = 2
 
-[node name="Body" type="CSGBox3D" parent="."]
+[node name="Body" type="CSGBox3D" parent="Geometry"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 1.1, 0.0)
 size = Vector3(1.2, 2.2, 0.6)
 material = SubResource("StandardMaterial3D_wood")
+
+[node name="Inside" type="CSGBox3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 1.1, 0.05)
+operation = 2
+size = Vector3(1.1, 2.1, 0.55)
+
+[node name="DoorLeft" type="AnimatableBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.58, 0, 0.3)
+collision_layer = 7
+collision_mask = 0
+script = ExtResource("1_script")
+open_angle = -1.5708
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="DoorLeft"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.29, 1.1, 0)
+mesh = SubResource("BoxMesh_door")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DoorLeft"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.29, 1.1, 0)
+shape = SubResource("BoxShape3D_door")
+
+[node name="DoorRight" type="AnimatableBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.58, 0, 0.3)
+collision_layer = 7
+collision_mask = 0
+script = ExtResource("1_script")
+open_angle = 1.5708
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="DoorRight"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.29, 1.1, 0)
+mesh = SubResource("BoxMesh_door")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DoorRight"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.29, 1.1, 0)
+shape = SubResource("BoxShape3D_door")
