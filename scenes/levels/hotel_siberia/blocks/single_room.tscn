@@ -5,6 +5,7 @@
 [ext_resource type="PackedScene" path="res://entities/props/door.tscn" id="10_door"]
 [ext_resource type="PackedScene" uid="uid://bed_123" path="res://entities/props/bed.tscn" id="5_bed"]
 [ext_resource type="PackedScene" uid="uid://table_123" path="res://entities/props/table.tscn" id="6_table"]
+[ext_resource type="PackedScene" uid="uid://chair_123" path="res://entities/props/chair.tscn" id="7_chair"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wall"]
 albedo_texture = ExtResource("1_wallpaper")
@@ -93,7 +94,10 @@ shadow_enabled = true
 [node name="Bed" parent="." instance=ExtResource("5_bed")]
 transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 2.9, 0.0, 4.23)
 
-# Стол: повёрнут +90° по Y → длинная сторона (1.0м) вдоль восточной стены (ось Z).
-# Прижат к восточной стене (X≈3.35), севернее кровати (Z=1.2).
+# Стол: длинная сторона вдоль восточной стены.
 [node name="Table" parent="." instance=ExtResource("6_table")]
-transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 3.35, 0.0, 1.2)
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 3.55, 0.0, 1.93)
+
+# Стул: перед столом, смотрит на восток
+[node name="Chair" parent="." instance=ExtResource("7_chair")]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 3.0, 0.0, 1.93)
