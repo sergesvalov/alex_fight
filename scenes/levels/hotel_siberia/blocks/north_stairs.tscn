@@ -38,40 +38,46 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 2.25, 4.9)
 size = Vector3(7.6, 4.5, 0.2)
 material = SubResource("StandardMaterial3D_wall")
 
-[node name="EastFloor" type="CSGBox3D" parent="StairsGeometry"]
+[node name="StairsInternal" type="CSGCombiner3D" parent="."]
+use_collision = true
+collision_layer = 2
+
+
+[node name="EastFloor" type="CSGBox3D" parent="StairsInternal"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, 0.0, 4.3)
 size = Vector3(2.4, 0.2, 1.2)
 material = SubResource("StandardMaterial3D_floor")
 
-[node name="EastFlight" type="CSGBox3D" parent="StairsGeometry"]
+
+[node name="EastFlight" type="CSGBox3D" parent="StairsInternal"]
 position = Vector3(2.5, 0.75, 2.45)
 rotation = Vector3(0.5404, 0, 0)
 size = Vector3(2.4, 0.2, 2.915)
 material = SubResource("StandardMaterial3D_floor")
 
-[node name="NELanding" type="CSGBox3D" parent="StairsGeometry"]
+[node name="NELanding" type="CSGBox3D" parent="StairsInternal"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, 1.5, 0.6)
 size = Vector3(2.4, 0.2, 1.2)
 material = SubResource("StandardMaterial3D_floor")
 
-[node name="NorthFlight" type="CSGBox3D" parent="StairsGeometry"]
+[node name="NorthFlight" type="CSGBox3D" parent="StairsInternal"]
 position = Vector3(0.0, 2.25, 0.6)
 rotation = Vector3(0, 0, -0.5236)
 size = Vector3(3.001, 0.2, 1.2)
 material = SubResource("StandardMaterial3D_floor")
 
-[node name="NWLanding" type="CSGBox3D" parent="StairsGeometry"]
+[node name="NWLanding" type="CSGBox3D" parent="StairsInternal"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5, 3.0, 0.6)
 size = Vector3(2.4, 0.2, 1.2)
 material = SubResource("StandardMaterial3D_floor")
 
-[node name="WestFlight" type="CSGBox3D" parent="StairsGeometry"]
+[node name="WestFlight" type="CSGBox3D" parent="StairsInternal"]
 position = Vector3(-2.5, 3.75, 2.45)
 rotation = Vector3(-0.5404, 0, 0)
 size = Vector3(2.4, 0.2, 2.915)
 material = SubResource("StandardMaterial3D_floor")
 
-[node name="WestFloor" type="CSGBox3D" parent="StairsGeometry"]
+[node name="WestFloor" type="CSGBox3D" parent="StairsInternal"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5, 4.5, 4.3)
 size = Vector3(2.4, 0.2, 1.2)
 material = SubResource("StandardMaterial3D_floor")
@@ -89,6 +95,11 @@ omni_range = 6.0
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.0, 5.0, 3.5)
 omni_range = 6.0
 
+[node name="StairsSouthWallTop" type="CSGBox3D" parent="StairsGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 5.75, 4.9)
+size = Vector3(7.6, 2.5, 0.2)
+material = SubResource("StandardMaterial3D_wall")
+
 [node name="DoorHoleEast" type="CSGBox3D" parent="StairsGeometry"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.8, 1.1, 4.9)
 operation = 2
@@ -98,9 +109,3 @@ size = Vector3(1.2, 2.2, 1.0)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.8, 5.6, 4.9)
 operation = 2
 size = Vector3(1.2, 2.2, 1.0)
-
-[node name="StairsSouthWallTop" type="CSGBox3D" parent="StairsGeometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 5.75, 4.9)
-size = Vector3(7.6, 2.5, 0.2)
-material = SubResource("StandardMaterial3D_wall")
-
