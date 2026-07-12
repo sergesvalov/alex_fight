@@ -135,6 +135,8 @@ pipeline {
                             if grep -q 'name="Android Quest 2"' export_presets.cfg 2>/dev/null; then
                                 echo "Копируем конфиг VR..."
                                 cp configs/project.vr.godot project.godot
+                                echo "Запуск автотеста конфигурации VR..."
+                                godot --headless -s tests/verify_vr_config.gd || { echo 'VR CONFIG TEST FAILED!'; exit 1; }
                                 godot --headless --export-release "Android Quest 2" build/alex_fight_vr.apk || true
                                 if [ ! -f "build/alex_fight_vr.apk" ]; then echo 'VR APK build failed!'; exit 1; fi
                             else
