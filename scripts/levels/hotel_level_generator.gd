@@ -17,6 +17,7 @@ const CEIL_BIAS: float = 0.001
 
 var carpet_texture = preload("res://assets/textures/hotel_carpet.jpg")
 var wall_texture = preload("res://assets/textures/hotel_wallpaper.jpg")
+var retro_wall_texture = preload("res://assets/textures/retro_wallpaper.png")
 var ceiling_texture = preload("res://assets/textures/hotel_wallpaper.jpg")
 var floor_texture = preload("res://assets/textures/hotel_carpet.jpg")
 
@@ -121,7 +122,10 @@ func _build_floor_geometry(f_num: int, y_offset: float, suffix: String, c_color:
 	ceil_mat.cull_mode = BaseMaterial3D.CULL_BACK
 	
 	var wall_mat = StandardMaterial3D.new()
-	wall_mat.albedo_texture = wall_texture
+	if f_num == 1:
+		wall_mat.albedo_texture = retro_wall_texture
+	else:
+		wall_mat.albedo_texture = wall_texture
 	wall_mat.uv1_scale = Vector3(15, 3, 1)
 	wall_mat.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_ALWAYS
 
@@ -597,3 +601,20 @@ func _create_portal_for_room(room_idx: int, floor_num: int, target_room_idx: int
 		area.target_position = target_pos
 		
 	hole.add_child(area)
+
+var _retro_wall_mat: StandardMaterial3D
+
+func _apply_retro_wallpaper(room_inst: Node3D) -> void:
+	if not _retro_wall_mat:
+		_retro_wall_mat = StandardMaterial3D.new()
+		_retro_wall_mat.albedo_texture = retro_wall_texture
+		_retro_wall_mat.uv1_scale = Vector3(20, 2, 2)
+		_retro_wall_mat.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_ALWAYS
+	
+	var geometry = room_inst.get_node_or_null("RoomGeometry")
+	if geometry:
+		for child in geometry.get_children():
+			if child is CSGBox3D and "Wall" in child.name:
+				child.material = _retro_wall_mat
+			elif child is CSGCombiner3D and child.name == "RoomNorthWall":
+				child.material = _retro_wall_mat
