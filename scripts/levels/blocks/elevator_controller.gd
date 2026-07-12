@@ -1,9 +1,8 @@
 extends Node3D
 class_name ElevatorController
 
-@onready var door_animatable = $ElevatorDoor/AnimatableBody3D
-@onready var panel = $ElevatorGeometry/ElevatorPanel
-@onready var button = $ElevatorGeometry/ElevatorPanel/ButtonFloor4
+@onready var panel = $ElevatorPanel
+@onready var button = $ElevatorPanel/ButtonFloor4
 
 # We'll create an AudioStreamPlayer3D for the hum dynamically if not present
 var sfx_hum: AudioStreamPlayer3D
@@ -25,8 +24,9 @@ func _on_button_pressed(floor_num: int) -> void:
 	_run_elevator_sequence()
 
 func _run_elevator_sequence() -> void:
+	var door_animatable = get_node_or_null("ElevatorDoor/AnimatableBody3D")
 	# 1. Close doors if open
-	if door_animatable.is_open:
+	if door_animatable and door_animatable.is_open:
 		door_animatable.interact(null) # triggers closing
 		await get_tree().create_timer(door_animatable.move_time + 0.5).timeout
 	else:
@@ -35,7 +35,7 @@ func _run_elevator_sequence() -> void:
 		pass
 		
 	# Ensure closed
-	if door_animatable.is_open:
+	if door_animatable and door_animatable.is_open:
 		door_animatable.interact(null)
 		await get_tree().create_timer(door_animatable.move_time + 0.5).timeout
 		
@@ -52,5 +52,5 @@ func _run_elevator_sequence() -> void:
 		sfx_hum.stop()
 		
 	# 4. Open doors
-	if not door_animatable.is_open:
+	if door_animatable and not door_animatable.is_open:
 		door_animatable.interact(null)
