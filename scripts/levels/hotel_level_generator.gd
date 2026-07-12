@@ -304,7 +304,7 @@ func _generate_elevator(parent: Node, f_scale: float, height: float, thickness: 
 			door_inst.name = "ElevatorDoor"
 			inst.add_child(door_inst)
 			door_inst.position = Vector3(0, 0, 0.1 * f_scale)
-			door_inst.scale = Vector3(1.428, 1.0, 1.0)
+			door_inst.scale = Vector3(1.5, 1.05, 0.25)
 			
 		var btn_script = load("res://scripts/interactables/elevator_button.gd")
 		if btn_script:
