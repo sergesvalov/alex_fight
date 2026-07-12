@@ -439,21 +439,27 @@ func _create_static_box(parent: Node, node_name: String, pos: Vector3, size: Vec
 	
 	parent.add_child(static_body)
 
-func _find_wardrobes(node: Node, arr: Array) -> void:
-	if node.name.begins_with("Wardrobe"):
+func _find_props(node: Node, prop_name: String, arr: Array) -> void:
+	if node.name.begins_with(prop_name):
 		arr.append(node)
 	for child in node.get_children():
-		_find_wardrobes(child, arr)
+		_find_props(child, prop_name, arr)
 
 func _spawn_cassettes(parent: Node, f_scale: float) -> void:
 	var scene = load("res://entities/interactables/vhs_tape.tscn")
 	if not scene: return
 	
 	var wardrobes = []
-	_find_wardrobes(parent, wardrobes)
+	_find_props(parent, "Wardrobe", wardrobes)
 	var chosen_wardrobe = null
 	if wardrobes.size() > 0:
 		chosen_wardrobe = wardrobes[randi() % wardrobes.size()]
+
+	var tables = []
+	_find_props(parent, "Table", tables)
+	var chosen_table = null
+	if tables.size() > 0:
+		chosen_table = tables[randi() % tables.size()]
 		
 	for i in range(3):
 		var inst = scene.instantiate()
@@ -463,6 +469,12 @@ func _spawn_cassettes(parent: Node, f_scale: float) -> void:
 		if i == 0 and chosen_wardrobe != null:
 			inst.global_transform = chosen_wardrobe.global_transform
 			inst.global_position += chosen_wardrobe.global_basis * Vector3(0.0, 1.15, 0.05)
+		elif i == 1 and chosen_table != null:
+			inst.global_transform = chosen_table.global_transform
+			inst.global_position += chosen_table.global_basis * Vector3(0.0, 0.8, 0.0)
+		elif i == 2:
+			inst.position = Vector3(7.2 * f_scale, 0.05 * f_scale, -23.5 * f_scale)
+			inst.rotation.y = randf_range(0, PI * 2)
 		else:
 			var rand_x = randf_range(-2.0, 4.0)
 			var rand_z = randf_range(-20.0, 40.0)
