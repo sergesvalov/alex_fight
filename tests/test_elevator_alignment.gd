@@ -9,7 +9,7 @@ func _ready() -> void:
 	# Simulate generator logic
 	shaft.add_child(door)
 	door.position = Vector3(0, 0, 0.1)
-	door.scale = Vector3(1.5, 1.05, 0.25)
+	door.scale = Vector3(1.42, 1.0, 1.0)
 	
 	var hole = shaft.get_node("ElevatorGeometry/ElevatorDoorHole")
 	var door_mesh = door.get_node("AnimatableBody3D/MeshInstance3D")
