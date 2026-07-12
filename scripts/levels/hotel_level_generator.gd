@@ -509,7 +509,10 @@ func _generate_roof(y_offset: float, f_scale: float) -> void:
 	var floor_thick = floor_thickness * f_scale
 	
 	var roof_mat = StandardMaterial3D.new()
-	roof_mat.albedo_color = Color(0.5, 0.5, 0.5) # Flat grey
+	var roof_tex = preload("res://assets/textures/roof_concrete.png")
+	roof_mat.albedo_texture = roof_tex
+	roof_mat.uv1_scale = Vector3(10, 10, 10)
+	roof_mat.albedo_color = Color(0.8, 0.8, 0.8)
 	
 	# Roof slabs (same logic as floor slabs)
 	var floor_y = -floor_thick / 2.0
