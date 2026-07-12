@@ -21,7 +21,11 @@ var ceiling_texture = preload("res://assets/textures/hotel_wallpaper.jpg")
 var floor_texture = preload("res://assets/textures/hotel_carpet.jpg")
 
 func _ready() -> void:
+	GameStateManager.all_tapes_collected.connect(_on_all_tapes_collected)
 	_generate_level()
+	if GameStateManager.secret_portal_active:
+		_create_secret_portal()
+		
 	if not Engine.is_editor_hint():
 		# Allow physics to settle
 		await get_tree().physics_frame
@@ -529,3 +533,67 @@ func _generate_roof(y_offset: float, f_scale: float) -> void:
 	_create_static_box(parent, "Parapet_East", Vector3(half_x + thickness/2.0, parapet_y, 0), Vector3(thickness, parapet_height, z_length), roof_mat)
 	_create_static_box(parent, "Parapet_North", Vector3(0, parapet_y, -half_z - thickness/2.0), Vector3(x_width + thickness * 2.0, parapet_height, thickness), roof_mat)
 	_create_static_box(parent, "Parapet_South", Vector3(0, parapet_y, half_z + thickness/2.0), Vector3(x_width + thickness * 2.0, parapet_height, thickness), roof_mat)
+
+func _on_all_tapes_collected() -> void:
+	if GameStateManager.secret_portal_active: return
+	var valid_rooms = [1, 2, 3, 5, 6, 8, 10, 11, 12, 13, 15, 16, 17, 20, 21]
+	GameStateManager.secret_portal_room_a = valid_rooms[randi() % valid_rooms.size()]
+	GameStateManager.secret_portal_room_b = valid_rooms[randi() % valid_rooms.size()]
+	GameStateManager.secret_portal_active = true
+	_create_secret_portal()
+
+func _create_secret_portal() -> void:
+	_create_portal_for_room(GameStateManager.secret_portal_room_a, 4, GameStateManager.secret_portal_room_b, 3)
+	_create_portal_for_room(GameStateManager.secret_portal_room_b, 3, GameStateManager.secret_portal_room_a, 4)
+
+func _create_portal_for_room(room_idx: int, floor_num: int, target_room_idx: int, target_floor_num: int) -> void:
+	var is_single = (room_idx >= 10)
+	var prefix = "SingleRoom_" if is_single else "DoubleRoom_"
+	var room_name = prefix + str(floor_num * 100 + room_idx)
+	var room_node = find_child(room_name, true, false)
+	if not room_node: return
+	
+	var geometry = room_node.get_node_or_null("RoomGeometry")
+	if not geometry: return
+	
+	var hole = CSGBox3D.new()
+	hole.operation = CSGBox3D.OPERATION_SUBTRACTION
+	hole.size = Vector3(1.0, 2.2, 1.0)
+	
+	if is_single:
+		# West wall
+		hole.position = Vector3(-3.75, 1.1, 2.5)
+	else:
+		# East wall
+		hole.position = Vector3(4.8, 1.1, 5.0)
+		
+	geometry.add_child(hole)
+	
+	var area = Area3D.new()
+	area.collision_layer = 0
+	area.collision_mask = 1 # Player layer
+	
+	var coll = CollisionShape3D.new()
+	var shape = BoxShape3D.new()
+	shape.size = Vector3(0.8, 2.0, 0.8)
+	coll.shape = shape
+	area.add_child(coll)
+	
+	var script = load("res://scripts/interactables/secret_portal.gd")
+	if script:
+		area.set_script(script)
+		
+	var target_is_single = (target_room_idx >= 10)
+	var target_prefix = "SingleRoom_" if target_is_single else "DoubleRoom_"
+	var target_room_name = target_prefix + str(target_floor_num * 100 + target_room_idx)
+	var target_room_node = find_child(target_room_name, true, false)
+	
+	if target_room_node:
+		var target_pos = target_room_node.global_position
+		if target_is_single:
+			target_pos += target_room_node.global_basis * Vector3(0, 0.5, 2.5)
+		else:
+			target_pos += target_room_node.global_basis * Vector3(0, 0.5, 5.0)
+		area.target_position = target_pos
+		
+	hole.add_child(area)

@@ -25,6 +25,10 @@ var entered_from_stairs: bool = false
 var stair_spawn_position: Vector3 = Vector3.ZERO
 var stair_spawn_rotation: Vector3 = Vector3.ZERO
 
+var secret_portal_active: bool = false
+var secret_portal_room_a: int = 0  # e.g., 410
+var secret_portal_room_b: int = 0  # e.g., 310
+
 func change_state(new_state: GameState) -> void:
     current_state = new_state
     state_changed.emit(new_state)
