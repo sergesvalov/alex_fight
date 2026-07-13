@@ -634,9 +634,9 @@ func _create_portal_for_room(room_idx: int, floor_num: int, target_room_idx: int
 	if target_room_node:
 		var target_pos = target_room_node.global_position
 		if target_is_single:
-			target_pos += target_room_node.global_basis * Vector3(0, 0.5, 2.5)
+			target_pos += target_room_node.global_basis * Vector3(-1.5, 0.5, 2.5)
 		else:
-			target_pos += target_room_node.global_basis * Vector3(0, 0.5, 5.0)
+			target_pos += target_room_node.global_basis * Vector3(2.5, 0.5, 7.5)
 		area.target_position = target_pos
 		
 	hole.add_child(area)
