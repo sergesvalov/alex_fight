@@ -546,9 +546,9 @@ func _generate_roof(y_offset: float, f_scale: float) -> void:
 	var roof_tex = _load_texture_safe("res://assets/textures/roof_concrete.jpg")
 	if roof_tex:
 		roof_mat.albedo_texture = roof_tex
-		roof_mat.uv1_scale = Vector3(roof_uv, roof_uv, roof_uv)
+		roof_mat.uv1_scale = Vector3(10, 10, 10)
 	else:
-		roof_mat.albedo_color = Color(0.2, 0.2, 0.2)
+		roof_mat.albedo_color = Color(0.8, 0.8, 0.8)
 	
 	# Roof slabs (same logic as floor slabs)
 	var floor_y = -floor_thick / 2.0
