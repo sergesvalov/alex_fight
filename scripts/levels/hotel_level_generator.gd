@@ -129,20 +129,29 @@ func _build_floor_geometry(f_num: int, y_offset: float, suffix: String, c_color:
 	wall_mat.uv1_scale = Vector3(15, 3, 1)
 	wall_mat.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_ALWAYS
 
-	# 1 & 2. Floor and Ceiling (Split into 3 parts to leave a hole for North Stairs)
-	var z_south_len = 55.18 * f_scale
-	var z_south_pos = 2.41 * f_scale
+	# 1 & 2. Floor and Ceiling (Split into parts to leave holes for North and South Stairs)
+	var z_main_len = 50.18 * f_scale
+	var z_main_pos = -0.09 * f_scale
+	
 	var z_north_len = 4.82 * f_scale
 	var z_north_pos = -27.59 * f_scale
-	
 	var x_nw_len = 10.1 * f_scale
 	var x_nw_pos = -7.6 * f_scale
 	var x_ne_len = 8.0 * f_scale
 	var x_ne_pos = 8.65 * f_scale
 	
-	# South Main (covers everything from Z=-25.2 to Z=30.0)
-	_create_static_box(parent, "Floor_Main", Vector3(0, floor_y, z_south_pos), Vector3(x_width, floor_thick, z_south_len), floor_mat)
-	_create_static_box(parent, "Ceiling_Main", Vector3(0, ceil_y, z_south_pos), Vector3(x_width, floor_thick, z_south_len), ceil_mat)
+	var z_sw_len = 5.0 * f_scale
+	var z_sw_pos = 27.5 * f_scale
+	var x_sw_len = 12.98 * f_scale
+	var x_sw_pos = -6.16 * f_scale
+	
+	# Central Main (covers everything from Z=-25.18 to Z=25.0)
+	_create_static_box(parent, "Floor_Main", Vector3(0, floor_y, z_main_pos), Vector3(x_width, floor_thick, z_main_len), floor_mat)
+	_create_static_box(parent, "Ceiling_Main", Vector3(0, ceil_y, z_main_pos), Vector3(x_width, floor_thick, z_main_len), ceil_mat)
+	
+	# South West (covers Z=25.0 to 30.0, X=-12.65 to 0.33)
+	_create_static_box(parent, "Floor_SW", Vector3(x_sw_pos, floor_y, z_sw_pos), Vector3(x_sw_len, floor_thick, z_sw_len), floor_mat)
+	_create_static_box(parent, "Ceiling_SW", Vector3(x_sw_pos, ceil_y, z_sw_pos), Vector3(x_sw_len, floor_thick, z_sw_len), ceil_mat)
 	
 	# North West (covers Z=-30.0 to -25.2, X=-12.65 to -2.55)
 	_create_static_box(parent, "Floor_NW", Vector3(x_nw_pos, floor_y, z_north_pos), Vector3(x_nw_len, floor_thick, z_north_len), floor_mat)
@@ -166,6 +175,11 @@ func _build_floor_geometry(f_num: int, y_offset: float, suffix: String, c_color:
 	
 	if f_num == 1:
 		_create_static_box(parent, "Floor_NorthStairs", Vector3(1.05 * f_scale, floor_y, -27.6 * f_scale), Vector3(7.6 * f_scale, floor_thick, 4.8 * f_scale), floor_mat)
+		
+		# Fill the South Stairs hole for the ground floor
+		var x_se_len = 12.32 * f_scale
+		var x_se_pos = 6.49 * f_scale
+		_create_static_box(parent, "Floor_SouthStairs", Vector3(x_se_pos, floor_y, z_sw_pos), Vector3(x_se_len, floor_thick, z_sw_len), floor_mat)
 
 	# 3.6 Elevator
 	_generate_elevator(parent, f_scale, height, thickness, wall_mat, f_num)
