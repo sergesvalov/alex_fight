@@ -845,5 +845,6 @@ L     |  +----------+             +-------------+     L
 > **Fix:** Always use `intersect_ray()` (Raycasting) passing completely through the doorway opening. If the doorway is correctly subtracted, the raycast will return empty. This perfectly simulates a character walking through the door and is 100% robust.
 
 > [!IMPORTANT]
-> **Multi-Floor Wall Overlapping**
-> When dealing with looped levels (like the P.T. staircase), remember that `StairsSouthWall` of Floor N+1 may perfectly overlap `StairsSouthWallTop` of Floor N. If you rely on CSG subtraction to open doors, be sure you subtract from ALL intersecting solid geometry on the given coordinates, or physically avoid spawning redundant overlapping walls.
+> **Multi-Floor Wall Overlapping & Doorway Architecture**
+> When dealing with looped or stacked levels (like the P.T. staircase), **NEVER** extend a block's wall height (`StairsSouthWall`) into the next floor (e.g. making it 7m tall), and **NEVER** use overlapping boxes (like `StairsSouthWallTop`). Doing so creates **non-manifold overlapping geometry**, which completely breaks Godot's CSG subtraction (`operation = 2`).
+> **The Rule:** Each stair block's walls must strictly end at the floor height (4.5m). When a player climbs up from Floor N and exits at Y=4.5, they are exiting through the wall of **Floor N+1**. Therefore, `DoorHoleWest` (the upper exit) is located at the bottom (Y=1.05) of Floor N+1's block, piercing Floor N+1's wall to let the Floor N player out.
