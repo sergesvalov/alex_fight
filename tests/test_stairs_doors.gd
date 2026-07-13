@@ -16,6 +16,9 @@ func _ready() -> void:
 	generator.set_script(gen_script)
 	add_child(generator)
 	
+	print("⏳ Forcing CSG mesh generation (Headless workaround)...")
+	_force_csg_update(generator)
+	
 	print("⏳ Waiting for CSG processing...")
 	await get_tree().create_timer(1.0).timeout
 	
@@ -53,10 +56,16 @@ func _ready() -> void:
 	print("\n==================================================")
 	if errors > 0:
 		print("❌ Test FAILED with ", errors, " errors.")
-		get_tree().quit(1)
+		get_tree().quit(1 if errors > 0 else 0)
 	else:
 		print("✅ Test complete. All points passed.")
 		get_tree().quit(0)
+
+func _force_csg_update(node: Node) -> void:
+	if node is CSGShape3D:
+		node.get_meshes()
+	for child in node.get_children():
+		_force_csg_update(child)
 
 func _test_point(space_state: PhysicsDirectSpaceState3D, pos: Vector3, label: String, expected_hit: bool) -> int:
 	var p = PhysicsPointQueryParameters3D.new()
