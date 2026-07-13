@@ -33,25 +33,25 @@ func _ready() -> void:
 	print("\n--- Testing DoorHoleEast (Lower Entry) ---")
 	# Expected DoorEast center is X=3.85, Y=1.1, Z=-25.1
 	var east_door_pos = Vector3(3.85, 1.1, -25.1)
-	errors += _test_point(space_state, east_door_pos, "Center of DoorHoleEast", false)
-	errors += _test_point(space_state, east_door_pos + Vector3(0, 0.9, 0), "Top of DoorHoleEast", false)
-	errors += _test_point(space_state, east_door_pos + Vector3(0, -0.9, 0), "Bottom of DoorHoleEast", false)
+	errors += _test_ray(space_state, east_door_pos + Vector3(0, 0, 1.0), east_door_pos + Vector3(0, 0, -1.0), "Center of DoorHoleEast", false)
+	errors += _test_ray(space_state, east_door_pos + Vector3(0, 0.9, 1.0), east_door_pos + Vector3(0, 0.9, -1.0), "Top of DoorHoleEast", false)
+	errors += _test_ray(space_state, east_door_pos + Vector3(0, -0.9, 1.0), east_door_pos + Vector3(0, -0.9, -1.0), "Bottom of DoorHoleEast", false)
 	
 	print("\n--- Testing DoorHoleWest (Upper Exit) ---")
 	# Expected DoorWest center is X=-1.75, Y=5.6, Z=-25.1
 	var west_door_pos = Vector3(-1.75, 5.6, -25.1)
-	errors += _test_point(space_state, west_door_pos, "Center of DoorHoleWest", false)
+	errors += _test_ray(space_state, west_door_pos + Vector3(0, 0, 1.0), west_door_pos + Vector3(0, 0, -1.0), "Center of DoorHoleWest", false)
 	
 	print("\n--- Testing Solid Walls (Should return hit) ---")
 	# Solid wall between doors
 	var center_wall_pos = Vector3(1.05, 1.1, -25.1)
-	errors += _test_point(space_state, center_wall_pos, "Center South Wall (Y=1.1)", true)
+	errors += _test_ray(space_state, center_wall_pos + Vector3(0, 0, 1.0), center_wall_pos + Vector3(0, 0, -1.0), "Center South Wall (Y=1.1)", true)
 	
 	var west_wall_pos = Vector3(-1.75, 1.1, -25.1)
-	errors += _test_point(space_state, west_wall_pos, "West Wall under Door (Y=1.1)", true)
+	errors += _test_ray(space_state, west_wall_pos + Vector3(0, 0, 1.0), west_wall_pos + Vector3(0, 0, -1.0), "West Wall under Door (Y=1.1)", true)
 	
 	var east_wall_pos = Vector3(3.85, 5.6, -25.1)
-	errors += _test_point(space_state, east_wall_pos, "East Wall over Door (Y=5.6)", true)
+	errors += _test_ray(space_state, east_wall_pos + Vector3(0, 0, 1.0), east_wall_pos + Vector3(0, 0, -1.0), "East Wall over Door (Y=5.6)", true)
 	
 	print("\n==================================================")
 	if errors > 0:
@@ -67,23 +67,26 @@ func _force_csg_update(node: Node) -> void:
 	for child in node.get_children():
 		_force_csg_update(child)
 
-func _test_point(space_state: PhysicsDirectSpaceState3D, pos: Vector3, label: String, expected_hit: bool) -> int:
-	var p = PhysicsPointQueryParameters3D.new()
-	p.position = pos
-	p.collision_mask = 2 # Check for wall geometry
+func _test_ray(space_state: PhysicsDirectSpaceState3D, origin: Vector3, dest: Vector3, label: String, expected_hit: bool) -> int:
+	var p = PhysicsRayQueryParameters3D.new()
+	p.from = origin
+	p.to = dest
+	p.collide_with_areas = false
+	p.collide_with_bodies = true
+	var hit = space_state.intersect_ray(p)
 	
-	var results = space_state.intersect_point(p, 1)
-	var is_hit = results.size() > 0
+	var is_hit = not hit.is_empty()
+	var collider_name = hit.collider.name if is_hit else "None"
 	
 	if is_hit == expected_hit:
-		if is_hit:
-			print("✅ PASS | ", label, " (", pos, ") -> WALL BLOCKED! (Expected) by ", results[0].collider.name)
+		if expected_hit:
+			print("✅ PASS | ", label, " (", origin, " -> ", dest, ") -> WALL BLOCKED! (Expected) by ", collider_name)
 		else:
-			print("✅ PASS | ", label, " (", pos, ") -> OPENING CONFIRMED! (Expected)")
+			print("✅ PASS | ", label, " (", origin, " -> ", dest, ") -> CLEAR! (Expected)")
 		return 0
 	else:
-		if is_hit:
-			print("❌ FAIL | ", label, " (", pos, ") -> WALL BLOCKED! (UNEXPECTED) by ", results[0].collider.name)
+		if expected_hit:
+			print("❌ FAIL | ", label, " (", origin, " -> ", dest, ") -> CLEAR! (UNEXPECTED)")
 		else:
-			print("❌ FAIL | ", label, " (", pos, ") -> OPENING MISSING! (UNEXPECTED)")
+			print("❌ FAIL | ", label, " (", origin, " -> ", dest, ") -> WALL BLOCKED! (UNEXPECTED) by ", collider_name)
 		return 1
