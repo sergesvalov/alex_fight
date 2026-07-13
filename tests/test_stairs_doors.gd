@@ -16,14 +16,8 @@ func _ready() -> void:
 	generator.set_script(gen_script)
 	add_child(generator)
 	
-	print("🔨 Generating level...")
-	generator._generate_level()
-	
-	# Wait for physics frames to initialize CSG and collision
-	await get_tree().process_frame
-	await get_tree().process_frame
-	await get_tree().physics_frame
-	await get_tree().physics_frame
+	print("⏳ Waiting for CSG processing...")
+	await get_tree().create_timer(1.0).timeout
 	
 	var space_state = generator.get_world_3d().direct_space_state
 	if not space_state:
