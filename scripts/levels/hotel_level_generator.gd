@@ -15,11 +15,22 @@ const CEIL_BIAS: float = 0.001
 @export var map_texture: Texture2D = null
 @export var empty_box_mode: bool = false
 
-var carpet_texture = load("res://assets/textures/hotel_carpet.jpg")
-var wall_texture = load("res://assets/textures/hotel_wallpaper.jpg")
-var retro_wall_texture = load("res://assets/textures/retro_wallpaper.png")
-var ceiling_texture = load("res://assets/textures/hotel_wallpaper.jpg")
-var floor_texture = load("res://assets/textures/hotel_carpet.jpg")
+static func _load_texture_safe(path: String) -> Texture2D:
+	var global_path = ProjectSettings.globalize_path(path)
+	if not FileAccess.file_exists(global_path + ".import"):
+		if FileAccess.file_exists(global_path):
+			var img = Image.new()
+			if img.load(global_path) == OK:
+				return ImageTexture.create_from_image(img)
+	if ResourceLoader.exists(path):
+		return load(path) as Texture2D
+	return null
+
+@onready var carpet_texture = _load_texture_safe("res://assets/textures/hotel_carpet.jpg")
+@onready var wall_texture = _load_texture_safe("res://assets/textures/hotel_wallpaper.jpg")
+@onready var retro_wall_texture = _load_texture_safe("res://assets/textures/retro_wallpaper.png")
+@onready var ceiling_texture = _load_texture_safe("res://assets/textures/hotel_wallpaper.jpg")
+@onready var floor_texture = _load_texture_safe("res://assets/textures/hotel_carpet.jpg")
 
 func _ready() -> void:
 	GameStateManager.all_tapes_collected.connect(_on_all_tapes_collected)
@@ -523,7 +534,7 @@ func _generate_roof(y_offset: float, f_scale: float) -> void:
 	var floor_thick = floor_thickness * f_scale
 	
 	var roof_mat = StandardMaterial3D.new()
-	var roof_tex = load("res://assets/textures/roof_concrete.png")
+	var roof_tex = _load_texture_safe("res://assets/textures/roof_concrete.png")
 	roof_mat.albedo_texture = roof_tex
 	roof_mat.uv1_scale = Vector3(10, 10, 10)
 	roof_mat.albedo_color = Color(0.8, 0.8, 0.8)
