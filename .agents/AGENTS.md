@@ -827,5 +827,23 @@ L     |  +----------+             +-------------+     L
        South Wall (Z = -25.1)
    West Door (X = -1.75)           East Door (X = 3.85)
            |                                |
-                        VERTICAL CORRIDOR
+                         VERTICAL CORRIDOR
 ```
+
+## Godot 4 CSG & Headless Testing Gotchas
+
+> [!CAUTION]
+> **Headless CSG Mesh Generation Delay**
+> When running autotests via Jenkins (`godot --headless`), the engine uses `RendererDummy`. Because there is no active rendering pipeline, Godot **will not** automatically evaluate complex CSG boolean operations (`operation = 2` / SUBTRACTION). Tests that rely on holes cut into `CSGCombiner3D` walls will fail because the walls remain solid.
+> 
+> **Fix:** In your test `_ready()` function, recursively iterate over all `CSGShape3D` nodes and manually call `node.get_meshes()`. This forces the engine to synchronously compute the CSG meshes and construct the updated collision shape (the `ConcavePolygonShape3D`).
+
+> [!WARNING]
+> **`intersect_point` vs `ConcavePolygonShape3D`**
+> Never use `PhysicsDirectSpaceState3D.intersect_point()` to test if a point is "inside a hole" or "blocked by a CSG wall". CSG geometry generates `ConcavePolygonShape3D` (a triangle mesh). Godot's point-containment logic for concave trimeshes is highly unreliable and will frequently return false positives (reporting the point is blocked) when the point is located perfectly in the empty doorway space between two adjacent wall faces.
+>
+> **Fix:** Always use `intersect_ray()` (Raycasting) passing completely through the doorway opening. If the doorway is correctly subtracted, the raycast will return empty. This perfectly simulates a character walking through the door and is 100% robust.
+
+> [!IMPORTANT]
+> **Multi-Floor Wall Overlapping**
+> When dealing with looped levels (like the P.T. staircase), remember that `StairsSouthWall` of Floor N+1 may perfectly overlap `StairsSouthWallTop` of Floor N. If you rely on CSG subtraction to open doors, be sure you subtract from ALL intersecting solid geometry on the given coordinates, or physically avoid spawning redundant overlapping walls.
