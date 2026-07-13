@@ -153,16 +153,16 @@ func _build_floor_geometry(f_num: int, y_offset: float, suffix: String, c_color:
 	
 	var z_sw_len = 5.0 * f_scale
 	var z_sw_pos = 27.5 * f_scale
-	var x_sw_len = x_width
-	var x_sw_pos = 0.0
+	var x_sw_len = 14.52 * f_scale
+	var x_sw_pos = -5.39 * f_scale
 	
 	# Central Main (covers everything from Z=-25.18 to Z=25.0)
 	_create_static_box(parent, "Floor_Main", Vector3(0, floor_y, z_main_pos), Vector3(x_width, floor_thick, z_main_len), floor_mat)
 	_create_static_box(parent, "Ceiling_Main", Vector3(0, ceil_y, z_main_pos), Vector3(x_width, floor_thick, z_main_len), ceil_mat)
 	
-	# South Area (covers Z=25.0 to 30.0, X=-12.65 to 12.65)
-	_create_static_box(parent, "Floor_South", Vector3(x_sw_pos, floor_y, z_sw_pos), Vector3(x_sw_len, floor_thick, z_sw_len), floor_mat)
-	_create_static_box(parent, "Ceiling_South", Vector3(x_sw_pos, ceil_y, z_sw_pos), Vector3(x_sw_len, floor_thick, z_sw_len), ceil_mat)
+	# South West (covers Z=25.0 to 30.0, X=-12.65 to 1.87)
+	_create_static_box(parent, "Floor_SW", Vector3(x_sw_pos, floor_y, z_sw_pos), Vector3(x_sw_len, floor_thick, z_sw_len), floor_mat)
+	_create_static_box(parent, "Ceiling_SW", Vector3(x_sw_pos, ceil_y, z_sw_pos), Vector3(x_sw_len, floor_thick, z_sw_len), ceil_mat)
 	
 	# North West (covers Z=-30.0 to -25.2, X=-12.65 to -2.55)
 	_create_static_box(parent, "Floor_NW", Vector3(x_nw_pos, floor_y, z_north_pos), Vector3(x_nw_len, floor_thick, z_north_len), floor_mat)
@@ -188,8 +188,8 @@ func _build_floor_geometry(f_num: int, y_offset: float, suffix: String, c_color:
 		_create_static_box(parent, "Floor_NorthStairs", Vector3(1.05 * f_scale, floor_y, -27.6 * f_scale), Vector3(7.6 * f_scale, floor_thick, 4.8 * f_scale), floor_mat)
 		
 		# Fill the South Stairs hole for the ground floor
-		var x_se_len = 12.32 * f_scale
-		var x_se_pos = 6.49 * f_scale
+		var x_se_len = 10.78 * f_scale
+		var x_se_pos = 7.26 * f_scale
 		_create_static_box(parent, "Floor_SouthStairs", Vector3(x_se_pos, floor_y, z_sw_pos), Vector3(x_se_len, floor_thick, z_sw_len), floor_mat)
 
 	# 3.6 Elevator
