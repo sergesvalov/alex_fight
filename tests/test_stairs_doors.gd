@@ -48,10 +48,10 @@ func _ready() -> void:
 	errors += _test_ray(space_state, center_wall_pos + Vector3(0, 0, 1.0), center_wall_pos + Vector3(0, 0, -1.0), "Center South Wall (Y=1.1)", true)
 	
 	var west_wall_pos = Vector3(-1.75, 1.1, -25.1)
-	errors += _test_ray(space_state, west_wall_pos + Vector3(0, 0, 1.0), west_wall_pos + Vector3(0, 0, -1.0), "West Wall under Door (Y=1.1)", true)
+	errors += _test_ray(space_state, west_wall_pos + Vector3(0, 0, 1.0), west_wall_pos + Vector3(0, 0, -1.0), "West Wall under Door (Y=1.1) (Hole for N-1 exit)", false)
 	
 	var east_wall_pos = Vector3(3.85, 5.6, -25.1)
-	errors += _test_ray(space_state, east_wall_pos + Vector3(0, 0, 1.0), east_wall_pos + Vector3(0, 0, -1.0), "East Wall over Door (Y=5.6)", true)
+	errors += _test_ray(space_state, east_wall_pos + Vector3(0, 0, 1.0), east_wall_pos + Vector3(0, 0, -1.0), "East Wall over Door (Y=5.6) (Hole for N+1 entry)", false)
 	
 	print("\n==================================================")
 	if errors > 0:

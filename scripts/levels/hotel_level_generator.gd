@@ -36,7 +36,7 @@ static func _load_texture_safe(path: String) -> Texture2D:
 
 func _ready() -> void:
 	if GameStateManager.has_signal("all_tapes_collected"):
-		GameStateManager.all_tapes_collected.connect(_on_all_tapes_collected)
+		GameStateManager.connect("all_tapes_collected", _on_all_tapes_collected)
 	_generate_level()
 	if "secret_portal_active" in GameStateManager and GameStateManager.secret_portal_active:
 		_create_secret_portal()
