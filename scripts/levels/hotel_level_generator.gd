@@ -153,16 +153,16 @@ func _build_floor_geometry(f_num: int, y_offset: float, suffix: String, c_color:
 	
 	var z_sw_len = 5.0 * f_scale
 	var z_sw_pos = 27.5 * f_scale
-	var x_sw_len = 12.98 * f_scale
-	var x_sw_pos = -6.16 * f_scale
+	var x_sw_len = x_width
+	var x_sw_pos = 0.0
 	
 	# Central Main (covers everything from Z=-25.18 to Z=25.0)
 	_create_static_box(parent, "Floor_Main", Vector3(0, floor_y, z_main_pos), Vector3(x_width, floor_thick, z_main_len), floor_mat)
 	_create_static_box(parent, "Ceiling_Main", Vector3(0, ceil_y, z_main_pos), Vector3(x_width, floor_thick, z_main_len), ceil_mat)
 	
-	# South West (covers Z=25.0 to 30.0, X=-12.65 to 0.33)
-	_create_static_box(parent, "Floor_SW", Vector3(x_sw_pos, floor_y, z_sw_pos), Vector3(x_sw_len, floor_thick, z_sw_len), floor_mat)
-	_create_static_box(parent, "Ceiling_SW", Vector3(x_sw_pos, ceil_y, z_sw_pos), Vector3(x_sw_len, floor_thick, z_sw_len), ceil_mat)
+	# South Area (covers Z=25.0 to 30.0, X=-12.65 to 12.65)
+	_create_static_box(parent, "Floor_South", Vector3(x_sw_pos, floor_y, z_sw_pos), Vector3(x_sw_len, floor_thick, z_sw_len), floor_mat)
+	_create_static_box(parent, "Ceiling_South", Vector3(x_sw_pos, ceil_y, z_sw_pos), Vector3(x_sw_len, floor_thick, z_sw_len), ceil_mat)
 	
 	# North West (covers Z=-30.0 to -25.2, X=-12.65 to -2.55)
 	_create_static_box(parent, "Floor_NW", Vector3(x_nw_pos, floor_y, z_north_pos), Vector3(x_nw_len, floor_thick, z_north_len), floor_mat)
