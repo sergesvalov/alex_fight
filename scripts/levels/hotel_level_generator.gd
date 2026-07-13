@@ -17,9 +17,10 @@ const CEIL_BIAS: float = 0.001
 
 static func _load_texture_safe(path: String) -> Texture2D:
 	if DisplayServer.get_name() == "headless":
-		if FileAccess.file_exists(path):
+		var global_path = ProjectSettings.globalize_path(path)
+		if FileAccess.file_exists(global_path):
 			var img = Image.new()
-			if img.load(path) == OK:
+			if img.load(global_path) == OK:
 				return ImageTexture.create_from_image(img)
 		return null
 		
@@ -29,14 +30,15 @@ static func _load_texture_safe(path: String) -> Texture2D:
 
 @onready var carpet_texture = _load_texture_safe("res://assets/textures/hotel_carpet.jpg")
 @onready var wall_texture = _load_texture_safe("res://assets/textures/hotel_wallpaper.jpg")
-@onready var retro_wall_texture = _load_texture_safe("res://assets/textures/retro_wallpaper.png")
+@onready var retro_wall_texture = _load_texture_safe("res://assets/textures/retro_wallpaper.jpg")
 @onready var ceiling_texture = _load_texture_safe("res://assets/textures/hotel_wallpaper.jpg")
 @onready var floor_texture = _load_texture_safe("res://assets/textures/hotel_carpet.jpg")
 
 func _ready() -> void:
-	GameStateManager.all_tapes_collected.connect(_on_all_tapes_collected)
+	if GameStateManager.has_signal("all_tapes_collected"):
+		GameStateManager.all_tapes_collected.connect(_on_all_tapes_collected)
 	_generate_level()
-	if GameStateManager.secret_portal_active:
+	if "secret_portal_active" in GameStateManager and GameStateManager.secret_portal_active:
 		_create_secret_portal()
 		
 	if not Engine.is_editor_hint():
@@ -541,10 +543,12 @@ func _generate_roof(y_offset: float, f_scale: float) -> void:
 	var floor_thick = floor_thickness * f_scale
 	
 	var roof_mat = StandardMaterial3D.new()
-	var roof_tex = _load_texture_safe("res://assets/textures/roof_concrete.png")
-	roof_mat.albedo_texture = roof_tex
-	roof_mat.uv1_scale = Vector3(10, 10, 10)
-	roof_mat.albedo_color = Color(0.8, 0.8, 0.8)
+	var roof_tex = _load_texture_safe("res://assets/textures/roof_concrete.jpg")
+	if roof_tex:
+		roof_mat.albedo_texture = roof_tex
+		roof_mat.uv1_scale = Vector3(roof_uv, roof_uv, roof_uv)
+	else:
+		roof_mat.albedo_color = Color(0.2, 0.2, 0.2)
 	
 	# Roof slabs (same logic as floor slabs)
 	var floor_y = -floor_thick / 2.0
