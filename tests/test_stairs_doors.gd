@@ -74,13 +74,13 @@ func _test_point(space_state: PhysicsDirectSpaceState3D, pos: Vector3, label: St
 	
 	if is_hit == expected_hit:
 		if is_hit:
-			print("✅ PASS | ", label, " (", pos, ") -> WALL BLOCKED! (Expected)")
+			print("✅ PASS | ", label, " (", pos, ") -> WALL BLOCKED! (Expected) by ", results[0].collider.name)
 		else:
 			print("✅ PASS | ", label, " (", pos, ") -> OPENING CONFIRMED! (Expected)")
 		return 0
 	else:
 		if is_hit:
-			print("❌ FAIL | ", label, " (", pos, ") -> WALL BLOCKED! (UNEXPECTED)")
+			print("❌ FAIL | ", label, " (", pos, ") -> WALL BLOCKED! (UNEXPECTED) by ", results[0].collider.name)
 		else:
 			print("❌ FAIL | ", label, " (", pos, ") -> OPENING MISSING! (UNEXPECTED)")
 		return 1
