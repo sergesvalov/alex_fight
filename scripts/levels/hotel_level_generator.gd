@@ -16,12 +16,13 @@ const CEIL_BIAS: float = 0.001
 @export var empty_box_mode: bool = false
 
 static func _load_texture_safe(path: String) -> Texture2D:
-	var global_path = ProjectSettings.globalize_path(path)
-	if not FileAccess.file_exists(global_path + ".import"):
-		if FileAccess.file_exists(global_path):
+	if DisplayServer.get_name() == "headless":
+		if FileAccess.file_exists(path):
 			var img = Image.new()
-			if img.load(global_path) == OK:
+			if img.load(path) == OK:
 				return ImageTexture.create_from_image(img)
+		return null
+		
 	if ResourceLoader.exists(path):
 		return load(path) as Texture2D
 	return null
@@ -163,6 +164,12 @@ func _build_floor_geometry(f_num: int, y_offset: float, suffix: String, c_color:
 	# South West (covers Z=25.0 to 30.0, X=-12.65 to 1.87)
 	_create_static_box(parent, "Floor_SW", Vector3(x_sw_pos, floor_y, z_sw_pos), Vector3(x_sw_len, floor_thick, z_sw_len), floor_mat)
 	_create_static_box(parent, "Ceiling_SW", Vector3(x_sw_pos, ceil_y, z_sw_pos), Vector3(x_sw_len, floor_thick, z_sw_len), ceil_mat)
+	
+	# South Stairs Intermediate Landing (East Wall, half height)
+	var x_landing_len = 4.62 * f_scale
+	var x_landing_pos = 10.34 * f_scale
+	var y_landing = height / 2.0
+	_create_static_box(parent, "Landing_SouthStairs", Vector3(x_landing_pos, y_landing, z_sw_pos), Vector3(x_landing_len, floor_thick, z_sw_len), floor_mat)
 	
 	# North West (covers Z=-30.0 to -25.2, X=-12.65 to -2.55)
 	_create_static_box(parent, "Floor_NW", Vector3(x_nw_pos, floor_y, z_north_pos), Vector3(x_nw_len, floor_thick, z_north_len), floor_mat)
