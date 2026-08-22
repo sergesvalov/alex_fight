@@ -1,6 +1,12 @@
 extends AnimatableBody3D
-class_name InteractiveDoor
 
+# No class_name: a scene file that instances door.tscn more than once (north_stairs.tscn,
+# double_room.tscn, single_room.tscn all do - two doors per file) was silently losing some
+# of those instances (and, in single_room.tscn, other unrelated instanced props too) in
+# exported PC builds only, never in a way that printed an error. class_name registers this
+# script as a global class tied to the script resource; removing it is a safe, no-behavior-
+# change way to rule out global class registration as part of that failure, since nothing
+# else in the project actually referenced the InteractiveDoor type name.
 signal state_changed(is_open: bool)
 
 @onready var sfx_open: AudioStreamPlayer3D = $"../SfxOpen"
