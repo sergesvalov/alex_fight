@@ -114,7 +114,18 @@ func _build_floor_geometry(f_num: int, y_offset: float, suffix: String, c_color:
 	var height = corridor_height * f_scale
 	var thickness = wall_thickness * f_scale
 	var floor_thick = floor_thickness * f_scale
-	
+
+	# DoubleRooms sit flush with their own outer wall at base_x=-7.65 (see
+	# _generate_double_room), which is 4.9m short of the old symmetric building
+	# shell - leaving a sealed, inaccessible void along the whole west side.
+	# half_x_west trims every west-side box (walls/floor/ceiling/roof) so the
+	# shell meets the room's own wall exactly instead of leaving dead space.
+	var half_x = x_width / 2.0
+	var west_trim = 4.9 * f_scale
+	var half_x_west = half_x - west_trim
+	var main_width = half_x + half_x_west
+	var main_center_x = west_trim / 2.0
+
 	var floor_y = -floor_thick / 2.0
 	# Pull ceiling down by CEIL_BIAS so its top face is never co-planar with
 	# the bottom face of the floor slab one storey above (Android Z-fighting fix).
@@ -149,21 +160,23 @@ func _build_floor_geometry(f_num: int, y_offset: float, suffix: String, c_color:
 	
 	var z_north_len = 4.82 * f_scale
 	var z_north_pos = -27.59 * f_scale
-	var x_nw_len = 10.1 * f_scale
-	var x_nw_pos = -7.6 * f_scale
+	var x_nw_east = -2.55 * f_scale
+	var x_nw_len = x_nw_east + half_x_west
+	var x_nw_pos = (x_nw_east - half_x_west) / 2.0
 	var x_ne_len = 8.0 * f_scale
 	var x_ne_pos = 8.65 * f_scale
-	
+
 	var z_sw_len = 5.0 * f_scale
 	var z_sw_pos = 27.5 * f_scale
-	var x_sw_len = 14.52 * f_scale
-	var x_sw_pos = -5.39 * f_scale
-	
+	var x_sw_east = 1.87 * f_scale
+	var x_sw_len = x_sw_east + half_x_west
+	var x_sw_pos = (x_sw_east - half_x_west) / 2.0
+
 	# Central Main (covers everything from Z=-25.18 to Z=25.0)
-	_create_static_box(parent, "Floor_Main", Vector3(0, floor_y, z_main_pos), Vector3(x_width, floor_thick, z_main_len), floor_mat)
-	_create_static_box(parent, "Ceiling_Main", Vector3(0, ceil_y, z_main_pos), Vector3(x_width, floor_thick, z_main_len), ceil_mat)
+	_create_static_box(parent, "Floor_Main", Vector3(main_center_x, floor_y, z_main_pos), Vector3(main_width, floor_thick, z_main_len), floor_mat)
+	_create_static_box(parent, "Ceiling_Main", Vector3(main_center_x, ceil_y, z_main_pos), Vector3(main_width, floor_thick, z_main_len), ceil_mat)
 	
-	# South West (covers Z=25.0 to 30.0, X=-12.65 to 1.87)
+	# South West (covers Z=25.0 to 30.0, X=-7.75 to 1.87)
 	_create_static_box(parent, "Floor_SW", Vector3(x_sw_pos, floor_y, z_sw_pos), Vector3(x_sw_len, floor_thick, z_sw_len), floor_mat)
 	_create_static_box(parent, "Ceiling_SW", Vector3(x_sw_pos, ceil_y, z_sw_pos), Vector3(x_sw_len, floor_thick, z_sw_len), ceil_mat)
 	
@@ -173,7 +186,7 @@ func _build_floor_geometry(f_num: int, y_offset: float, suffix: String, c_color:
 	var y_landing = height / 2.0
 	_create_static_box(parent, "Landing_SouthStairs", Vector3(x_landing_pos, y_landing, z_sw_pos), Vector3(x_landing_len, floor_thick, z_sw_len), floor_mat)
 	
-	# North West (covers Z=-30.0 to -25.2, X=-12.65 to -2.55)
+	# North West (covers Z=-30.0 to -25.2, X=-7.75 to -2.55)
 	_create_static_box(parent, "Floor_NW", Vector3(x_nw_pos, floor_y, z_north_pos), Vector3(x_nw_len, floor_thick, z_north_len), floor_mat)
 	_create_static_box(parent, "Ceiling_NW", Vector3(x_nw_pos, ceil_y, z_north_pos), Vector3(x_nw_len, floor_thick, z_north_len), ceil_mat)
 	
@@ -182,16 +195,15 @@ func _build_floor_geometry(f_num: int, y_offset: float, suffix: String, c_color:
 	_create_static_box(parent, "Ceiling_NE", Vector3(x_ne_pos, ceil_y, z_north_pos), Vector3(x_ne_len, floor_thick, z_north_len), ceil_mat)
 	
 	# 3. Outer Walls
-	var half_x = x_width / 2.0
 	var half_z = z_length / 2.0
-	
+
 	var outer_wall_height = height + floor_thick
 	var outer_wall_y = (height - floor_thick) / 2.0
-	
-	_create_static_box(parent, "Wall_West", Vector3(-half_x - thickness/2.0, outer_wall_y, 0), Vector3(thickness, outer_wall_height, z_length), wall_mat)
+
+	_create_static_box(parent, "Wall_West", Vector3(-half_x_west - thickness/2.0, outer_wall_y, 0), Vector3(thickness, outer_wall_height, z_length), wall_mat)
 	_create_static_box(parent, "Wall_East", Vector3(half_x + thickness/2.0, outer_wall_y, 0), Vector3(thickness, outer_wall_height, z_length), wall_mat)
-	_create_static_box(parent, "Wall_North", Vector3(0, outer_wall_y, -half_z - thickness/2.0), Vector3(x_width + thickness * 2.0, outer_wall_height, thickness), wall_mat)
-	_create_static_box(parent, "Wall_South", Vector3(0, outer_wall_y, half_z + thickness/2.0), Vector3(x_width + thickness * 2.0, outer_wall_height, thickness), wall_mat)
+	_create_static_box(parent, "Wall_North", Vector3(main_center_x, outer_wall_y, -half_z - thickness/2.0), Vector3(main_width + thickness * 2.0, outer_wall_height, thickness), wall_mat)
+	_create_static_box(parent, "Wall_South", Vector3(main_center_x, outer_wall_y, half_z + thickness/2.0), Vector3(main_width + thickness * 2.0, outer_wall_height, thickness), wall_mat)
 	
 	if f_num == 1:
 		_create_static_box(parent, "Floor_NorthStairs", Vector3(1.05 * f_scale, floor_y, -27.6 * f_scale), Vector3(7.6 * f_scale, floor_thick, 4.8 * f_scale), floor_mat)
@@ -541,7 +553,15 @@ func _generate_roof(y_offset: float, f_scale: float) -> void:
 	var x_width = 25.3 * f_scale
 	var thickness = wall_thickness * f_scale
 	var floor_thick = floor_thickness * f_scale
-	
+
+	# Same west-side trim as _build_floor_geometry - keeps the roof/parapet
+	# flush with the DoubleRoom wing instead of overhanging the sealed void.
+	var half_x = x_width / 2.0
+	var west_trim = 4.9 * f_scale
+	var half_x_west = half_x - west_trim
+	var main_width = half_x + half_x_west
+	var main_center_x = west_trim / 2.0
+
 	var roof_mat = StandardMaterial3D.new()
 	var roof_tex = _load_texture_safe("res://assets/textures/roof_concrete.jpg")
 	if roof_tex:
@@ -557,25 +577,25 @@ func _generate_roof(y_offset: float, f_scale: float) -> void:
 	var z_north_len = 4.82 * f_scale
 	var z_north_pos = -27.59 * f_scale
 	
-	var x_nw_len = 10.1 * f_scale
-	var x_nw_pos = -7.6 * f_scale
+	var x_nw_east = -2.55 * f_scale
+	var x_nw_len = x_nw_east + half_x_west
+	var x_nw_pos = (x_nw_east - half_x_west) / 2.0
 	var x_ne_len = 8.0 * f_scale
 	var x_ne_pos = 8.65 * f_scale
-	
-	_create_static_box(parent, "Roof_Main", Vector3(0, floor_y, z_south_pos), Vector3(x_width, floor_thick, z_south_len), roof_mat)
+
+	_create_static_box(parent, "Roof_Main", Vector3(main_center_x, floor_y, z_south_pos), Vector3(main_width, floor_thick, z_south_len), roof_mat)
 	_create_static_box(parent, "Roof_NW", Vector3(x_nw_pos, floor_y, z_north_pos), Vector3(x_nw_len, floor_thick, z_north_len), roof_mat)
 	_create_static_box(parent, "Roof_NE", Vector3(x_ne_pos, floor_y, z_north_pos), Vector3(x_ne_len, floor_thick, z_north_len), roof_mat)
-	
+
 	# Parapets (Outer walls)
 	var parapet_height = 1.0 * f_scale + floor_thick
 	var parapet_y = (1.0 * f_scale - floor_thick) / 2.0
-	var half_x = x_width / 2.0
 	var half_z = z_length / 2.0
-	
-	_create_static_box(parent, "Parapet_West", Vector3(-half_x - thickness/2.0, parapet_y, 0), Vector3(thickness, parapet_height, z_length), roof_mat)
+
+	_create_static_box(parent, "Parapet_West", Vector3(-half_x_west - thickness/2.0, parapet_y, 0), Vector3(thickness, parapet_height, z_length), roof_mat)
 	_create_static_box(parent, "Parapet_East", Vector3(half_x + thickness/2.0, parapet_y, 0), Vector3(thickness, parapet_height, z_length), roof_mat)
-	_create_static_box(parent, "Parapet_North", Vector3(0, parapet_y, -half_z - thickness/2.0), Vector3(x_width + thickness * 2.0, parapet_height, thickness), roof_mat)
-	_create_static_box(parent, "Parapet_South", Vector3(0, parapet_y, half_z + thickness/2.0), Vector3(x_width + thickness * 2.0, parapet_height, thickness), roof_mat)
+	_create_static_box(parent, "Parapet_North", Vector3(main_center_x, parapet_y, -half_z - thickness/2.0), Vector3(main_width + thickness * 2.0, parapet_height, thickness), roof_mat)
+	_create_static_box(parent, "Parapet_South", Vector3(main_center_x, parapet_y, half_z + thickness/2.0), Vector3(main_width + thickness * 2.0, parapet_height, thickness), roof_mat)
 
 func _on_all_tapes_collected() -> void:
 	if GameStateManager.secret_portal_active: return
