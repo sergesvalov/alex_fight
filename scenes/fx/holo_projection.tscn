@@ -29,5 +29,10 @@ mesh = SubResource("CylinderMesh_holo")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.2, 0)
 pixel_size = 0.005
 billboard = 1
+no_depth_test = true
+font_size = 48
+outline_size = 12
+modulate = Color(0.7, 1, 1, 1)
+outline_modulate = Color(0, 0.15, 0.2, 1)
 text = "[ Заголовок ]
 Текст сообщения..."
