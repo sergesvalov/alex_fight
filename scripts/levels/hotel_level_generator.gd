@@ -180,10 +180,13 @@ func _build_floor_geometry(f_num: int, y_offset: float, suffix: String, c_color:
 	_create_static_box(parent, "Floor_SW", Vector3(x_sw_pos, floor_y, z_sw_pos), Vector3(x_sw_len, floor_thick, z_sw_len), floor_mat)
 	_create_static_box(parent, "Ceiling_SW", Vector3(x_sw_pos, ceil_y, z_sw_pos), Vector3(x_sw_len, floor_thick, z_sw_len), ceil_mat)
 	
-	# South Stairs Intermediate Landing (East Wall, half height)
+	# South Stairs Intermediate Landing (East side). Sits at half of the FULL floor-to-floor
+	# height (height + floor_thick), not half of the room height alone, so the two ramps
+	# built by _generate_south_stairs_ramp() land exactly on this floor's own floor level
+	# below and the floor-above's floor level above - see that function for the full layout.
 	var x_landing_len = 4.62 * f_scale
 	var x_landing_pos = 10.34 * f_scale
-	var y_landing = height / 2.0
+	var y_landing = (height + floor_thick) / 2.0
 	_create_static_box(parent, "Landing_SouthStairs", Vector3(x_landing_pos, y_landing, z_sw_pos), Vector3(x_landing_len, floor_thick, z_sw_len), floor_mat)
 	
 	# North West (covers Z=-30.0 to -25.2, X=-7.75 to -2.55)
@@ -227,7 +230,9 @@ func _build_floor_geometry(f_num: int, y_offset: float, suffix: String, c_color:
 	
 	# 3.7.5 South Stairs Wall
 	_generate_south_stairs_wall(parent, f_scale, height, thickness, wall_mat)
-	
+	_generate_south_stairs_ramp(parent, f_scale, height, floor_thick, floor_mat)
+
+
 	_generate_double_room(parent, f_scale, f_num, 401)
 	_generate_double_room(parent, f_scale, f_num, 402)
 	_generate_double_room(parent, f_scale, f_num, 403)
@@ -398,6 +403,53 @@ func _generate_south_stairs_wall(parent: Node, f_scale: float, height: float, th
 		var lintel_y = door_h + (lintel_h / 2.0)
 		_create_static_box(parent, "SouthStairsWall_Lintel", Vector3(x_center, lintel_y, z_pos), Vector3(door_w, lintel_h, thickness), wall_mat)
 
+func _generate_south_stairs_ramp(parent: Node, f_scale: float, height: float, floor_thick: float, floor_mat: Material) -> void:
+	# Dog-leg staircase, self-contained per floor (same philosophy as north_stairs.tscn's
+	# 3 flights: each floor climbs its own full 0 -> floor-to-floor-height run, and stacking
+	# floors is what makes it continuous - no geometry is shared with or duplicated by the
+	# neighboring floor). One door only, so both flights start/end at the same X as the door
+	# area (Floor_SW's edge), not two separate doors like the north stairs.
+	#
+	# Layout inside the 5m-deep south-stairs zone (Z 25..30), split into two 2.5m bands so
+	# the up-flight and the return flight sit side by side instead of stacked (stacking them
+	# would need the upper flight to clear headroom over the lower one; side by side avoids
+	# that entirely):
+	#   Band 1 (Z 25..27.5):  RampA climbs EAST,  X 1.87 -> 8.03,  Y 0 -> mid_y
+	#   Landing (full Z 25..30, X 8.03..12.65, Y mid_y): turn here (reuses Landing_SouthStairs)
+	#   Band 2 (Z 27.5..30):  RampB climbs WEST,  X 8.03 -> 1.87,  Y mid_y -> full_y
+	# RampB's arrival point (X=1.87, Y=full_y) is exactly where the floor-above's own
+	# Floor_SW edge sits, so it needs no landing of its own - the next floor provides it.
+	var x_inner = 1.87 * f_scale   # Floor_SW's east edge - shared by both flights
+	var x_outer = 8.03 * f_scale   # Landing_SouthStairs' west edge - shared by both flights
+	var mid_y = (height + floor_thick) / 2.0   # matches Landing_SouthStairs' y_landing
+	var full_y = height + floor_thick          # this floor's ceiling = next floor's floor
+
+	var z_band1 = 26.25 * f_scale  # center of Z[25,27.5]
+	var z_band2 = 28.75 * f_scale  # center of Z[27.5,30]
+	var band_depth = 2.5 * f_scale
+
+	var run = x_outer - x_inner
+	var ramp_len = sqrt(run * run + mid_y * mid_y)
+	var angle_up = atan2(mid_y, run)
+
+	# RampA: rises to the east, Band 1
+	_create_static_box(
+		parent, "SouthStairsRampA",
+		Vector3((x_inner + x_outer) / 2.0, mid_y / 2.0, z_band1),
+		Vector3(ramp_len, 0.2 * f_scale, band_depth),
+		floor_mat,
+		Vector3(0, 0, angle_up)
+	)
+
+	# RampB: rises to the west, Band 2 - same shape as RampA, mirrored in X and offset up by mid_y
+	_create_static_box(
+		parent, "SouthStairsRampB",
+		Vector3((x_inner + x_outer) / 2.0, mid_y + (full_y - mid_y) / 2.0, z_band2),
+		Vector3(ramp_len, 0.2 * f_scale, band_depth),
+		floor_mat,
+		Vector3(0, 0, -angle_up)
+	)
+
 func _generate_double_room(parent: Node, f_scale: float, f_num: int, orig_num: int) -> void:
 	var scene = load("res://scenes/levels/hotel_siberia/blocks/double_room.tscn")
 	if not scene: return
@@ -447,10 +499,11 @@ func _generate_single_room(parent: Node, f_scale: float, f_num: int, orig_num: i
 	elif orig_num == 420: inst.position = Vector3(base_x * f_scale, 0, 15.0 * f_scale)
 	elif orig_num == 421: inst.position = Vector3(base_x * f_scale, 0, 20.0 * f_scale)
 
-func _create_static_box(parent: Node, node_name: String, pos: Vector3, size: Vector3, mat: Material) -> void:
+func _create_static_box(parent: Node, node_name: String, pos: Vector3, size: Vector3, mat: Material, rot: Vector3 = Vector3.ZERO) -> void:
 	var static_body = StaticBody3D.new()
 	static_body.name = node_name
 	static_body.position = pos
+	static_body.rotation = rot
 	static_body.collision_layer = 2 # Matches old floor layer
 	
 	var mesh_inst = MeshInstance3D.new()
