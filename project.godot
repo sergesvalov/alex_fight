@@ -25,6 +25,7 @@ GameStateManager="*res://scripts/autoloads/GameStateManager.gd"
 DialogSystem="*res://scripts/autoloads/DialogSystem.gd"
 AudioManager="*res://scripts/autoloads/AudioManager.gd"
 SaveManager="*res://scripts/autoloads/SaveManager.gd"
+GameLogger="*res://scripts/autoloads/GameLogger.gd"
 
 [display]
 

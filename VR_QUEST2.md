@@ -1,7 +1,7 @@
 # VR Адаптация Alex Fight → Oculus Quest 2
 
 > **Статус:** Реализовано (2026-07-11)
-> **Движок:** Godot 4.7 · **Платформа:** Meta Quest 2 (Android ARM64, OpenXR)
+> **Движок:** Godot 4.7.2 · **Платформа:** Meta Quest 2 (Android ARM64, OpenXR)
 
 ---
 

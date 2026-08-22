@@ -32,16 +32,10 @@ RUN mkdir -p ${ANDROID_HOME}/cmdline-tools && \
 RUN yes | sdkmanager --licenses
 RUN sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
 
-# Подмена x86_64 утилит на нативные ARM из Ubuntu (критично для Raspberry Pi / ARM64)
-RUN ln -sf /usr/bin/zipalign ${ANDROID_HOME}/build-tools/34.0.0/zipalign && \
-    ln -sf /usr/bin/aapt ${ANDROID_HOME}/build-tools/34.0.0/aapt && \
-    ln -sf /usr/bin/apksigner ${ANDROID_HOME}/build-tools/34.0.0/apksigner && \
-    ln -sf /usr/bin/adb ${ANDROID_HOME}/platform-tools/adb || true
-
-# Установка Godot (Сборка под Linux ARM64)
-ARG GODOT_VERSION=4.7
+# Установка Godot (Сборка под Linux x86_64)
+ARG GODOT_VERSION=4.7.2
 ENV GODOT_VERSION=${GODOT_VERSION}
-ENV GODOT_BIN=Godot_v${GODOT_VERSION}-stable_linux.arm64
+ENV GODOT_BIN=Godot_v${GODOT_VERSION}-stable_linux.x86_64
 
 RUN wget -q https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/${GODOT_BIN}.zip -O godot.zip && \
     unzip -q godot.zip -d /usr/local/bin/ && \
@@ -64,4 +58,4 @@ RUN mkdir -p /root/.config/godot && \
     echo '[gd_resource type="EditorSettings" format=3]' > /root/.config/godot/editor_settings-4.tres && \
     echo '[resource]' >> /root/.config/godot/editor_settings-4.tres && \
     echo 'export/android/android_sdk_path = "/opt/android-sdk"' >> /root/.config/godot/editor_settings-4.tres && \
-    echo 'export/android/java_sdk_path = "/usr/lib/jvm/java-17-openjdk-arm64"' >> /root/.config/godot/editor_settings-4.tres
+    echo 'export/android/java_sdk_path = "/usr/lib/jvm/java-17-openjdk-amd64"' >> /root/.config/godot/editor_settings-4.tres

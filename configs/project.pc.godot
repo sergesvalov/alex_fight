@@ -15,6 +15,11 @@ run/main_scene="res://scenes/levels/hotel_siberia/hotel_level_4.tscn"
 config/features=PackedStringArray("4.7", "Mobile")
 config/icon="res://icon.svg"
 
+[debug]
+
+file_logging/enable_file_logging=true
+file_logging/log_path="user://logs/alex_fight.log"
+
 [autoload]
 
 GlobalConfig="*res://scripts/autoloads/GlobalConfig.gd"
@@ -25,6 +30,7 @@ GameStateManager="*res://scripts/autoloads/GameStateManager.gd"
 DialogSystem="*res://scripts/autoloads/DialogSystem.gd"
 AudioManager="*res://scripts/autoloads/AudioManager.gd"
 SaveManager="*res://scripts/autoloads/SaveManager.gd"
+GameLogger="*res://scripts/autoloads/GameLogger.gd"
 
 [display]
 

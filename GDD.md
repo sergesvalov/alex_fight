@@ -1,9 +1,9 @@
 # 📋 Game Design Document & Technical Architecture
-## «ALEX FIGHT» — 3D-шутер | Godot 4.7 | Android
+## «ALEX FIGHT» — 3D-шутер | Godot 4.7.2 | Android
 
 > **Версия документа:** 1.0  
 > **Платформа:** Android (Vulkan Mobile)  
-> **Движок:** Godot 4.7  
+> **Движок:** Godot 4.7.2  
 > **Жанр:** Коридорный 3D-шутер / Survival Horror  
 > **Сеттинг:** Ретрофутуризм, Сибирь, Зима
 
@@ -101,7 +101,7 @@
 
 ---
 
-## 2. 🏗️ Архитектура Проекта в Godot 4.7
+## 2. 🏗️ Архитектура Проекта в Godot 4.7.2
 
 ### 2.1 Структура Папок Проекта
 

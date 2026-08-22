@@ -13,10 +13,10 @@ pipeline {
 
     environment {
         // Конфигурация локального реестра
-        REGISTRY_IP   = "192.168.10.222" 
+        REGISTRY_IP   = "192.168.0.222"
         REGISTRY_PORT = "5050"
-        
-        // Имя образа для Godot-сборщика (ARM64)
+
+        // Имя образа для Godot-сборщика (x86_64)
         BUILDER_IMAGE = "${REGISTRY_IP}:${REGISTRY_PORT}/alex-fight-godot-builder"
     }
 
@@ -30,15 +30,12 @@ pipeline {
         stage('Build & Push Builder Image') {
             steps {
                 script {
-                    echo "Определение требуемой версии Godot из project.godot..."
-                    env.GODOT_VERSION = sh(script: "grep -oE 'config/features=PackedStringArray\\(\"[0-9]+\\.[0-9]+' project.godot | grep -oE '[0-9]+\\.[0-9]+' || echo '4.7'", returnStdout: true).trim()
-                    if (!env.GODOT_VERSION) {
-                        // Фолбэк на 4.7
-                        env.GODOT_VERSION = '4.7'
-                    }
-                    
+                    // project.godot's config/features tag only ever carries "major.minor" (e.g. "4.7"),
+                    // never the patch version - Godot doesn't encode patch releases in that tag at all.
+                    // So the exact engine build is pinned here directly instead of parsed from the project.
+                    env.GODOT_VERSION = '4.7.2'
                     echo "Требуемая версия Godot: ${env.GODOT_VERSION}"
-                    echo "Сборка Docker-образа Godot ${env.GODOT_VERSION} (ARM64) + Android SDK..."
+                    echo "Сборка Docker-образа Godot ${env.GODOT_VERSION} (x86_64) + Android SDK..."
                     sh "docker build --build-arg GODOT_VERSION=${env.GODOT_VERSION} -t ${BUILDER_IMAGE}:${env.GODOT_VERSION} -f Dockerfile.android ."
                     
                     echo "Пушим сборочный образ в локальный реестр..."
@@ -155,7 +152,7 @@ pipeline {
                                     mkdir -p build/windows
                                     godot --headless --export-release "Windows Desktop" build/windows/alex_fight.exe || true
                                     if [ ! -f "build/windows/alex_fight.exe" ]; then echo 'Windows build failed!'; exit 1; fi
-                                    
+
                                     echo "Архивируем сборку ПК в ZIP..."
                                     apt-get update && apt-get install -y zip
                                     cd build/windows && zip -r ../alex_fight_pc_test.zip * && cd ../..
