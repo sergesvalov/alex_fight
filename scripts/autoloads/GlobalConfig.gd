@@ -9,25 +9,34 @@ var room_layouts = {
 		"bounds_neg_x": -2.75,
 		"bounds_pos_z": 2.4,
 		"bounds_neg_z": -2.4,
-		"props": {
-			"RoomLabel": {"pos": Vector3(-2.8, 2.2, 0.5), "anchor_x": 0, "anchor_z": 0}
-		}
+		# No per-prop anchors here (Bed/Table/Chair/Wardrobe fall back to generic scaling) -
+		# a "RoomLabel" entry used to live here but named a node that has never existed in
+		# single_room.tscn (same dead-config issue as DoubleRoom's, just inert instead of
+		# actively wrong since it never matched anything to begin with).
+		"props": {}
 	},
 	"DoubleRoom": {
+		# bounds_pos_z/bounds_neg_z used to assume the room's Z was centered on 0 (an
+		# older double_room.tscn layout). The current one runs from RoomNorthWall at
+		# Z=0.1 to RoomSouthWall at Z=9.9, so bounds_pos_z is that south wall's inner
+		# face (9.8) and bounds_neg_z is the north wall's (0.0), not +-4.4. Every prop's
+		# "pos" below is its actual current transform in double_room.tscn - the previous
+		# values were from that same old centered layout and no longer matched any real
+		# node, which would have put furniture in the wrong place on any build that
+		# actually exercises floor/player scaling (VR, mobile with a non-default size).
 		"bounds": Vector3(8.9, 3.5, 10.0),
 		"bounds_pos_x": 4.0,
 		"bounds_neg_x": -3.15,
-		"bounds_pos_z": 4.4,
-		"bounds_neg_z": -4.4,
+		"bounds_pos_z": 9.8,
+		"bounds_neg_z": 0.0,
 		"props": {
-			"Bed1": {"pos": Vector3(-2.5, 0.0, -2.0), "anchor_x": -1, "anchor_z": 0},
-			"Bed2": {"pos": Vector3(-2.5, 0.0, 2.0), "anchor_x": -1, "anchor_z": 0},
-			"Table1": {"pos": Vector3(-1.5, 0.0, 4.5), "anchor_x": 0, "anchor_z": 1},
-			"Chair1": {"pos": Vector3(-1.5, 0.0, 3.7), "anchor_x": 0, "anchor_z": 1},
-			"Table2": {"pos": Vector3(0.5, 0.0, 4.5), "anchor_x": 0, "anchor_z": 1},
-			"Chair2": {"pos": Vector3(0.5, 0.0, 3.7), "anchor_x": 0, "anchor_z": 1},
-			"Wardrobe": {"pos": Vector3(2.5, 0.0, 4.5), "anchor_x": 1, "anchor_z": 1},
-			"RoomLabel": {"pos": Vector3(4.56, 2.2, 0.6), "anchor_x": 0, "anchor_z": 0}
+			"Bed1": {"pos": Vector3(-2.8, 0.0, 1.6), "anchor_x": -1, "anchor_z": 0},
+			"Bed2": {"pos": Vector3(-1.2, 0.0, 1.6), "anchor_x": -1, "anchor_z": 0},
+			"Table1": {"pos": Vector3(-2.5, 0.0, 9.4), "anchor_x": 0, "anchor_z": 1},
+			"Chair1": {"pos": Vector3(-2.5, 0.0, 8.5), "anchor_x": 0, "anchor_z": 1},
+			"Table2": {"pos": Vector3(-0.5, 0.0, 9.4), "anchor_x": 0, "anchor_z": 1},
+			"Chair2": {"pos": Vector3(-0.5, 0.0, 8.5), "anchor_x": 0, "anchor_z": 1},
+			"Wardrobe": {"pos": Vector3(3.5, 0.0, 9.4), "anchor_x": 1, "anchor_z": 1}
 		}
 	}
 }
