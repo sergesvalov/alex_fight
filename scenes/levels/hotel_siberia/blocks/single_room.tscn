@@ -1,11 +1,11 @@
 [gd_scene load_steps=8 format=3]
 
 [ext_resource type="Texture2D" path="res://assets/textures/hotel_wallpaper.jpg" id="1_wallpaper"]
-[ext_resource type="Script" path="res://scripts/levels/blocks/block.gd" id="3_script"]
-[ext_resource type="PackedScene" path="res://entities/props/bed.tscn" id="5_bed"]
-[ext_resource type="PackedScene" path="res://entities/props/table.tscn" id="6_table"]
-[ext_resource type="PackedScene" path="res://entities/props/chair.tscn" id="7_chair"]
-[ext_resource type="PackedScene" path="res://entities/props/wardrobe.tscn" id="8_wardrobe"]
+[ext_resource type="Script" path="res://scripts/levels/blocks/block.gd" id="2_script"]
+[ext_resource type="PackedScene" path="res://entities/props/bed.tscn" id="3_bed"]
+[ext_resource type="PackedScene" path="res://entities/props/table.tscn" id="4_table"]
+[ext_resource type="PackedScene" path="res://entities/props/chair.tscn" id="5_chair"]
+[ext_resource type="PackedScene" path="res://entities/props/wardrobe.tscn" id="6_wardrobe"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wall"]
 albedo_texture = ExtResource("1_wallpaper")
@@ -16,7 +16,7 @@ roughness = 0.9
 size = Vector3(0.6, 0.05, 0.6)
 
 [node name="SingleRoomBlock" type="Node3D"]
-script = ExtResource("3_script")
+script = ExtResource("2_script")
 
 [node name="RoomGeometry" type="CSGCombiner3D" parent="."]
 use_collision = true
@@ -91,20 +91,20 @@ shadow_enabled = true
 # Кровать: повёрнута -90° по Y → длина (2.0м) идёт по оси X (восток-запад).
 # Изголовье у восточной стены (X≈3.6), ножная часть на западе (X≈1.65).
 # Ширина (1.14м) — вдоль оси Z, центр Z=3.0.
-[node name="Bed" parent="." instance=ExtResource("5_bed")]
+[node name="Bed" parent="." instance=ExtResource("3_bed")]
 transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 2.9, 0.0, 4.23)
 
 # Стол: длинная сторона вдоль восточной стены.
-[node name="Table" parent="." instance=ExtResource("6_table")]
+[node name="Table" parent="." instance=ExtResource("4_table")]
 transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 3.55, 0.0, 1.93)
 
 # Стул: перед столом, смотрит на восток
-[node name="Chair" parent="." instance=ExtResource("7_chair")]
+[node name="Chair" parent="." instance=ExtResource("5_chair")]
 transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 3.0, 0.0, 1.93)
 
 # Шкаф: спиной к северной стене (Z=0.1), открытой стороной в комнату (+Z, без поворота).
 # По чертежу в одиночных номерах тоже есть шкаф ("CLOSET"), которого раньше не было.
-[node name="Wardrobe" parent="." instance=ExtResource("8_wardrobe")]
+[node name="Wardrobe" parent="." instance=ExtResource("6_wardrobe")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3, 0.0, 0.4)
 
 # RoomDoor/WCDoor used to be embedded here as door.tscn instances - see double_room.tscn for
