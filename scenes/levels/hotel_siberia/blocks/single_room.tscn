@@ -107,3 +107,11 @@ transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 3.0, 0.0, 1.93)
 # По чертежу в одиночных номерах тоже есть шкаф ("CLOSET"), которого раньше не было.
 [node name="Wardrobe" parent="." instance=ExtResource("8_wardrobe")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3, 0.0, 0.4)
+
+# Дверь номера: проём в RoomWestWall (X=-3.75, Z=3.5), коридор к западу -> basis.z смотрит -X (поворот -90° вокруг Y).
+[node name="RoomDoor" parent="." instance=ExtResource("10_door")]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -3.75, 0.0, 3.5)
+
+# Дверь санузла: проём в WCSouthWall (X=-2.55, Z=2.5), номер к югу -> basis.z смотрит +Z (без поворота).
+[node name="WCDoor" parent="." instance=ExtResource("10_door")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.55, 0.0, 2.5)

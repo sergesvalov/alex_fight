@@ -403,13 +403,35 @@ func _move_player(f_scale: float) -> void:
 func _generate_maintenance_room(parent: Node, f_scale: float, height: float, thickness: float, wall_mat: Material) -> void:
 	var wall_y = height / 2.0
 	_create_static_box(parent, "Maint_Inner_South", Vector3(11.15 * f_scale, wall_y, -20.0 * f_scale), Vector3(3.0 * f_scale, height, thickness), wall_mat)
-	_create_static_box(parent, "Maint_Inner_West_North", Vector3(9.65 * f_scale, wall_y, -27.0 * f_scale), Vector3(thickness, height, 6.0 * f_scale), wall_mat)
-	_create_static_box(parent, "Maint_Inner_West_South", Vector3(9.65 * f_scale, wall_y, -21.0 * f_scale), Vector3(thickness, height, 2.0 * f_scale), wall_mat)
+
+	# Doorway gap narrowed from 2.0m to a standard 1.2m (matching the stairs doors) so a
+	# single door.tscn leaf covers it instead of leaving 0.8m permanently uncovered.
+	# Center stays at Z=-23 (unchanged) - only the two wall segments' extents shrank in.
+	var door_w = 1.2 * f_scale
+	var door_z_center = -23.0 * f_scale
+	var gap_min_z = door_z_center - door_w / 2.0
+	var gap_max_z = door_z_center + door_w / 2.0
+	var north_len = gap_min_z - (-30.0 * f_scale)
+	var north_center_z = ((-30.0 * f_scale) + gap_min_z) / 2.0
+	var south_len = (-20.0 * f_scale) - gap_max_z
+	var south_center_z = (gap_max_z + (-20.0 * f_scale)) / 2.0
+	_create_static_box(parent, "Maint_Inner_West_North", Vector3(9.65 * f_scale, wall_y, north_center_z), Vector3(thickness, height, north_len), wall_mat)
+	_create_static_box(parent, "Maint_Inner_West_South", Vector3(9.65 * f_scale, wall_y, south_center_z), Vector3(thickness, height, south_len), wall_mat)
 	var door_h = 2.2 * f_scale
 	if height > door_h:
 		var lintel_h = height - door_h
 		var lintel_y = door_h + (lintel_h / 2.0)
-		_create_static_box(parent, "Maint_Inner_West_Lintel", Vector3(9.65 * f_scale, lintel_y, -23.0 * f_scale), Vector3(thickness, lintel_h, 2.0 * f_scale), wall_mat)
+		_create_static_box(parent, "Maint_Inner_West_Lintel", Vector3(9.65 * f_scale, lintel_y, door_z_center), Vector3(thickness, lintel_h, door_w), wall_mat)
+
+	# Corridor is west of this wall (smaller X), so basis.z needs to point -X: rotation.y = -PI/2.
+	var door_scene_maint = load("res://entities/props/door.tscn")
+	if door_scene_maint:
+		var maint_door_inst = door_scene_maint.instantiate()
+		maint_door_inst.name = "MaintenanceDoor"
+		parent.add_child(maint_door_inst)
+		maint_door_inst.position = Vector3(9.65 * f_scale, 0, door_z_center)
+		maint_door_inst.rotation.y = -PI / 2.0
+		maint_door_inst.scale = Vector3(door_w, f_scale, f_scale)
 
 	# Storage wardrobes, backs against the building's own east wall (X=12.65), opening
 	# facing west into the room. Kept north of the doorway gap (Z -24..-22) for clearance.
@@ -477,6 +499,20 @@ func _generate_south_stairs_wall(parent: Node, f_scale: float, height: float, th
 		var lintel_h = height - door_h
 		var lintel_y = door_h + (lintel_h / 2.0)
 		_create_static_box(parent, "SouthStairsWall_Lintel", Vector3(x_center, lintel_y, z_pos), Vector3(door_w, lintel_h, thickness), wall_mat)
+
+	# Corridor is north of this wall (smaller Z), so the door's basis.z (its "outward"
+	# reference direction per door.gd) needs to point -Z: rotation.y = PI.
+	# door.tscn's native panel is 1.0 wide x 2.2 tall x 0.1 thick - scale.x stretches it
+	# to this doorway's width (door_w), scale.y/z match the same f_scale as everything
+	# else this function builds (door_h is already 2.2*f_scale).
+	var door_scene = load("res://entities/props/door.tscn")
+	if door_scene:
+		var door_inst = door_scene.instantiate()
+		door_inst.name = "SouthStairsDoor"
+		parent.add_child(door_inst)
+		door_inst.position = Vector3(x_center, 0, z_pos)
+		door_inst.rotation.y = PI
+		door_inst.scale = Vector3(door_w, f_scale, f_scale)
 
 func _generate_south_stairs_ramp(parent: Node, f_scale: float, height: float, floor_thick: float, floor_mat: Material) -> void:
 	# Dog-leg staircase, self-contained per floor (same philosophy as north_stairs.tscn's

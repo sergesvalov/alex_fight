@@ -117,3 +117,11 @@ transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, -0.5, 
 
 [node name="Chair2" parent="." instance=ExtResource("4_chair")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5, 0.0, 8.5)
+
+# Дверь номера: проём в RoomEastWall (X=4.8, Z=8.5), корридор к востоку -> basis.z смотрит +X (поворот +90° вокруг Y).
+[node name="RoomDoor" parent="." instance=ExtResource("10_door")]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 4.8, 0.0, 8.5)
+
+# Дверь санузла: проём в WCSouthWall (X=2.35, Z=4.9), номер к югу -> basis.z смотрит +Z (без поворота).
+[node name="WCDoor" parent="." instance=ExtResource("10_door")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.35, 0.0, 4.9)
