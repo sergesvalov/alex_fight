@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="Texture2D" path="res://assets/textures/hotel_wallpaper.jpg" id="1_wallpaper"]
 [ext_resource type="Script" path="res://scripts/levels/blocks/block.gd" id="2_script"]
@@ -12,7 +12,13 @@ albedo_texture = ExtResource("1_wallpaper")
 uv1_scale = Vector3(20, 2, 2)
 roughness = 0.9
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_light"]
+emission_enabled = true
+emission = Color(1, 1, 0.8, 1)
+emission_energy_multiplier = 5.0
+
 [sub_resource type="BoxMesh" id="BoxMesh_light"]
+material = SubResource("StandardMaterial3D_light")
 size = Vector3(0.6, 0.05, 0.6)
 
 [node name="SingleRoomBlock" type="Node3D"]
@@ -88,24 +94,14 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.25, 3.7, 3.5)
 light_color = Color(1, 0.9, 0.8, 1)
 shadow_enabled = true
 
-# Кровать: повернута -90 градусов по Y, длина (2.0м) идет по оси X (восток-запад).
-# Изголовье у восточной стены (X~3.6), ножная часть на западе (X~1.65).
-# Ширина (1.14м) - вдоль оси Z, центр Z=3.0.
 [node name="Bed" parent="." instance=ExtResource("3_bed")]
 transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 2.9, 0.0, 4.23)
 
-# Стол: длинная сторона вдоль восточной стены.
 [node name="Table" parent="." instance=ExtResource("4_table")]
 transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 3.55, 0.0, 1.93)
 
-# Стул: перед столом, смотрит на восток
 [node name="Chair" parent="." instance=ExtResource("5_chair")]
 transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 3.0, 0.0, 1.93)
 
-# Шкаф: спиной к северной стене (Z=0.1), открытой стороной в комнату (+Z, без поворота).
-# По чертежу в одиночных номерах тоже есть шкаф ("CLOSET"), которого раньше не было.
 [node name="Wardrobe" parent="." instance=ExtResource("6_wardrobe")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3, 0.0, 0.4)
-
-# RoomDoor/WCDoor used to be embedded here as door.tscn instances - see double_room.tscn for
-# why they were moved into code (_generate_single_room in hotel_level_generator.gd).
