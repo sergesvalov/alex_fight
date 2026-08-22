@@ -7,6 +7,7 @@ pipeline {
 
     parameters {
         booleanParam(name: 'RUN_TESTS', defaultValue: false, description: 'Запускать ли автотесты Godot перед сборкой')
+        booleanParam(name: 'BUILD_ANDROID', defaultValue: true, description: 'Собирать ли APK для Android (Phone и Quest 2)')
         booleanParam(name: 'BUILD_MAC', defaultValue: false, description: 'Собирать ли версию для macOS')
         booleanParam(name: 'BUILD_WINDOWS', defaultValue: true, description: 'Собирать ли версию для ПК (Windows)')
     }
@@ -122,28 +123,32 @@ pipeline {
                         }
 
                         stage('Build Android APKs') {
-                            echo "Запуск экспорта Android-проектов (Phone & VR)..."
-                            sh '''
-                            if grep -q 'name="Android"' export_presets.cfg 2>/dev/null; then
-                                echo "Копируем конфиг телефона..."
-                                cp configs/project.phone.godot project.godot
-                                godot --headless --export-release "Android" build/alex_fight.apk || true
-                                if [ ! -f "build/alex_fight.apk" ]; then echo 'APK build failed!'; exit 1; fi
-                            else
-                                echo "Пресет Android не найден в export_presets.cfg. Сборка обычного APK пропущена."
-                            fi
-                            
-                            if grep -q 'name="Android Quest 2"' export_presets.cfg 2>/dev/null; then
-                                echo "Копируем конфиг VR..."
-                                cp configs/project.vr.godot project.godot
-                                echo "Запуск автотеста конфигурации VR..."
-                                godot --headless -s tests/verify_vr_config.gd || { echo 'VR CONFIG TEST FAILED!'; exit 1; }
-                                godot --headless --export-release "Android Quest 2" build/alex_fight_vr.apk || true
-                                if [ ! -f "build/alex_fight_vr.apk" ]; then echo 'VR APK build failed!'; exit 1; fi
-                            else
-                                echo "Пресет Android Quest 2 не найден в export_presets.cfg. Сборка VR APK пропущена."
-                            fi
-                            '''
+                            if (params.BUILD_ANDROID) {
+                                echo "Запуск экспорта Android-проектов (Phone & VR)..."
+                                sh '''
+                                if grep -q 'name="Android"' export_presets.cfg 2>/dev/null; then
+                                    echo "Копируем конфиг телефона..."
+                                    cp configs/project.phone.godot project.godot
+                                    godot --headless --export-release "Android" build/alex_fight.apk || true
+                                    if [ ! -f "build/alex_fight.apk" ]; then echo 'APK build failed!'; exit 1; fi
+                                else
+                                    echo "Пресет Android не найден в export_presets.cfg. Сборка обычного APK пропущена."
+                                fi
+
+                                if grep -q 'name="Android Quest 2"' export_presets.cfg 2>/dev/null; then
+                                    echo "Копируем конфиг VR..."
+                                    cp configs/project.vr.godot project.godot
+                                    echo "Запуск автотеста конфигурации VR..."
+                                    godot --headless -s tests/verify_vr_config.gd || { echo 'VR CONFIG TEST FAILED!'; exit 1; }
+                                    godot --headless --export-release "Android Quest 2" build/alex_fight_vr.apk || true
+                                    if [ ! -f "build/alex_fight_vr.apk" ]; then echo 'VR APK build failed!'; exit 1; fi
+                                else
+                                    echo "Пресет Android Quest 2 не найден в export_presets.cfg. Сборка VR APK пропущена."
+                                fi
+                                '''
+                            } else {
+                                echo "Сборка Android APK пропущена (BUILD_ANDROID = false)"
+                            }
                         }
                         
                         stage('Build PC (Windows)') {

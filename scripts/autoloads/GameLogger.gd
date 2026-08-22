@@ -13,7 +13,11 @@ func _ready() -> void:
 	_copy_log_next_to_executable()
 
 func _notification(what: int) -> void:
-	if what == NOTIFICATION_WM_CLOSE_REQUEST:
+	# Same guard as _ready(): OS.get_executable_path() on Android points inside the
+	# installed APK, which the app cannot write to (sandboxed) - attempting the copy
+	# there (e.g. on this notification firing when the app is backgrounded, not just
+	# closed) previously broke the Android build.
+	if what == NOTIFICATION_WM_CLOSE_REQUEST and OS.get_name() == "Windows" and not OS.has_feature("editor"):
 		_copy_log_next_to_executable()
 
 func _copy_log_next_to_executable() -> void:
