@@ -10,6 +10,11 @@ signal narrative_ended
 var is_playing: bool = false
 var holo_scene: PackedScene = preload("res://scenes/fx/holo_projection.tscn")
 
+# Movement locks for this long at most while a tape plays (long tapes keep narrating/showing the
+# subtitle for their full duration regardless - only the READING movement-lock is capped, so the
+# player never feels frozen in place for a 10s+ narration).
+const MAX_READING_LOCK: float = 2.0
+
 var tape_data: Dictionary = {}
 
 func _ready() -> void:
@@ -75,14 +80,27 @@ func play_tape_for_floor(floor_num: int, tape_id: int, spawn_position: Vector3) 
     else:
         push_error("[DialogSystem] holo_scene is null - no hologram will show")
 
-    await get_tree().create_timer(current_tape["duration"]).timeout
+    var duration: float = current_tape["duration"]
+    var lock_time: float = min(MAX_READING_LOCK, duration)
+    await get_tree().create_timer(lock_time).timeout
+    # Only the movement lock ends here - the subtitle/hologram (and is_playing, so the player
+    # can't immediately start a second tape) keep going for the rest of the tape's duration.
+    # Guarded by still-READING in case something else (combat, death) already changed state
+    # during the lock.
+    if GameStateManager.current_state == GameStateManager.GameState.READING:
+        GameStateManager.change_state(GameStateManager.GameState.EXPLORING)
+
+    var remaining: float = duration - lock_time
+    if remaining > 0.0:
+        await get_tree().create_timer(remaining).timeout
     print("[DialogSystem] narrative timer finished for tape_id=", tape_id)
     end_narrative()
 
 func end_narrative() -> void:
     print("[DialogSystem] end_narrative, is_playing -> false")
     is_playing = false
-    GameStateManager.change_state(GameStateManager.GameState.EXPLORING)
+    if GameStateManager.current_state == GameStateManager.GameState.READING:
+        GameStateManager.change_state(GameStateManager.GameState.EXPLORING)
     narrative_ended.emit()
 
 func show_thought(text: String, duration: float = 5.0) -> void:

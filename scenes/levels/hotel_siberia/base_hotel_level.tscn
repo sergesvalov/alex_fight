@@ -2,7 +2,6 @@
 
 [ext_resource type="PackedScene" uid="uid://pl1a2y3e4r5" path="res://entities/player/player.tscn" id="1_player"]
 [ext_resource type="PackedScene" uid="uid://blablahud222" path="res://hud/hud.tscn" id="2_hud"]
-[ext_resource type="PackedScene" uid="uid://tape123" path="res://entities/interactables/vhs_tape.tscn" id="3_tape"]
 [ext_resource type="Script" path="res://scripts/levels/base_hotel_level.gd" id="4_level"]
 [ext_resource type="Script" path="res://scripts/levels/enemy_spawner.gd" id="spawner_script"]
 [ext_resource type="PackedScene" path="res://entities/enemies/cerberus/cerberus.tscn" id="cerberus_scene"]
@@ -117,18 +116,6 @@ script = ExtResource("99_generator")
 [node name="CocaColaPlaque" type="MeshInstance3D" parent="InteractableObjects"]
 transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 4.84, 2, -10)
 mesh = SubResource("QuadMesh_coca")
-
-[node name="VhsTape_1" parent="InteractableObjects" instance=ExtResource("3_tape")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.05, 1, 25.0)
-tape_id = 0
-
-[node name="VhsTape_2" parent="InteractableObjects" instance=ExtResource("3_tape")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.05, 1, 0.0)
-tape_id = 1
-
-[node name="VhsTape_3" parent="InteractableObjects" instance=ExtResource("3_tape")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.05, 1, -25.0)
-tape_id = 2
 
 [node name="DeadBody_1" parent="InteractableObjects" instance=ExtResource("dead_body")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.0, 0, -15.0)

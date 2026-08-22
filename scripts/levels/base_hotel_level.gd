@@ -49,29 +49,15 @@ func _ready() -> void:
                     player.rotation.y = PI/2 # Face -X
 
     if GameStateManager.current_floor == 3:
-        # Randomize tapes and Cerberus spawn
+        # Tape randomization used to live here too (VhsTape_1/2/3 under InteractableObjects) -
+        # removed along with those nodes, which duplicated every cassette on the level (the
+        # generator's own _spawn_cassettes() now places 3 per floor, everywhere, on its own).
         var available_rooms = rooms.duplicate()
         available_rooms.shuffle()
-        
-        var tapes = []
-        for i in range(1, 4):
-            var tape_path = "InteractableObjects/VhsTape_" + str(i)
-            if has_node(tape_path):
-                tapes.append(get_node(tape_path))
-                
-        for tape in tapes:
-            if available_rooms.size() > 0:
-                var r = available_rooms.pop_back()
-                var is_double = r.name.begins_with("DoubleRoom")
-                var local_pos = Vector3(0.5, 0.87, 4.5) if is_double else Vector3(2.0, 0.87, -2.5)
-                tape.global_position = r.to_global(local_pos)
-                tape.global_rotation = r.global_rotation
-                
+
         if has_node("Enemies/Cerberus") and available_rooms.size() > 0:
             var r = available_rooms.pop_back()
             get_node("Enemies/Cerberus").global_position = r.global_position + Vector3(0, 1.0, 0)
-            
-        # Specific floor logic should be handled by extending scripts
 func _on_all_tapes_collected() -> void:
     # Pick a random room
     var rooms = []
