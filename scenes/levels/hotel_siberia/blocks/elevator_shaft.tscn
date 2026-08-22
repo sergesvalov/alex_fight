@@ -56,7 +56,11 @@ material = SubResource("StandardMaterial3D_wall")
 [node name="ElevatorDoorHole" type="CSGBox3D" parent="ElevatorGeometry"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.15, 0.1)
 operation = 2
-size = Vector3(2.0, 2.5, 1.0)
+# Width narrowed from 2.0 to 1.5: with the wall at 4.7m wide, a 2.0m hole left only 1.35m
+# of solid wall on each side to hide a 1.4m-wide sliding door behind - wider than the pocket,
+# so no open_offset could ever fully clear it (confirmed in-game: door visible through the
+# wall when "open"). 1.5m leaves a 1.6m pocket, comfortably wider than the door panel.
+size = Vector3(1.5, 2.5, 1.0)
 
 [node name="ElevatorLight" type="OmniLight3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.75, 2.5)

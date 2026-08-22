@@ -721,6 +721,10 @@ func _generate_single_room(parent: Node, f_scale: float, f_num: int, orig_num: i
 	# Проём в WCSouthWall (X=-2.55, Z=2.5), номер к югу -> basis.z смотрит +Z (без поворота).
 	_add_room_door(inst, "WCDoor", Vector3(-2.55, 0.0, 2.5), 0.0)
 
+	if not inst.has_node("Bed"):
+		print("[generator] _generate_single_room: ", inst.name, " STILL MISSING FURNITURE - children=",
+			inst.get_child_count(), " names=", inst.get_children().map(func(c): return c.name))
+
 	parent.add_child(inst)
 
 func _create_static_box(parent: Node, node_name: String, pos: Vector3, size: Vector3, mat: Material, rot: Vector3 = Vector3.ZERO) -> void:
