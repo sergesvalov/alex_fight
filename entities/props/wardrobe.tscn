@@ -19,36 +19,41 @@ collision_layer = 2
 
 [node name="Body" type="CSGBox3D" parent="Geometry"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 1.1, 0.0)
-size = Vector3(1.2, 2.2, 0.6)
+size = Vector3(1.2, 2.2, 0.65)
 material = SubResource("StandardMaterial3D_wood")
 
+# Was centered at Z=0.05 with depth 0.55, leaving only a 0.075m sliver of Body behind it
+# (Body's own back face is at Z=-0.325) - thin enough that the back panel was effectively
+# missing/invisible in-game. Shifted forward to Z=0.075 (Body depth also grew 0.6->0.65)
+# so there's a solid ~0.125m back wall, while the hole still overshoots Body's front face by
+# 0.025m (same margin as before) to guarantee a full, non-coplanar cut through the open side.
 [node name="Inside" type="CSGBox3D" parent="Geometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 1.1, 0.05)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 1.1, 0.075)
 operation = 2
 size = Vector3(1.1, 2.1, 0.55)
 
 [node name="Divider" type="CSGBox3D" parent="Geometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 1.1, 0.05)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 1.1, 0.075)
 size = Vector3(0.02, 2.1, 0.55)
 material = SubResource("StandardMaterial3D_wood_light")
 
 [node name="Shelf1" type="CSGBox3D" parent="Geometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.28, 0.575, 0.05)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.28, 0.575, 0.075)
 size = Vector3(0.54, 0.05, 0.55)
 material = SubResource("StandardMaterial3D_wood")
 
 [node name="Shelf2" type="CSGBox3D" parent="Geometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.28, 1.1, 0.05)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.28, 1.1, 0.075)
 size = Vector3(0.54, 0.05, 0.55)
 material = SubResource("StandardMaterial3D_wood")
 
 [node name="Shelf3" type="CSGBox3D" parent="Geometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.28, 1.625, 0.05)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.28, 1.625, 0.075)
 size = Vector3(0.54, 0.05, 0.55)
 material = SubResource("StandardMaterial3D_wood")
 
 [node name="HangingRod" type="CSGCylinder3D" parent="Geometry"]
-transform = Transform3D(0, 1, 0, -1, 0, 0, 0, 0, 1, 0.28, 1.9, 0.05)
+transform = Transform3D(0, 1, 0, -1, 0, 0, 0, 0, 1, 0.28, 1.9, 0.075)
 radius = 0.015
 height = 0.48
 sides = 12

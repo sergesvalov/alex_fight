@@ -95,13 +95,13 @@ script = ExtResource("4_level")
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(0.707107, -0.5, 0.5, 0, 0.707107, 0.707107, -0.707107, -0.5, 0.5, 0, 10, 0)
 light_color = Color(0.35, 0.45, 0.6, 1)
-light_energy = 0.05
+light_energy = 0.0575
 shadow_enabled = true
 
 [node name="AtmosphereLight" type="OmniLight3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, -5)
 light_color = Color(0.8, 0.3, 0.1, 1)
-light_energy = 2.0
+light_energy = 2.3
 omni_range = 15.0
 shadow_enabled = true
 

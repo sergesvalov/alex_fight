@@ -100,14 +100,17 @@ material = SubResource("StandardMaterial3D_floor")
 
 [node name="LightBottom" type="OmniLight3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.0, 1.5, 3.5)
+light_energy = 1.15
 omni_range = 6.0
 
 [node name="LightMid" type="OmniLight3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.0, 1.2)
+light_energy = 1.15
 omni_range = 6.0
 
 [node name="LightTop" type="OmniLight3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.0, 5.0, 3.5)
+light_energy = 1.15
 omni_range = 6.0
 
 # DoorEast/DoorWest used to be embedded here as door.tscn instances - a scene that embeds

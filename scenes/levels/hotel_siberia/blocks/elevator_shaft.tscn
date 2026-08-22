@@ -63,6 +63,7 @@ size = Vector3(1.5, 2.5, 1.0)
 [node name="ElevatorLight" type="OmniLight3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.75, 2.5)
 light_color = Color(0.9, 0.95, 1, 1)
+light_energy = 1.15
 omni_range = 8.0
 
 [node name="ElevatorPanel" type="CSGBox3D" parent="."]

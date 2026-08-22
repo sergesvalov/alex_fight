@@ -800,6 +800,12 @@ func _spawn_cassettes(parent: Node, f_scale: float) -> void:
 	var tables = []
 	_find_props(parent, "Table", tables)
 	var chosen_table = _closest_to_spawn(tables)
+
+	if parent.name == "GeneratedFloor_Main":
+		print("[generator] _spawn_cassettes on ", parent.name, ": wardrobes found=", wardrobes.size(),
+			" chosen=", (chosen_wardrobe.get_path() if chosen_wardrobe else "NONE"),
+			" | tables found=", tables.size(),
+			" chosen=", (chosen_table.get_path() if chosen_table else "NONE"))
 		
 	for i in range(3):
 		var inst = scene.instantiate()
@@ -826,6 +832,8 @@ func _spawn_cassettes(parent: Node, f_scale: float) -> void:
 			inst.rotation.y = randf_range(0, PI * 2)
 
 		parent.add_child(inst)
+		if parent.name == "GeneratedFloor_Main":
+			print("[generator] Cassette_", i, " global_position=", inst.global_position)
 
 func _spawn_cerberus(parent: Node, f_scale: float) -> void:
 	var scene = load("res://entities/enemies/cerberus/cerberus.tscn")
