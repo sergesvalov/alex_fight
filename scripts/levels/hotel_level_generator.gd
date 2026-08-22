@@ -122,6 +122,11 @@ var _floor_lights_by_index: Dictionary = {}   # int floor index (1..10) -> Array
 var _lit_floor_index: int = -1
 var _light_y_step: float = 0.0
 
+# One-shot diagnostic latch for the "single_room.tscn loses its furniture/door instances
+# in exported builds" investigation (2026-08-22) - only need to dump the raw SceneState
+# once, not once per room per floor.
+var _diag_single_room_state_logged: bool = false
+
 func _ready() -> void:
 	if GameStateManager.has_signal("all_tapes_collected"):
 		GameStateManager.connect("all_tapes_collected", _on_all_tapes_collected)
@@ -484,10 +489,14 @@ func _generate_maintenance_room(parent: Node, f_scale: float, height: float, thi
 	if door_scene_maint:
 		var maint_door_inst = door_scene_maint.instantiate()
 		maint_door_inst.name = "MaintenanceDoor"
-		parent.add_child(maint_door_inst)
+		# position/rotation/scale MUST be set before add_child(): add_child() fires _ready()
+		# synchronously on the whole subtree (including door.gd's AnimatableBody3D), which
+		# would otherwise see the door still at its pre-placement identity transform - i.e.
+		# sitting at local (0,0,0), right on top of the player's spawn point at world origin.
 		maint_door_inst.position = Vector3(9.65 * f_scale, 0, door_z_center)
 		maint_door_inst.rotation.y = -PI / 2.0
 		maint_door_inst.scale = Vector3(door_w, f_scale, f_scale)
+		parent.add_child(maint_door_inst)
 
 	# Storage wardrobes, backs against the building's own east wall (X=12.65), opening
 	# facing west into the room. Kept north of the doorway gap (Z -24..-22) for clearance.
@@ -499,24 +508,26 @@ func _generate_maintenance_room(parent: Node, f_scale: float, height: float, thi
 		for i in range(2):
 			var wardrobe_inst = wardrobe_scene.instantiate()
 			wardrobe_inst.name = "MaintWardrobe" + str(i + 1)
-			parent.add_child(wardrobe_inst)
 			wardrobe_inst.transform = Transform3D(Basis(Vector3(0, 0, 1), Vector3(0, 1, 0), Vector3(-1, 0, 0)), Vector3(12.25 * f_scale, 0, (-28.0 + i * 2.5) * f_scale))
+			parent.add_child(wardrobe_inst)
 
 func _generate_elevator(parent: Node, f_scale: float, height: float, thickness: float, wall_mat: Material) -> void:
 	var scene = load("res://scenes/levels/hotel_siberia/blocks/elevator_shaft.tscn")
 	if scene:
 		var inst = scene.instantiate()
-		parent.add_child(inst)
+		# position/scale MUST be set before add_child() - see _generate_maintenance_room()
+		# for why (add_child() fires _ready() synchronously on the whole subtree).
 		inst.position = Vector3(ELEVATOR_CENTER_X * f_scale, 0, ELEVATOR_CENTER_Z * f_scale)
 		inst.scale.z = -1.0
+		parent.add_child(inst)
 
 		var door_scene = load("res://entities/props/elevator_door.tscn")
 		if door_scene:
 			var door_inst = door_scene.instantiate()
 			door_inst.name = "ElevatorDoor"
-			inst.add_child(door_inst)
 			door_inst.position = Vector3(0, 0, 0.1 * f_scale)
 			door_inst.scale = Vector3(ELEVATOR_DOOR_SCALE_X, 1.0, 1.0)
+			inst.add_child(door_inst)
 
 		# Floor buttons are NOT created here. elevator_shaft.tscn already ships a real,
 		# wired-up "ButtonFloor4" template under ElevatorPanel, and elevator_controller.gd's
@@ -530,8 +541,11 @@ func _generate_north_stairs(parent: Node, f_scale: float) -> void:
 	var scene = load("res://scenes/levels/hotel_siberia/blocks/north_stairs.tscn")
 	if scene:
 		var inst = scene.instantiate()
-		parent.add_child(inst)
+		# position MUST be set before add_child() - see _generate_maintenance_room() for why
+		# (add_child() fires _ready() synchronously on the whole subtree, including
+		# DoorEast/DoorWest, which would otherwise see this block still at local (0,0,0)).
 		inst.position = Vector3(NORTH_STAIRS_CENTER_X * f_scale, 0, NORTH_STAIRS_CENTER_Z * f_scale)
+		parent.add_child(inst)
 
 func _generate_south_stairs_wall(parent: Node, f_scale: float, height: float, thickness: float, wall_mat: Material) -> void:
 	var z_pos = SOUTH_STAIRS_ZONE_Z_START * f_scale + (thickness / 2.0)
@@ -565,10 +579,11 @@ func _generate_south_stairs_wall(parent: Node, f_scale: float, height: float, th
 	if door_scene:
 		var door_inst = door_scene.instantiate()
 		door_inst.name = "SouthStairsDoor"
-		parent.add_child(door_inst)
+		# See _generate_maintenance_room() for why this must happen before add_child().
 		door_inst.position = Vector3(x_center, 0, z_pos)
 		door_inst.rotation.y = PI
 		door_inst.scale = Vector3(door_w, f_scale, f_scale)
+		parent.add_child(door_inst)
 
 func _generate_south_stairs_ramp(parent: Node, f_scale: float, height: float, floor_thick: float, floor_mat: Material) -> void:
 	# Dog-leg staircase, self-contained per floor (same philosophy as north_stairs.tscn's
@@ -670,6 +685,13 @@ func _generate_single_room(parent: Node, f_scale: float, f_num: int, orig_num: i
 	if not scene:
 		print("[generator] _generate_single_room: FAILED to load single_room.tscn for room ", orig_num)
 		return
+	if not _diag_single_room_state_logged:
+		_diag_single_room_state_logged = true
+		var state = scene.get_state()
+		var raw_names: Array = []
+		for i in range(state.get_node_count()):
+			raw_names.append(state.get_node_name(i))
+		print("[generator] DIAG single_room.tscn SceneState: node_count=", state.get_node_count(), " names=", raw_names)
 	var inst = scene.instantiate()
 	var room_idx = orig_num % 100
 	var final_num = f_num * 100 + room_idx
@@ -733,8 +755,10 @@ func _spawn_cassettes(parent: Node, f_scale: float) -> void:
 	for i in range(3):
 		var inst = scene.instantiate()
 		inst.name = "Cassette_" + str(i)
-		parent.add_child(inst)
-		
+
+		# position/transform MUST be set before add_child() - see _generate_maintenance_room()
+		# for why. chosen_wardrobe/chosen_table are unrelated, already-placed nodes, so reading
+		# their global_transform here is unaffected by inst's own tree membership.
 		if i == 0 and chosen_wardrobe != null:
 			inst.global_transform = chosen_wardrobe.global_transform
 			# X=-0.28 matches the shelf zone's center in wardrobe.tscn (the other half of the
@@ -752,13 +776,16 @@ func _spawn_cassettes(parent: Node, f_scale: float) -> void:
 			inst.position = Vector3(rand_x * f_scale, 0.5 * f_scale, rand_z * f_scale)
 			inst.rotation.y = randf_range(0, PI * 2)
 
+		parent.add_child(inst)
+
 func _spawn_cerberus(parent: Node, f_scale: float) -> void:
 	var scene = load("res://entities/enemies/cerberus/cerberus.tscn")
 	if not scene: return
 	var inst = scene.instantiate()
 	inst.name = "Cerberus"
-	parent.add_child(inst)
+	# position MUST be set before add_child() - see _generate_maintenance_room() for why.
 	inst.position = Vector3(1.0 * f_scale, 0, 10.0 * f_scale)
+	parent.add_child(inst)
 
 func _generate_roof(y_offset: float, f_scale: float) -> void:
 	var parent = Node3D.new()
