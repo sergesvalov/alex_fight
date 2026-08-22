@@ -2,30 +2,29 @@
 
 This file provides architectural guidelines and debugging instructions for AI agents working on the hotel level generator in this project.
 
-## Architecture & Responsibilities (NEW GENERATOR)
+> [!IMPORTANT]
+> **Keep this file honest.** When you change level geometry, edit or delete the section describing it in the *same* commit — never append a new section on top of a stale one. Past confusion on the North Stairs block happened because an old single-floor door design and the current multi-floor design were both documented here at once, contradicting each other. If a section's numbers don't match the current `.tscn`, delete the section — don't leave it "for reference."
 
-The previous architecture relied on external scripts drawing corridor walls dynamically while rooms lacked front walls. **This is NO LONGER TRUE.**
+## Architecture & Responsibilities
 
 1. **Master Generator (`hotel_level_generator.gd`)**:
    - Acts as the central director. It dynamically builds global boundary walls, floors, ceilings, and special corridor blockers (like the South Stairs wall).
    - Instantiates pre-built room CSG blocks directly into the level.
-   
+
 2. **Self-Contained CSG Rooms**:
    - Rooms are instantiated from `blocks/double_room.tscn` and `blocks/single_room.tscn`.
-   - Rooms **DO** contain their own front walls (facing the corridor) and door holes, built using `CSGCombiner3D`. 
+   - Rooms **DO** contain their own front walls (facing the corridor) and door holes, built using `CSGCombiner3D`.
    - Double rooms have an East wall. Single rooms have a West wall.
    - Single rooms intentionally lack an East wall because they align flush with the global building East wall.
 
 3. **Mirroring and Orientations**:
-   - Hotel plumbing is often shared between adjacent rooms. 
+   - Hotel plumbing is often shared between adjacent rooms.
    - We achieve this by mirroring specific rooms along the `Z` axis (`scale.z = -1.0`).
    - For example, Double Room 403 is mirrored so its WC touches Double Room 405's WC at `Z = 0.0`.
    - Single Rooms 411, 413, 416, and 417 are mirrored to ensure their WCs align back-to-back with neighboring single rooms, or cross-corridor with double rooms.
    - **Elevator Shaft (`elevator_shaft.tscn`)**: Mirrored along the Z axis (`scale.z = -1.0`) to correctly orient its interior (panel, lights) while keeping the doorway (`ElevatorDoorHole`) on the South face (local Z=0.1) pointing towards the horizontal corridor.
 
-## Hotel Level Geometry Maps
-
-Это абсолютная, математически идеальная карта гостиницы (Северный блок), полностью восстановленная по всем частям чертежа. 
+## Hotel Level Geometry Map (Modular Grid)
 
 ### Модульная сетка (The 5-Meter Module Grid)
 
@@ -91,19 +90,30 @@ Z (North)
   +-----------------------+-----------------------------------------------+ Z (South)
 ```
 
+### Object Descriptions
+- **#**: Walls (Solid CSGBox3D structures defining the rooms and corridors).
+- **.**: Floor/Ceiling areas.
+- **B**: Bed. A large interactable furniture object where characters can rest or hide.
+- **W**: Wardrobe. A tall wooden storage unit.
+- **T**: Table. A standard desk/table.
+- **C**: Chair. An interactable physics object.
+- **D**: Door. The interactive doors placed at room entrances and WCs.
 
-
-
-
-
-
-
+## Level Instancing & 10 Floors (Added July 2026)
+- The game now has 10 individual Godot scenes for each floor (`scenes/levels/hotel_siberia/hotel_level_1.tscn` to `hotel_level_10.tscn`).
+- Each scene inherits from `base_hotel_level.tscn` but modifies its `HotelGeometry` properties in the inspector to customize:
+  - `floor_number`: Determines the elevator panel display.
+  - `carpet_color`: Sets a unique visual theme for the floor.
+  - `map_texture`: Replaces the floor map image on the wall.
+  - `empty_box_mode`: (Only used on Level 1). If `true`, the generator skips all internal walls and rooms, creating only an empty concrete parallel-piped.
+- The `hotel_level_generator.gd` now runs immediately inside `_ready()` regardless of `Engine.is_editor_hint()`. This ensures geometry is always available at runtime.
+- **P.T. Non-Euclidean Loop**: The game deliberately loads only ONE floor at a time to save resources. When traveling up or down stairs, `seamless_teleporter.gd` loops the player locally and changes the scene. The 10 floors DO NOT physically exist stacked on top of each other in the game.
 
 ## North Stairs Block Map (`blocks/north_stairs.tscn`)
 
-Блок инстанциируется генератором: `inst.position = Vector3(1.05, 0, -30.0)`.
+Верифицировано против текущего `north_stairs.tscn` (2026-08): единая `StairsSouthWall` высотой 4.5м, никакой надставки поверх неё.
 
-Преобразование координат: `global = local + inst.position`
+Блок инстанциируется генератором: `inst.position = Vector3(1.05, 0, -30.0)`. Преобразование координат: `global = local + inst.position`.
 
 ### Ключевые координаты (глобальные)
 
@@ -111,20 +121,22 @@ Z (North)
 |---------|----------|----------|---|------------|
 | StairsEastWall | +4.65..+4.85 | -30.0..-25.1 | 0..4.5 | Восточная стена |
 | StairsWestWall | -2.75..-2.55 | -30.0..-25.1 | 0..4.5 | Западная стена |
-| StairsSouthWall | -2.75..+4.85 | -25.2..-25.1 | 0..4.5 | Южная стена (основная) |
-| StairsSouthWallTop | -2.75..+4.85 | -25.2..-25.1 | 4.5..7.0 | Надставка над западной дверью |
-| DoorHoleEast | +3.25..+4.45 | -25.2..-25.1 | 0..2.2 | **Нижний вход** |
-| DoorHoleWest | -2.45..-1.15 | -25.2..-25.1 | 4.5..6.7 | **Верхний выход** |
+| StairsSouthWall | -2.75..+4.85 | -25.2..-25.1 | 0..4.5 | Южная стена, единый CSGBox3D (без надставки) |
+| DoorHoleEast | +3.25..+4.45 | -25.2..-25.1 | -0.1..2.2 | Вход этого этажа (низ блока) |
+| DoorHoleWest | -2.45..-1.15 | -25.2..-25.1 | -0.1..2.2 | "Выход" этого этажа — физически это дверь у пола, см. примечание ниже |
 | NELanding | +1.25..+3.65 | -30.0..-27.6 | **1.5** (сурф.) | Промежуточная площадка восток |
 | NWLanding | -3.65..-1.25 | -30.0..-27.6 | **3.0** (сурф.) | Промежуточная площадка запад |
 
-### Три пролёта лестницы
+### Три пролёта лестницы (физическая геометрия ступеней внутри блока)
 
 | Пролёт | Ось | Y нижний | Y верхний | Где |
 |--------|-----|----------|-----------|-----|
 | **EastFlight** | Z = -30.0..-27.6 | 0.0 (пол, у сев. стены) | 1.5 (NE Landing) | X = +3.25..+4.45 |
 | **NorthFlight** | Z = -27.6..-25.2 | 1.5 (NE, восток) | 3.0 (NW, запад) | X = -1.25..+1.25 |
 | **WestFlight** | Z = -30.0..-27.6 | 3.0 (NW Landing) | 4.5 (у сев. стены) | X = -4.45..-3.25 |
+
+> [!IMPORTANT]
+> Ступени физически поднимаются с Y=0 до Y=4.5 внутри блока (таблица выше) — но **обе** дверные дыры в южной стене (`DoorHoleEast`, `DoorHoleWest`) вырезаны на одной и той же низкой высоте (Y≈-0.1..2.2), а не одна внизу и одна вверху. Это осознанное решение, не баг: см. правило "Multi-Floor Wall Overlapping" в разделе **Godot 4 CSG & Headless Testing Gotchas** ниже — верхний выход этого этажа физически реализован как нижняя дверь блока *следующего* этажа.
 
 ### Вид сверху — план (масштаб: 1 символ ≈ 0.5м)
 
@@ -145,12 +157,11 @@ Z (North)
   Z=4.9  █████████ ██ █████████████████████████ ██ █████████████  ← WallSouth (Z=-25.1)
                     ▲                                 ▲
                DoorWest                          DoorEast
-             (Y=4.5..6.7)                        (Y=0..2.2)
-              upper exit                         lower entry
+              (обе на Y≈-0.1..2.2, у пола — см. примечание выше)
          global X: -1.75                              +3.85
 ```
 
-### Вид сбоку — профиль высот (по центральной линии)
+### Вид сбоку — профиль высот (по центральной линии, геометрия ступеней)
 
 ```
  Y
@@ -173,669 +184,15 @@ Z (North)
 > [!NOTE]
 > **Transform рамп** (-90°Y): `Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, ox, 0, oz)`. `polygon.x → world -Z`, `polygon.y → world Y`, `depth → world +X`. NorthFlight — identity transform, `depth → world +Z`.
 
-> [!NOTE]
-> **Дверь Western (верхний выход)**: В коммите `6ee1310` ошибочно стояла на Y=0..2.2 (как входная). Правильная позиция: center Y=5.6, size Y=2.2 → дыра Y=4.5..6.7. Требует `StairsSouthWallTop` (надставку стены Y=4.5..7.0).
-
 > [!WARNING]
 > **Вырез в полу**: Генератор НЕ создаёт пол в X=[-2.55..+4.65], Z=[-30..-25.2]. Блок должен своими стенами замкнуть этот проём. `inst.position.X=1.05` центрирует блок (local X=[-3.7..+3.7]) в зоне дыры (global X=[-2.65..+4.75]).
-
-
-
-Блок инстанциируется генератором: `inst.position = Vector3(1.05, 0, -30.0)`.
-
-## Actual Geometry Maps
-
-
-
-### Map at Floor Level (Y=0.0)
-```text
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    #####################
-       BBBBBBBB         #
-       BBBBBBBB         #
-       BBBBBBBB         #
-       BBBBBBBB         #
-       BBBBBBBB         #
-              #         #
-              #         #
-              #         #
-              ####DDD####
-                        #
-                        #
-                        #
-                        #
-                        #
-                        #
-         CC  CC         D
-        TCC TCC     WWW D
-        TTT TTT     WWW #
-    ####TTT#TTT#####WWW##
-    #####################              #################
-       BBBBBBBB         #              ##   #
-       BBBBBBBB         #              ##   #
-       BBBBBBBB         #              ##   #
-       BBBBBBBB         #              ##DDD#
-       BBBBBBBB         #              ##DDD#
-              #         #              D
-              #         #              D
-              #         #              ##
-              ####DDD####              #################
-                        #              #################
-                        #              ##
-                        #              D
-                        #              D
-                        #              ##DDD#
-                        #              ##DDD#
-         CC  CC         D              ##   #
-        TCC TCC     WWW D              ##   #
-        TTT TTT     WWW #              ##   #
-    ####TTT#TTT#####WWW##              #################
-    ####TTT#TTT#####WWW##              #################
-        TTT TTT     WWW #              ##   #
-        TCC TCC     WWW D              ##   #
-         CC  CC         D              ##   #
-                        #              ##DDD#
-                        #              ##DDD#
-                        #              D
-                        #              D
-                        #              ##
-                        #              #################
-              ####DDD####              #################
-              #         #              ##
-              #         #              D
-              #         #              D
-       BBBBBBBB         #              ##DDD#
-       BBBBBBBB         #              ##DDD#
-       BBBBBBBB         #              ##   #
-       BBBBBBBB         #              ##   #
-       BBBBBBBB         #              ##   #
-    #####################              #################
-    #####################              #################
-       BBBBBBBB         #              ##   #
-       BBBBBBBB         #              ##   #
-       BBBBBBBB         #              ##   #
-       BBBBBBBB         #              ##DDD#
-       BBBBBBBB         #              ##DDD#
-              #         #              D
-              #         #              D
-              #         #              ##
-              ####DDD####              #################
-                        #              #################
-                        #              ##
-                        #              D
-                        #              D
-                        #              ##DDD#
-                        #              ##DDD#
-         CC  CC         D              ##   #
-        TCC TCC     WWW D              ##   #
-        TTT TTT     WWW #              ##   #
-    ####TTT#TTT#####WWW##              #################
-    #####################              #################
-       BBBBBBBB         #              ##
-       BBBBBBBB         #              D
-       BBBBBBBB         #              D
-       BBBBBBBB         #              ##DDD#
-       BBBBBBBB         #              ##DDD#
-              #         #              ##   #
-              #         #              ##   #
-              #         #              ##   #
-              ####DDD####              #################
-                        #              #################
-                        #              ##   #
-                        #              ##   #
-                        #              ##   #
-                        #              ##DDD#
-                        #              ##DDD#
-         CC  CC         D              D
-        TCC TCC     WWW D              D
-        TTT TTT     WWW #              ##
-    ####TTT#TTT#####WWW##              #################
-    ####TTT#TTT#####WWW##              #################
-        TTT TTT     WWW #              ##   #
-        TCC TCC     WWW D              ##   #
-         CC  CC         D              ##   #
-                        #              ##DDD#
-                        #              ##DDD#
-                        #              D
-                        #              D
-                        #              ##
-                        #              #################
-              ####DDD####
-              #         #
-              #         #
-              #         #
-       BBBBBBBB         #
-       BBBBBBBB         #
-       BBBBBBBB         #
-       BBBBBBBB         #
-       BBBBBBBB         #
-    #####################
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-```
-
-### Map at 1 Meter (Y=1.0)
-```text
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    #####################
-              #         #
-              #         #
-              #         #
-              #         #
-              #         #
-              #         #
-              #         #
-              #         #
-              ####DDD####
-                        #
-                        #
-                        #
-                        #
-                        #
-                        #
-                        D
-                    WWW D
-                    WWW #
-    ################WWW##
-    #####################              #################
-              #         #              ##   #
-              #         #              ##   #
-              #         #              ##   #
-              #         #              ##DDD#
-              #         #              ##DDD#
-              #         #              D
-              #         #              D
-              #         #              ##
-              ####DDD####              #################
-                        #              #################
-                        #              ##
-                        #              D
-                        #              D
-                        #              ##DDD#
-                        #              ##DDD#
-                        D              ##   #
-                    WWW D              ##   #
-                    WWW #              ##   #
-    ################WWW##              #################
-    ################WWW##              #################
-                    WWW #              ##   #
-                    WWW D              ##   #
-                        D              ##   #
-                        #              ##DDD#
-                        #              ##DDD#
-                        #              D
-                        #              D
-                        #              ##
-                        #              #################
-              ####DDD####              #################
-              #         #              ##
-              #         #              D
-              #         #              D
-              #         #              ##DDD#
-              #         #              ##DDD#
-              #         #              ##   #
-              #         #              ##   #
-              #         #              ##   #
-    #####################              #################
-    #####################              #################
-              #         #              ##   #
-              #         #              ##   #
-              #         #              ##   #
-              #         #              ##DDD#
-              #         #              ##DDD#
-              #         #              D
-              #         #              D
-              #         #              ##
-              ####DDD####              #################
-                        #              #################
-                        #              ##
-                        #              D
-                        #              D
-                        #              ##DDD#
-                        #              ##DDD#
-                        D              ##   #
-                    WWW D              ##   #
-                    WWW #              ##   #
-    ################WWW##              #################
-    #####################              #################
-              #         #              ##
-              #         #              D
-              #         #              D
-              #         #              ##DDD#
-              #         #              ##DDD#
-              #         #              ##   #
-              #         #              ##   #
-              #         #              ##   #
-              ####DDD####              #################
-                        #              #################
-                        #              ##   #
-                        #              ##   #
-                        #              ##   #
-                        #              ##DDD#
-                        #              ##DDD#
-                        D              D
-                    WWW D              D
-                    WWW #              ##
-    ################WWW##              #################
-    ################WWW##              #################
-                    WWW #              ##   #
-                    WWW D              ##   #
-                        D              ##   #
-                        #              ##DDD#
-                        #              ##DDD#
-                        #              D
-                        #              D
-                        #              ##
-                        #              #################
-              ####DDD####
-              #         #
-              #         #
-              #         #
-              #         #
-              #         #
-              #         #
-              #         #
-              #         #
-    #####################
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-```
-
-### Map at Wall/Ceiling intersection (Y=4.0)
-```text
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    #####################
-              #         #
-              #         #
-              #         #
-              #         #
-              #         #
-              #         #
-              #         #
-              #         #
-              ###########
-                        #
-                        #
-                        #
-                        #
-                        #
-                        #
-                        #
-                        #
-                        #
-    #####################
-    #####################              #################
-              #         #              ##   #
-              #         #              ##   #
-              #         #              ##   #
-              #         #              ######
-              #         #              ######
-              #         #              ##
-              #         #              ##
-              #         #              ##
-              ###########              #################
-                        #              #################
-                        #              ##
-                        #              ##
-                        #              ##
-                        #              ######
-                        #              ######
-                        #              ##   #
-                        #              ##   #
-                        #              ##   #
-    #####################              #################
-    #####################              #################
-                        #              ##   #
-                        #              ##   #
-                        #              ##   #
-                        #              ######
-                        #              ######
-                        #              ##
-                        #              ##
-                        #              ##
-                        #              #################
-              ###########              #################
-              #         #              ##
-              #         #              ##
-              #         #              ##
-              #         #              ######
-              #         #              ######
-              #         #              ##   #
-              #         #              ##   #
-              #         #              ##   #
-    #####################              #################
-    #####################              #################
-              #         #              ##   #
-              #         #              ##   #
-              #         #              ##   #
-              #         #              ######
-              #         #              ######
-              #         #              ##
-              #         #              ##
-              #         #              ##
-              ###########              #################
-                        #              #################
-                        #              ##
-                        #              ##
-                        #              ##
-                        #              ######
-                        #              ######
-                        #              ##   #
-                        #              ##   #
-                        #              ##   #
-    #####################              #################
-    #####################              #################
-              #         #              ##
-              #         #              ##
-              #         #              ##
-              #         #              ######
-              #         #              ######
-              #         #              ##   #
-              #         #              ##   #
-              #         #              ##   #
-              ###########              #################
-                        #              #################
-                        #              ##   #
-                        #              ##   #
-                        #              ##   #
-                        #              ######
-                        #              ######
-                        #              ##
-                        #              ##
-                        #              ##
-    #####################              #################
-    #####################              #################
-                        #              ##   #
-                        #              ##   #
-                        #              ##   #
-                        #              ######
-                        #              ######
-                        #              ##
-                        #              ##
-                        #              ##
-                        #              #################
-              ###########
-              #         #
-              #         #
-              #         #
-              #         #
-              #         #
-              #         #
-              #         #
-              #         #
-    #####################
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-```
-
-
-### Object Descriptions
-- **#**: Walls (Solid CSGBox3D structures defining the rooms and corridors).
-- **.**: Floor/Ceiling areas.
-- **B**: Bed. A large interactable furniture object where characters can rest or hide.
-- **W**: Wardrobe. A tall wooden storage unit.
-- **T**: Table. A standard desk/table.
-- **C**: Chair. An interactable physics object.
-- **D**: Door. The interactive doors placed at room entrances and WCs. 
-
-## Level Instancing & 10 Floors (Added July 2026)
-- The game now has 10 individual Godot scenes for each floor (`scenes/levels/hotel_siberia/hotel_level_1.tscn` to `hotel_level_10.tscn`).
-- Each scene inherits from `base_hotel_level.tscn` but modifies its `HotelGeometry` properties in the inspector to customize:
-  - `floor_number`: Determines the elevator panel display.
-  - `carpet_color`: Sets a unique visual theme for the floor.
-  - `map_texture`: Replaces the floor map image on the wall.
-  - `empty_box_mode`: (Only used on Level 1). If `true`, the generator skips all internal walls and rooms, creating only an empty concrete parallel-piped.
-- The `hotel_level_generator.gd` now runs immediately inside `_ready()` regardless of `Engine.is_editor_hint()`. This ensures geometry is always available at runtime.
-- **P.T. Non-Euclidean Loop**: The game deliberately loads only ONE floor at a time to save resources. When traveling up or down stairs, `seamless_teleporter.gd` loops the player locally and changes the scene. The 10 floors DO NOT physically exist stacked on top of each other in the game.
-
-## North Stairs Room Map (Coordinates)
-
-The North Stairs room is an enclosed space located at the far North end of the vertical corridor.
-
-**Global Coordinates (f_scale = 1.0):**
-- **Center of the Room** (Approximate): `X = 1.05`, `Z = -27.5`
-- **North Wall**: `Z = -30.1` (Provided by the global building `Wall_North`)
-- **South Wall**: `Z = -25.1` (Provided by `StairsSouthWall`, with two door holes)
-- **West Wall**: `X = -2.65` (Provided by `StairsWestWall`)
-- **East Wall**: `X = 4.75` (Provided by `StairsEastWall`)
-- **West Doorway**: Centered at `X = -1.75`, `Z = -25.1`, Width = `1.2m`.
-- **East Doorway**: Centered at `X = 3.85`, `Z = -25.1`, Width = `1.2m`.
-- **NW Landing**: 2.4m x 2.4m square, Height = 2.67m. Centered at `X = -1.35`, `Z = -28.8`.
-- **NE Landing**: 2.4m x 2.4m square, Height = 1.33m. Centered at `X = 3.45`, `Z = -28.8`.
-- **East Flight**: 1.2m wide (aligned with door). Rises from `Y = 0.0` at `Z = -25.2` (East Door) up to `Y = 1.33m` at `Z = -27.6` (NE Landing).
-- **North Flight**: 2.4m deep. Rises from `Y = 1.33m` at `X = 2.25` (Edge of NE Landing) up to `Y = 2.67m` at `X = -0.15` (Edge of NW Landing).
-- **West Flight**: 1.2m wide (aligned with door). Rises from `Y = 2.67m` at `Z = -27.6` (NW Landing) up to `Y = 4.0m` at `Z = -25.2` (West Door, Ceiling level).
-
-**Schematic Map:**
-```text
-      Global North Wall (Z = -30.1)
-      +-------------+-------------+-------------+
-      |  NW LANDING <|| NORTH ||||<  NE LANDING |
-      |  (2.4x2.4)  <|| STAIR ||||<  (2.4x2.4)  |
-W     |  H = 2.67m  <|| UP TO NW|<   H = 1.33m  |     E
-E     +-------------+-------------+-------------+     A
-S (-2.65)| |||||||| | NORTH STAIRS| ||||||||||| |(4.75)S
-T     |  | |||||||| | ROOM        | ||||||||||| |     T
-      |  |WEST STAIR|             | |EAST STAIR |     |
-W     |  |UP TO ROOF|             | | UP TO NE  |     W
-A     |  | |||||||| |             | ||||||||||| |     A
-L     |  | |||||||| |             | ||||||||||| |     L
-L     |  +----------+             +-------------+     L
-      |                                         |
-      +----    -------------------------    ----+
-       South Wall (Z = -25.1)
-   West Door (X = -1.75)           East Door (X = 3.85)
-           |                                |
-                         VERTICAL CORRIDOR
-```
 
 ## Godot 4 CSG & Headless Testing Gotchas
 
 > [!CAUTION]
 > **Headless CSG Mesh Generation Delay**
 > When running autotests via Jenkins (`godot --headless`), the engine uses `RendererDummy`. Because there is no active rendering pipeline, Godot **will not** automatically evaluate complex CSG boolean operations (`operation = 2` / SUBTRACTION). Tests that rely on holes cut into `CSGCombiner3D` walls will fail because the walls remain solid.
-> 
+>
 > **Fix:** In your test `_ready()` function, recursively iterate over all `CSGShape3D` nodes and manually call `node.get_meshes()`. This forces the engine to synchronously compute the CSG meshes and construct the updated collision shape (the `ConcavePolygonShape3D`).
 
 > [!WARNING]
@@ -846,5 +203,5 @@ L     |  +----------+             +-------------+     L
 
 > [!IMPORTANT]
 > **Multi-Floor Wall Overlapping & Doorway Architecture**
-> When dealing with looped or stacked levels (like the P.T. staircase), **NEVER** extend a block's wall height (`StairsSouthWall`) into the next floor (e.g. making it 7m tall), and **NEVER** use overlapping boxes (like `StairsSouthWallTop`). Doing so creates **non-manifold overlapping geometry**, which completely breaks Godot's CSG subtraction (`operation = 2`).
+> When dealing with looped or stacked levels (like the P.T. staircase), **NEVER** extend a block's wall height (`StairsSouthWall`) into the next floor (e.g. making it 7m tall), and **NEVER** use overlapping boxes (like a `StairsSouthWallTop` addition). Doing so creates **non-manifold overlapping geometry**, which completely breaks Godot's CSG subtraction (`operation = 2`).
 > **The Rule:** Each stair block's walls must strictly end at the floor height (4.5m). When a player climbs up from Floor N and exits at Y=4.5, they are exiting through the wall of **Floor N+1**. Therefore, `DoorHoleWest` (the upper exit) is located at the bottom (Y=1.05) of Floor N+1's block, piercing Floor N+1's wall to let the Floor N player out.
