@@ -528,8 +528,14 @@ func _generate_elevator(parent: Node, f_scale: float, height: float, thickness: 
 		# for why (add_child() fires _ready() synchronously on the whole subtree).
 		inst.position = Vector3(ELEVATOR_CENTER_X * f_scale, 0, ELEVATOR_CENTER_Z * f_scale)
 		inst.scale.z = -1.0
-		parent.add_child(inst)
 
+		# ElevatorDoor MUST be added to inst before inst itself is added to parent: adding inst
+		# to parent fires elevator_controller.gd's _ready() synchronously, which looks up
+		# "ElevatorDoor/AnimatableBody3D" once and caches it in door_animatable - if that lookup
+		# happens before this door exists, door_animatable stays null forever, and the whole
+		# button-triggered open/close sequence (_run_elevator_sequence/_arrive_and_open) silently
+		# never touches the door (interacting with the door directly still works, since that
+		# doesn't go through elevator_controller.gd at all).
 		var door_scene = load("res://entities/props/elevator_door.tscn")
 		if door_scene:
 			var door_inst = door_scene.instantiate()
@@ -537,6 +543,8 @@ func _generate_elevator(parent: Node, f_scale: float, height: float, thickness: 
 			door_inst.position = Vector3(0, 0, 0.1 * f_scale)
 			door_inst.scale = Vector3(ELEVATOR_DOOR_SCALE_X, 1.0, 1.0)
 			inst.add_child(door_inst)
+
+		parent.add_child(inst)
 
 		# Floor buttons are NOT created here. elevator_shaft.tscn already ships a real,
 		# wired-up "ButtonFloor4" template under ElevatorPanel, and elevator_controller.gd's

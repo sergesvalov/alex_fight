@@ -7,5 +7,6 @@ func interact(player):
     if player.has_method("collect_tape"):
         player.collect_tape()
     GameStateManager.collect_tape(tape_id)
+    GameStateManager.add_to_inventory(GameStateManager.current_floor, tape_id)
     DialogSystem.play_tape(tape_id, global_position)
     queue_free()

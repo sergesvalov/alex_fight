@@ -54,7 +54,14 @@ func _setup_buttons() -> void:
 		var z_pos = -0.08 if col == 0 else 0.08
 		var y_pos = -0.3 + row * 0.15
 		btn.position = Vector3(0.01, y_pos, z_pos)
-		
+		# elevator_button.gd caches original_pos in its own _ready(), which already fired
+		# (with the template's stale pre-layout position) by the time this line runs - for
+		# the template button (floor 4) that's simply because it's scene-authored and _ready()
+		# runs before this function; for duplicates it's because add_child() above fires
+		# _ready() before btn.position is set here. Left uncorrected, every button's press
+		# animation would return it to that stale position instead of its real panel slot.
+		btn.original_pos = btn.position
+
 		# Floor number label
 		if not btn.has_node("Label3D"):
 			var lbl = Label3D.new()

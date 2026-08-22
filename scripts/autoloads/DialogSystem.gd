@@ -26,19 +26,25 @@ func load_tape_data() -> void:
         push_error("Could not open tapes.json")
 
 func play_tape(tape_id: int, spawn_position: Vector3) -> void:
+    play_tape_for_floor(GameStateManager.current_floor, tape_id, spawn_position)
+
+# Same as play_tape(), but for a specific floor rather than assuming the player's current one -
+# needed to replay a tape from the inventory after the player has already moved to another
+# floor/loop (GameStateManager.current_floor would point at the wrong floor's tape_data by then).
+func play_tape_for_floor(floor_num: int, tape_id: int, spawn_position: Vector3) -> void:
     if is_playing:
         return
-        
-    var floor_str = str(GameStateManager.current_floor)
+
+    var floor_str = str(floor_num)
     if not tape_data.has(floor_str):
         push_error("No tape data for floor " + floor_str)
         return
-        
+
     var floor_tapes = tape_data[floor_str]
     if tape_id < 0 or tape_id >= floor_tapes.size():
         push_error("Invalid tape_id for floor " + floor_str)
         return
-        
+
     var current_tape = floor_tapes[tape_id]
     
     is_playing = true

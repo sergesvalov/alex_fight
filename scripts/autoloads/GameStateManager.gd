@@ -16,7 +16,10 @@ enum GameState {
 }
 
 var current_state: GameState = GameState.EXPLORING
-var tapes_found: Array[int] = []         # [0, 1, 2] — ID найденных кассет
+var tapes_found: Array[int] = []         # [0, 1, 2] — ID найденных кассет на ТЕКУЩЕМ этаже,
+                                          # сбрасывается в reset_floor() при переходе на новый этаж/виток
+var collected_tapes: Array[Dictionary] = []  # [{"floor": 4, "id": 0}, ...] — постоянный инвентарь
+                                              # всех когда-либо найденных кассет, НЕ сбрасывается
 var exit_code_known: bool = false
 var cerberus_spawned: bool = false
 var current_floor: int = 4
@@ -32,6 +35,12 @@ var secret_portal_room_b: int = 0  # e.g., 310
 func change_state(new_state: GameState) -> void:
     current_state = new_state
     state_changed.emit(new_state)
+
+func add_to_inventory(floor_num: int, tape_id: int) -> void:
+    for entry in collected_tapes:
+        if entry["floor"] == floor_num and entry["id"] == tape_id:
+            return # already have this one, don't duplicate
+    collected_tapes.append({"floor": floor_num, "id": tape_id})
 
 func collect_tape(tape_id: int) -> void:
     if tape_id not in tapes_found:
