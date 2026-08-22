@@ -115,8 +115,17 @@ func _csgbox_x_range(box: CSGBox3D) -> Vector2:
 	var cx = box.global_transform.origin.x
 	return Vector2(cx - half, cx + half)
 
+# _create_static_box() never sets an explicit name on the CollisionShape3D it creates,
+# so it gets whatever default Godot assigns - looking it up by the literal path
+# "CollisionShape3D" is not reliable. Finding it by type is.
+func _find_collision_shape(body: Node) -> CollisionShape3D:
+	for child in body.get_children():
+		if child is CollisionShape3D:
+			return child
+	return null
+
 func _static_box_x_range(body: Node3D) -> Vector2:
-	var coll: CollisionShape3D = body.get_node_or_null("CollisionShape3D")
+	var coll: CollisionShape3D = _find_collision_shape(body)
 	if not coll or not coll.shape:
 		return Vector2(NAN, NAN)
 	var half = coll.shape.size.x / 2.0
@@ -168,20 +177,25 @@ func _check_south_stairs_floor_slabs(floor_node: Node, f_scale: float) -> void:
 # it's supposed to meet, instead of trusting the box's declared center position.
 
 func _static_box_top_y(body: Node3D) -> float:
-	var coll: CollisionShape3D = body.get_node_or_null("CollisionShape3D")
+	var coll: CollisionShape3D = _find_collision_shape(body)
 	if not coll or not coll.shape:
 		return NAN
 	return body.global_transform.origin.y + coll.shape.size.y / 2.0
 
 func _ramp_surface_at_local_x(ramp: Node3D, x_sign: float) -> Vector3:
-	var coll: CollisionShape3D = ramp.get_node_or_null("CollisionShape3D")
+	var coll: CollisionShape3D = _find_collision_shape(ramp)
+	if not coll or not coll.shape:
+		return Vector3(NAN, NAN, NAN)
 	var half_len = coll.shape.size.x / 2.0
 	var half_thick = coll.shape.size.y / 2.0
 	var local_corner = Vector3(x_sign * half_len, half_thick, 0.0)  # top face, at the given end
 	return ramp.global_transform * local_corner
 
 func _assert_surface_match(actual_y: float, expected_y: float, label: String, tolerance: float = 0.03) -> void:
-	if abs(actual_y - expected_y) > tolerance:
+	if is_nan(actual_y) or is_nan(expected_y):
+		print("❌ FAIL: ", label, " - could not measure geometry (missing CollisionShape3D)")
+		errors += 1
+	elif abs(actual_y - expected_y) > tolerance:
 		print("❌ FAIL: ", label, " - height mismatch: ", actual_y, "m vs ", expected_y, "m (diff ", actual_y - expected_y, "m) - unwalkable step")
 		errors += 1
 	else:
@@ -221,7 +235,10 @@ func _check_south_stairs_ramp_surfaces(floor_node: Node, f_scale: float) -> void
 # and never negative beyond a tiny float-precision margin (i.e. no interpenetration).
 
 func _assert_seam(gap: float, label: String, max_gap: float = 0.3, min_gap: float = -0.05) -> void:
-	if gap > max_gap:
+	if is_nan(gap):
+		print("❌ FAIL: ", label, " - could not measure geometry (missing CollisionShape3D)")
+		errors += 1
+	elif gap > max_gap:
 		print("❌ FAIL: ", label, " - gap = ", gap, "m (> ", max_gap, "m) - looks like a dead zone")
 		errors += 1
 	elif gap < min_gap:
