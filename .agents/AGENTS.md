@@ -107,7 +107,7 @@ Z (North)
   - `map_texture`: Replaces the floor map image on the wall.
   - `empty_box_mode`: (Only used on Level 1). If `true`, the generator skips all internal walls and rooms, creating only an empty concrete parallel-piped.
 - The `hotel_level_generator.gd` now runs immediately inside `_ready()` regardless of `Engine.is_editor_hint()`. This ensures geometry is always available at runtime.
-- **P.T. Non-Euclidean Loop**: The game deliberately loads only ONE floor at a time to save resources. When traveling up or down stairs, `seamless_teleporter.gd` loops the player locally and changes the scene. The 10 floors DO NOT physically exist stacked on top of each other in the game.
+- **P.T. Non-Euclidean Loop (corrected 2026-08-22 - the paragraph this replaces was wrong on both counts)**: `seamless_teleporter.gd` does not exist in this codebase (removed as dead code, never wired to any node) and never implemented the loop. All 10 floors DO physically coexist simultaneously in one scene, stacked at different Y offsets computed in `_generate_level()` (`y_offset = (i - floor_number) * y_step`, see `hotel_level_generator.gd`) - nothing is loaded/unloaded per floor. The "infinite loop" illusion comes entirely from stairs/elevator logic teleporting the player's Y position between these already-built floors (north_stairs' door-based teleport, the south stairs dog-leg ramps, and `elevator_controller.gd`'s button sequence all rely on this - see MECHANICS.md). Per-floor lighting (`_set_lit_floor()`) exists specifically because all floors' lights would otherwise be lit at once.
 
 ## North Stairs Block Map (`blocks/north_stairs.tscn`)
 

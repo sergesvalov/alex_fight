@@ -122,15 +122,40 @@ pipeline {
                             }
                         }
 
-                        stage('Build Android APKs') {
+                        stage('Build & Sign Android APKs') {
                             if (params.BUILD_ANDROID) {
-                                echo "Запуск экспорта Android-проектов (Phone & VR)..."
+                                echo "Запуск экспорта и подписи Android-проектов (Phone & VR)..."
                                 sh '''
+                                sign_apk() {
+                                    APK_PATH=$1
+                                    if [ -f "$APK_PATH" ]; then
+                                        if [ -f "release.keystore" ]; then
+                                            zipalign -v -p 4 "$APK_PATH" "${APK_PATH%.apk}-aligned.apk"
+                                            apksigner sign --ks release.keystore --ks-pass pass:YOUR_PASSWORD_HERE --out "${APK_PATH%.apk}-release.apk" "${APK_PATH%.apk}-aligned.apk"
+                                            rm "$APK_PATH" "${APK_PATH%.apk}-aligned.apk"
+                                            # Переименовываем обратно, чтобы архив Jenkins корректно подхватил файлы
+                                            mv "${APK_PATH%.apk}-release.apk" "$APK_PATH"
+                                        else
+                                            echo "Файл release.keystore не найден. Выполняем подпись с помощью debug.keystore для $APK_PATH..."
+                                            if [ ! -f "debug.keystore" ]; then
+                                                echo "Генерируем временный debug.keystore..."
+                                                keytool -keyalg RSA -genkeypair -alias androiddebugkey -keypass android -keystore debug.keystore -storepass android -dname "CN=Android Debug,O=Android,C=US" -validity 9999
+                                            fi
+                                            zipalign -v -p 4 "$APK_PATH" "${APK_PATH%.apk}-aligned.apk"
+                                            apksigner sign --ks debug.keystore --ks-pass pass:android --ks-key-alias androiddebugkey --key-pass pass:android --out "${APK_PATH%.apk}-signed.apk" "${APK_PATH%.apk}-aligned.apk"
+                                            rm "$APK_PATH" "${APK_PATH%.apk}-aligned.apk"
+                                            mv "${APK_PATH%.apk}-signed.apk" "$APK_PATH"
+                                        fi
+                                    fi
+                                }
+
                                 if grep -q 'name="Android"' export_presets.cfg 2>/dev/null; then
                                     echo "Копируем конфиг телефона..."
                                     cp configs/project.phone.godot project.godot
                                     godot --headless --export-release "Android" build/alex_fight.apk || true
                                     if [ ! -f "build/alex_fight.apk" ]; then echo 'APK build failed!'; exit 1; fi
+                                    echo "Подписываем build/alex_fight.apk..."
+                                    sign_apk "build/alex_fight.apk"
                                 else
                                     echo "Пресет Android не найден в export_presets.cfg. Сборка обычного APK пропущена."
                                 fi
@@ -142,15 +167,17 @@ pipeline {
                                     godot --headless -s tests/verify_vr_config.gd || { echo 'VR CONFIG TEST FAILED!'; exit 1; }
                                     godot --headless --export-release "Android Quest 2" build/alex_fight_vr.apk || true
                                     if [ ! -f "build/alex_fight_vr.apk" ]; then echo 'VR APK build failed!'; exit 1; fi
+                                    echo "Подписываем build/alex_fight_vr.apk..."
+                                    sign_apk "build/alex_fight_vr.apk"
                                 else
                                     echo "Пресет Android Quest 2 не найден в export_presets.cfg. Сборка VR APK пропущена."
                                 fi
                                 '''
                             } else {
-                                echo "Сборка Android APK пропущена (BUILD_ANDROID = false)"
+                                echo "Сборка и подпись Android APK пропущены (BUILD_ANDROID = false)"
                             }
                         }
-                        
+
                         stage('Build PC (Windows)') {
                             if (params.BUILD_WINDOWS) {
                                 echo "Запуск экспорта Windows-проекта для теста..."
@@ -194,37 +221,6 @@ pipeline {
                             } else {
                                 echo "Сборка для macOS пропущена (BUILD_MAC = false)"
                             }
-                        }
-
-                        stage('Production Sign (Android)') {
-                            echo "Переподписание боевым ключом (если он есть)..."
-                            sh '''
-                            sign_apk() {
-                                APK_PATH=$1
-                                if [ -f "$APK_PATH" ]; then
-                                    if [ -f "release.keystore" ]; then
-                                        zipalign -v -p 4 "$APK_PATH" "${APK_PATH%.apk}-aligned.apk"
-                                        apksigner sign --ks release.keystore --ks-pass pass:YOUR_PASSWORD_HERE --out "${APK_PATH%.apk}-release.apk" "${APK_PATH%.apk}-aligned.apk"
-                                        rm "$APK_PATH" "${APK_PATH%.apk}-aligned.apk"
-                                        # Мы переименовываем обратно, чтобы архив Jenkins корректно подхватил файлы
-                                        mv "${APK_PATH%.apk}-release.apk" "$APK_PATH"
-                                    else
-                                        echo "Файл release.keystore не найден. Выполняем подпись с помощью debug.keystore для $APK_PATH..."
-                                        if [ ! -f "debug.keystore" ]; then
-                                            echo "Генерируем временный debug.keystore..."
-                                            keytool -keyalg RSA -genkeypair -alias androiddebugkey -keypass android -keystore debug.keystore -storepass android -dname "CN=Android Debug,O=Android,C=US" -validity 9999
-                                        fi
-                                        zipalign -v -p 4 "$APK_PATH" "${APK_PATH%.apk}-aligned.apk"
-                                        apksigner sign --ks debug.keystore --ks-pass pass:android --ks-key-alias androiddebugkey --key-pass pass:android --out "${APK_PATH%.apk}-signed.apk" "${APK_PATH%.apk}-aligned.apk"
-                                        rm "$APK_PATH" "${APK_PATH%.apk}-aligned.apk"
-                                        mv "${APK_PATH%.apk}-signed.apk" "$APK_PATH"
-                                    fi
-                                fi
-                            }
-                            
-                            sign_apk "build/alex_fight.apk"
-                            sign_apk "build/alex_fight_vr.apk"
-                            '''
                         }
                     }
                 }
