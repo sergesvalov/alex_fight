@@ -642,11 +642,15 @@ func _generate_double_room(parent: Node, f_scale: float, f_num: int, orig_num: i
 	var room_idx = orig_num % 100
 	var final_num = f_num * 100 + room_idx
 	inst.name = "DoubleRoom_" + str(final_num)
-	parent.add_child(inst)
 
+	# position/scale MUST be set before add_child(): add_child() fires _ready() on the whole
+	# subtree synchronously, including every door's AnimatableBody3D - any code that reads
+	# global_transform in _ready() (including doors) would otherwise see the room still at
+	# its pre-move, pre-mirror identity transform.
 	inst.position = Vector3(DOUBLE_ROOM_BASE_X * f_scale, 0, layout["z"] * f_scale)
 	if layout["mirror"]:
 		inst.scale.z = -1.0
+	parent.add_child(inst)
 
 func _generate_single_room(parent: Node, f_scale: float, f_num: int, orig_num: int) -> void:
 	var layout = SINGLE_ROOM_LAYOUT.get(orig_num)
@@ -657,11 +661,12 @@ func _generate_single_room(parent: Node, f_scale: float, f_num: int, orig_num: i
 	var room_idx = orig_num % 100
 	var final_num = f_num * 100 + room_idx
 	inst.name = "SingleRoom_" + str(final_num)
-	parent.add_child(inst)
 
+	# See _generate_double_room() for why this must happen before add_child().
 	inst.position = Vector3(SINGLE_ROOM_BASE_X * f_scale, 0, layout["z"] * f_scale)
 	if layout["mirror"]:
 		inst.scale.z = -1.0
+	parent.add_child(inst)
 
 func _create_static_box(parent: Node, node_name: String, pos: Vector3, size: Vector3, mat: Material, rot: Vector3 = Vector3.ZERO) -> void:
 	var static_body = StaticBody3D.new()

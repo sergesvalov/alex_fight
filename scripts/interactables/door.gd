@@ -10,6 +10,23 @@ var is_open: bool = false
 var is_moving: bool = false
 var open_angle: float = -PI / 2.0
 
+func _ready() -> void:
+	# Diagnostic for the "door floating in the corridor / stuck in the wall" bug reported
+	# 2026-08-22: rooms placed with mirror:true get inst.scale.z = -1.0 on their whole subtree
+	# (see hotel_level_generator.gd), which is an ancestor NEGATIVE scale reaching this
+	# AnimatableBody3D. Godot explicitly does not support physics bodies under a mirrored
+	# (negative-determinant) ancestor transform - the suspicion is that this is exactly what's
+	# producing the broken doors. This print makes that visible without attaching a debugger.
+	var det = global_transform.basis.determinant()
+	var door_root = get_parent()
+	var room = door_root.get_parent() if door_root else null
+	var room_desc = (room.name + " scale=" + str(room.scale)) if room else "?"
+	print("[door.gd] ready: node=", get_path(), " in room=", room_desc,
+		" DoorRoot=", (door_root.name if door_root else "?"),
+		" global_pos=", global_position, " global_basis.z=", global_transform.basis.z,
+		" det(basis)=", det,
+		(" <-- MIRRORED ANCESTOR (unsupported for physics bodies)" if det < 0.0 else ""))
+
 func set_door_number(number: String) -> void:
 	var label = get_node_or_null("RoomNumberLabel")
 	if label:
