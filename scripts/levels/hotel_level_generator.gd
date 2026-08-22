@@ -114,6 +114,14 @@ static func _load_texture_safe(path: String) -> Texture2D:
 @onready var ceiling_texture = _load_texture_safe("res://assets/textures/hotel_wallpaper.jpg")
 @onready var floor_texture = _load_texture_safe("res://assets/textures/hotel_carpet.jpg")
 
+# Per-floor lighting: all 10 floors physically coexist in this one scene, stacked at
+# different Y offsets (see _generate_level) - without this, every room/stairs/elevator
+# light on all 10 floors would be lit simultaneously even though the player can only
+# ever be on one of them at a time.
+var _floor_lights_by_index: Dictionary = {}   # int floor index (1..10) -> Array[Light3D]
+var _lit_floor_index: int = -1
+var _light_y_step: float = 0.0
+
 func _ready() -> void:
 	if GameStateManager.has_signal("all_tapes_collected"):
 		GameStateManager.connect("all_tapes_collected", _on_all_tapes_collected)
@@ -135,7 +143,9 @@ func _generate_level() -> void:
 	
 	for child in get_children():
 		child.free()
-		
+	_floor_lights_by_index.clear()
+	_lit_floor_index = -1
+
 	var f_scale = GlobalConfig.get_floor_scale()
 	var height = corridor_height * f_scale
 	var floor_thick = floor_thickness * f_scale
@@ -174,16 +184,60 @@ func _generate_level() -> void:
 		var is_empty = false
 		if i == 1:
 			is_empty = true
-			
-		_build_floor_geometry(i, y_offset, suffix, c_color, m_tex, is_empty, f_scale)
-		
+
+		var floor_node = _build_floor_geometry(i, y_offset, suffix, c_color, m_tex, is_empty, f_scale)
+		var lights: Array = []
+		_find_lights(floor_node, lights)
+		_floor_lights_by_index[i] = lights
+
 	# Generate roof above the 10th floor
 	var roof_y_offset = (11 - floor_number) * y_step
 	_generate_roof(roof_y_offset, f_scale)
-		
+
+	_light_y_step = y_step
+	# Every light defaults to visible=true when created - explicitly turn all of them off
+	# before lighting just the starting floor, otherwise _set_lit_floor (which only turns
+	# off the *previous* floor) would leave every other floor lit until the player has
+	# physically visited and left it once.
+	for floor_lights in _floor_lights_by_index.values():
+		for light in floor_lights:
+			light.visible = false
+	_lit_floor_index = -1
+	_set_lit_floor(floor_number)
+
 	call_deferred("_move_player", f_scale)
 
-func _build_floor_geometry(f_num: int, y_offset: float, suffix: String, c_color: Color, m_texture: Texture2D, is_empty: bool, f_scale: float) -> void:
+func _find_lights(node: Node, out: Array) -> void:
+	if node is Light3D:
+		out.append(node)
+	for child in node.get_children():
+		_find_lights(child, out)
+
+func _set_lit_floor(floor_index: int) -> void:
+	if floor_index == _lit_floor_index:
+		return
+	if _floor_lights_by_index.has(_lit_floor_index):
+		for light in _floor_lights_by_index[_lit_floor_index]:
+			light.visible = false
+	if _floor_lights_by_index.has(floor_index):
+		for light in _floor_lights_by_index[floor_index]:
+			light.visible = true
+	_lit_floor_index = floor_index
+
+func _process(_delta: float) -> void:
+	if Engine.is_editor_hint() or _light_y_step <= 0.0:
+		return
+	var player = get_node_or_null("../../Player")
+	if not player:
+		if get_tree() and get_tree().current_scene:
+			player = get_tree().current_scene.get_node_or_null("Player")
+	if not player:
+		return
+	var floor_index = int(round(player.global_position.y / _light_y_step)) + floor_number
+	floor_index = clampi(floor_index, 1, 10)
+	_set_lit_floor(floor_index)
+
+func _build_floor_geometry(f_num: int, y_offset: float, suffix: String, c_color: Color, m_texture: Texture2D, is_empty: bool, f_scale: float) -> Node3D:
 	var parent = Node3D.new()
 	parent.name = "GeneratedFloor_" + suffix
 	parent.position.y = y_offset
@@ -297,8 +351,8 @@ func _build_floor_geometry(f_num: int, y_offset: float, suffix: String, c_color:
 	_generate_north_stairs(parent, f_scale)
 
 	if is_empty:
-		return
-	
+		return parent
+
 	# 3.5 Maintenance Room
 	_generate_maintenance_room(parent, f_scale, height, thickness, wall_mat)
 	
@@ -386,6 +440,8 @@ func _build_floor_geometry(f_num: int, y_offset: float, suffix: String, c_color:
 	ad_mesh.position = Vector3(-2.74 * f_scale, 2.0 * f_scale, 13.5 * f_scale)
 	ad_mesh.rotation.y = PI / 2.0
 	parent.add_child(ad_mesh)
+
+	return parent
 
 func _move_player(f_scale: float) -> void:
 	var player = get_node_or_null("../../Player")
