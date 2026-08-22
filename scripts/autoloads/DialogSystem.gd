@@ -1,7 +1,10 @@
 # autoloads/DialogSystem.gd
 extends Node
 
-signal narrative_started(tape_id: int)
+# Carries the resolved tape dict (title/text/duration), not just an id - hud.gd's subtitle is
+# the actual readable surface now (see play_tape_for_floor()), and it has no other way to look
+# the text up itself without duplicating the floor/tape_data lookup already done here.
+signal narrative_started(tape: Dictionary)
 signal narrative_ended
 
 var is_playing: bool = false
@@ -53,20 +56,20 @@ func play_tape_for_floor(floor_num: int, tape_id: int, spawn_position: Vector3) 
 
     is_playing = true
     GameStateManager.change_state(GameStateManager.GameState.READING)
-    narrative_started.emit(tape_id)
+    # hud.gd shows the actual readable text as a screen-space subtitle on this signal - see its
+    # comment for why (the old design read text off a world-space Label3D floating over the
+    # hologram, which forced players to tilt the camera up at whatever angle the pickup spot
+    # happened to leave it at, including straight into the ceiling in low rooms).
+    narrative_started.emit(current_tape)
 
     if holo_scene:
         var holo_instance = holo_scene.instantiate()
-        # Raised well above head height: the cone (CylinderMesh, 2m tall) starts right at
-        # spawn_position's own Y, so a player interacting from close range - normal for a
-        # ~3m interact ray - ends up with the camera INSIDE the additive-blended, depth-less
-        # shader (hologram.gdshader: blend_add + cull_disabled + depth_draw_never), which floods
-        # the whole screen with cyan and buries the Label3D under it. +2m puts the whole cone
-        # comfortably above a standing player's eye line regardless of how close they are.
+        # Small ambient flicker hovering just above the tape's own spot - purely atmospheric
+        # now that the subtitle (hud.gd) carries the actual text, so it no longer needs to clear
+        # head height or avoid the camera ending up inside its cone (the cone is short and this
+        # low, that's no longer reachable while standing).
         get_tree().current_scene.add_child(holo_instance)
-        holo_instance.global_position = spawn_position + Vector3(0, 2.0, 0)
-        print("[DialogSystem] holo_instance spawned at global_position=", holo_instance.global_position,
-            " has_set_tape_data=", holo_instance.has_method("set_tape_data"))
+        holo_instance.global_position = spawn_position + Vector3(0, 0.4, 0)
         if holo_instance.has_method("set_tape_data"):
             holo_instance.set_tape_data(current_tape)
     else:
