@@ -113,9 +113,10 @@ func _state_attack(_delta: float) -> void:
         _set_state(State.RETURN)
         return
     
-    var target_pos = player.global_position
-    target_pos.y = global_position.y
-    look_at(target_pos, Vector3.UP)
+    var to_player: Vector3 = player.global_position - global_position
+    to_player.y = 0.0
+    if to_player.length_squared() > 0.0001:
+        look_at(global_position + to_player, Vector3.UP)
     
     if global_position.distance_to(player.global_position) > attack_range * 1.5:
         _set_state(State.CHASE)

@@ -12,14 +12,20 @@ func apply_gravity(delta: float) -> void:
 
 func move_along_nav(speed: float) -> void:
     if nav_agent.is_navigation_finished(): return
-    
+
     var next_pos: Vector3 = nav_agent.get_next_path_position()
-    var direction: Vector3 = (next_pos - cerberus.global_position).normalized()
-    
+    var to_next: Vector3 = next_pos - cerberus.global_position
+    to_next.y = 0.0
+
+    if to_next.length_squared() < 0.0001:
+        # No meaningful horizontal path yet (e.g. nav mesh not baked/synced,
+        # or the next point is directly above/below us) - looking_at would
+        # target our own position and fail. Just stop horizontal movement.
+        cerberus.velocity.x = 0.0
+        cerberus.velocity.z = 0.0
+        return
+
+    var direction: Vector3 = to_next.normalized()
     cerberus.velocity.x = direction.x * speed
     cerberus.velocity.z = direction.z * speed
-    
-    if direction != Vector3.ZERO:
-        var look_pos = cerberus.global_position + direction
-        look_pos.y = cerberus.global_position.y
-        cerberus.look_at(look_pos, Vector3.UP)
+    cerberus.look_at(cerberus.global_position + direction, Vector3.UP)
