@@ -1,11 +1,11 @@
-[gd_scene load_steps=11 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Texture2D" path="res://assets/textures/hotel_wallpaper.jpg" id="1_wallpaper"]
 [ext_resource type="Script" path="res://scripts/levels/blocks/block.gd" id="3_script"]
-[ext_resource type="PackedScene" uid="uid://table_123" path="res://entities/props/table.tscn" id="3_table"]
-[ext_resource type="PackedScene" uid="uid://chair_123" path="res://entities/props/chair.tscn" id="4_chair"]
-[ext_resource type="PackedScene" uid="uid://bed_123" path="res://entities/props/bed.tscn" id="5_bed"]
-[ext_resource type="PackedScene" uid="uid://wardrobe_123" path="res://entities/props/wardrobe.tscn" id="6_wardrobe"]
+[ext_resource type="PackedScene" path="res://entities/props/table.tscn" id="3_table"]
+[ext_resource type="PackedScene" path="res://entities/props/chair.tscn" id="4_chair"]
+[ext_resource type="PackedScene" path="res://entities/props/bed.tscn" id="5_bed"]
+[ext_resource type="PackedScene" path="res://entities/props/wardrobe.tscn" id="6_wardrobe"]
 [ext_resource type="PackedScene" path="res://entities/props/door.tscn" id="10_door"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wall"]
