@@ -861,6 +861,11 @@ func _spawn_cassettes(parent: Node, f_scale: float) -> void:
 	for i in range(3):
 		var inst = scene.instantiate()
 		inst.name = "Cassette_" + str(i)
+		# Without this, every cassette keeps vhs_tape.gd's @export default (tape_id=0) - all 3
+		# would collect as the same id, so GameStateManager.tapes_found (a Set keyed by id) never
+		# grows past size 1, all_tapes_collected/exit_code_known/floor_stairs_unlocked never fire,
+		# and every cassette narrates tape #1's text regardless of which one was picked up.
+		inst.tape_id = i
 
 		# inst has no parent yet, so its OWN global_transform/global_position are unreliable
 		# (Godot only tracks a node's global transform correctly once it's actually inside the
