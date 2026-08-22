@@ -448,9 +448,23 @@ func _move_player(f_scale: float) -> void:
 	if not player:
 		if get_tree() and get_tree().current_scene:
 			player = get_tree().current_scene.get_node_or_null("Player")
-	
+
 	if player:
 		var p_spawn = Vector3(0, 2.0, 0) * f_scale
+		# Spawn inside the same room as Cassette #1, not the corridor - no room/corridor
+		# coordinates change, this just picks where inside the level the player starts.
+		# Uses the exact same "closest wardrobe to world origin" pick _spawn_cassettes()
+		# uses for Cassette #1, so it's always the room that cassette actually ends up in.
+		var main_floor = find_child("GeneratedFloor_Main", true, false)
+		if main_floor:
+			var wardrobes: Array = []
+			_find_props(main_floor, "Wardrobe", wardrobes)
+			var chosen_wardrobe = _closest_to_spawn(wardrobes)
+			if chosen_wardrobe:
+				# Wardrobe's +Z (its own basis) faces into the room, away from the wall
+				# it's backed against - stepping forward along it lands on open floor.
+				p_spawn = chosen_wardrobe.global_position + chosen_wardrobe.global_basis.z * 1.5
+				p_spawn.y = 2.0 * f_scale
 		player.global_position = p_spawn
 		if "velocity" in player:
 			player.velocity = Vector3.ZERO
@@ -751,21 +765,33 @@ func _find_props(node: Node, prop_name: String, arr: Array) -> void:
 	for child in node.get_children():
 		_find_props(child, prop_name, arr)
 
+# Per LORE.md, Cassette #1 ("Личность") is found in the starting room's furniture and
+# Cassette #2 ("Инцидент") is nearby in the corridor - both close to where the player actually
+# appears. The player spawns at the same world (X=0, Z=0) on every floor (see _move_player()),
+# so "closest to spawn" is a stand-in for "in/near the starting room" that works on any floor,
+# not just the one the player happens to be reading this on.
+func _closest_to_spawn(props: Array) -> Node:
+	var closest: Node = null
+	var closest_dist_sq = INF
+	for p in props:
+		var pos = p.global_position
+		var dist_sq = pos.x * pos.x + pos.z * pos.z
+		if dist_sq < closest_dist_sq:
+			closest_dist_sq = dist_sq
+			closest = p
+	return closest
+
 func _spawn_cassettes(parent: Node, f_scale: float) -> void:
 	var scene = load("res://entities/interactables/vhs_tape.tscn")
 	if not scene: return
-	
+
 	var wardrobes = []
 	_find_props(parent, "Wardrobe", wardrobes)
-	var chosen_wardrobe = null
-	if wardrobes.size() > 0:
-		chosen_wardrobe = wardrobes[randi() % wardrobes.size()]
+	var chosen_wardrobe = _closest_to_spawn(wardrobes)
 
 	var tables = []
 	_find_props(parent, "Table", tables)
-	var chosen_table = null
-	if tables.size() > 0:
-		chosen_table = tables[randi() % tables.size()]
+	var chosen_table = _closest_to_spawn(tables)
 		
 	for i in range(3):
 		var inst = scene.instantiate()
