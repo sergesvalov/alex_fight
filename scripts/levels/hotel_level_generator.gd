@@ -811,17 +811,25 @@ func _spawn_cassettes(parent: Node, f_scale: float) -> void:
 		var inst = scene.instantiate()
 		inst.name = "Cassette_" + str(i)
 
-		# position/transform MUST be set before add_child() - see _generate_maintenance_room()
-		# for why. chosen_wardrobe/chosen_table are unrelated, already-placed nodes, so reading
-		# their global_transform here is unaffected by inst's own tree membership.
+		# inst has no parent yet, so its OWN global_transform/global_position are unreliable
+		# (Godot only tracks a node's global transform correctly once it's actually inside the
+		# tree - writing/reading them on an orphan silently behaves as if its position were
+		# zero, which is exactly what put cassettes near world origin/the corridor instead of
+		# on the chosen furniture). chosen_wardrobe/chosen_table themselves ARE already in the
+		# tree, so reading THEIR global_transform is fine - the fix is to convert that world-
+		# space target into parent-relative LOCAL coordinates and assign inst.transform
+		# (not inst.global_transform) before add_child(), the same pattern used everywhere
+		# else in this generator.
 		if i == 0 and chosen_wardrobe != null:
-			inst.global_transform = chosen_wardrobe.global_transform
+			var target = chosen_wardrobe.global_transform
 			# X=-0.28 matches the shelf zone's center in wardrobe.tscn (the other half of the
 			# interior is now an open hanging compartment with a rod, not a shelf).
-			inst.global_position += chosen_wardrobe.global_basis * Vector3(-0.28, 1.15, 0.05)
+			target.origin += chosen_wardrobe.global_basis * Vector3(-0.28, 1.15, 0.05)
+			inst.transform = parent.global_transform.affine_inverse() * target
 		elif i == 1 and chosen_table != null:
-			inst.global_transform = chosen_table.global_transform
-			inst.global_position += chosen_table.global_basis * Vector3(0.0, 0.8, 0.0)
+			var target = chosen_table.global_transform
+			target.origin += chosen_table.global_basis * Vector3(0.0, 0.8, 0.0)
+			inst.transform = parent.global_transform.affine_inverse() * target
 		elif i == 2:
 			inst.position = Vector3(7.2 * f_scale, 0.05 * f_scale, -23.5 * f_scale)
 			inst.rotation.y = randf_range(0, PI * 2)

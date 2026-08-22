@@ -77,8 +77,13 @@ func open():
     show()
     # Pause the game while inventory is open
     get_tree().paused = true
+    # Mouse was captured (invisible, locked to center, driving camera look) during normal
+    # gameplay - without releasing it here, clicks never reach the slot buttons at all,
+    # since there's no free cursor to point with.
+    Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
 func close():
     hide()
     # Resume the game
     get_tree().paused = false
+    Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
