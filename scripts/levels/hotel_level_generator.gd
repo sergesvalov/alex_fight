@@ -635,9 +635,13 @@ func _generate_south_stairs_ramp(parent: Node, f_scale: float, height: float, fl
 
 func _generate_double_room(parent: Node, f_scale: float, f_num: int, orig_num: int) -> void:
 	var layout = DOUBLE_ROOM_LAYOUT.get(orig_num)
-	if not layout: return
+	if not layout:
+		print("[generator] _generate_double_room: no layout for room ", orig_num, " - skipped")
+		return
 	var scene = load("res://scenes/levels/hotel_siberia/blocks/double_room.tscn")
-	if not scene: return
+	if not scene:
+		print("[generator] _generate_double_room: FAILED to load double_room.tscn for room ", orig_num)
+		return
 	var inst = scene.instantiate()
 	var room_idx = orig_num % 100
 	var final_num = f_num * 100 + room_idx
@@ -651,12 +655,18 @@ func _generate_double_room(parent: Node, f_scale: float, f_num: int, orig_num: i
 	if layout["mirror"]:
 		inst.scale.z = -1.0
 	parent.add_child(inst)
+	print("[generator] _generate_double_room: added ", inst.name, " at ", inst.position,
+		" scale=", inst.scale, " children=", inst.get_child_count())
 
 func _generate_single_room(parent: Node, f_scale: float, f_num: int, orig_num: int) -> void:
 	var layout = SINGLE_ROOM_LAYOUT.get(orig_num)
-	if not layout: return
+	if not layout:
+		print("[generator] _generate_single_room: no layout for room ", orig_num, " - skipped")
+		return
 	var scene = load("res://scenes/levels/hotel_siberia/blocks/single_room.tscn")
-	if not scene: return
+	if not scene:
+		print("[generator] _generate_single_room: FAILED to load single_room.tscn for room ", orig_num)
+		return
 	var inst = scene.instantiate()
 	var room_idx = orig_num % 100
 	var final_num = f_num * 100 + room_idx
@@ -667,6 +677,8 @@ func _generate_single_room(parent: Node, f_scale: float, f_num: int, orig_num: i
 	if layout["mirror"]:
 		inst.scale.z = -1.0
 	parent.add_child(inst)
+	print("[generator] _generate_single_room: added ", inst.name, " at ", inst.position,
+		" scale=", inst.scale, " children=", inst.get_child_count())
 
 func _create_static_box(parent: Node, node_name: String, pos: Vector3, size: Vector3, mat: Material, rot: Vector3 = Vector3.ZERO) -> void:
 	var static_body = StaticBody3D.new()
