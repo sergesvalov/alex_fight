@@ -10,15 +10,21 @@ extends Area3D
 # what the .tscn used to bake into its material (Color(0.8, 0.2, 0.8), energy 0.5).
 func _ready() -> void:
     var mesh_inst := get_node_or_null("MeshInstance3D")
+    print("[vhs_tape] _ready tape_id=", tape_id, " path=", get_path(), " mesh_inst=", mesh_inst)
     if not mesh_inst:
+        push_error("[vhs_tape] tape_id=" + str(tape_id) + " has no MeshInstance3D child - material never applied")
         return
+    var tex := _generate_tape_texture()
+    print("[vhs_tape] tape_id=", tape_id, " generated texture=", tex, " size=", (tex.get_size() if tex else "N/A"))
     var mat := StandardMaterial3D.new()
-    mat.albedo_texture = _generate_tape_texture()
+    mat.albedo_texture = tex
     mat.uv1_scale = Vector3(2, 1, 2)
     mat.emission_enabled = true
     mat.emission = Color(0.8, 0.2, 0.8, 1)
     mat.emission_energy_multiplier = 0.5
     mesh_inst.material_override = mat
+    print("[vhs_tape] tape_id=", tape_id, " material_override set=", mesh_inst.material_override,
+        " mesh=", mesh_inst.mesh, " global_position=", global_position)
 
 func _generate_tape_texture() -> ImageTexture:
     var size = 64
@@ -54,6 +60,8 @@ func _generate_tape_texture() -> ImageTexture:
     return ImageTexture.create_from_image(img)
 
 func interact(player):
+    print("[vhs_tape] interact tape_id=", tape_id, " global_position=", global_position,
+        " is_playing_before=", DialogSystem.is_playing, " current_floor=", GameStateManager.current_floor)
     if player.has_method("collect_tape"):
         player.collect_tape()
     GameStateManager.collect_tape(tape_id)
