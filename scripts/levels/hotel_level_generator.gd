@@ -655,8 +655,11 @@ func _generate_double_room(parent: Node, f_scale: float, f_num: int, orig_num: i
 	if layout["mirror"]:
 		inst.scale.z = -1.0
 	parent.add_child(inst)
+	var child_names: Array = []
+	for c in inst.get_children():
+		child_names.append(c.name)
 	print("[generator] _generate_double_room: added ", inst.name, " at ", inst.position,
-		" scale=", inst.scale, " children=", inst.get_child_count())
+		" scale=", inst.scale, " children=", inst.get_child_count(), " names=", child_names)
 
 func _generate_single_room(parent: Node, f_scale: float, f_num: int, orig_num: int) -> void:
 	var layout = SINGLE_ROOM_LAYOUT.get(orig_num)
@@ -677,8 +680,11 @@ func _generate_single_room(parent: Node, f_scale: float, f_num: int, orig_num: i
 	if layout["mirror"]:
 		inst.scale.z = -1.0
 	parent.add_child(inst)
+	var child_names: Array = []
+	for c in inst.get_children():
+		child_names.append(c.name)
 	print("[generator] _generate_single_room: added ", inst.name, " at ", inst.position,
-		" scale=", inst.scale, " children=", inst.get_child_count())
+		" scale=", inst.scale, " children=", inst.get_child_count(), " names=", child_names)
 
 func _create_static_box(parent: Node, node_name: String, pos: Vector3, size: Vector3, mat: Material, rot: Vector3 = Vector3.ZERO) -> void:
 	var static_body = StaticBody3D.new()
