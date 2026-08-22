@@ -22,7 +22,7 @@ func _ready() -> void:
 
 func _generate_tape_texture() -> ImageTexture:
     var size = 64
-    var img = Image.create(size, size, false, Image.FORMAT_RGB8)
+    var img = Image.create_empty(size, size, false, Image.FORMAT_RGB8)
 
     var rng = RandomNumberGenerator.new()
     rng.seed = tape_id + 1 # deterministic per tape_id, not per pickup instance

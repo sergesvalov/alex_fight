@@ -49,10 +49,11 @@ func _make_empty_slot() -> Control:
 func _make_tape_slot(tape: Dictionary) -> Control:
     var btn = Button.new()
     btn.custom_minimum_size = Vector2(90, 90)
-    btn.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-    btn.clip_text = true
-    btn.text = _tape_title(tape["floor"], tape["id"])
-    btn.tooltip_text = "Прослушать ещё раз"
+    btn.autowrap_mode = TextServer.AUTOWRAP_OFF
+    # Full title never fits a 90x90 cell, so the button itself only shows a short slot label -
+    # the full title (plus the replay hint) shows on hover via the tooltip instead.
+    btn.text = "№ " + str(tape["id"] + 1)
+    btn.tooltip_text = _tape_title(tape["floor"], tape["id"]) + "\n\nПрослушать ещё раз"
     btn.pressed.connect(func(): _replay_tape(tape["floor"], tape["id"]))
     return btn
 

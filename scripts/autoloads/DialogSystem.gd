@@ -59,8 +59,8 @@ func play_tape_for_floor(floor_num: int, tape_id: int, spawn_position: Vector3) 
         # shader (hologram.gdshader: blend_add + cull_disabled + depth_draw_never), which floods
         # the whole screen with cyan and buries the Label3D under it. +2m puts the whole cone
         # comfortably above a standing player's eye line regardless of how close they are.
-        holo_instance.global_position = spawn_position + Vector3(0, 2.0, 0)
         get_tree().current_scene.add_child(holo_instance)
+        holo_instance.global_position = spawn_position + Vector3(0, 2.0, 0)
         if holo_instance.has_method("set_tape_data"):
             holo_instance.set_tape_data(current_tape)
     
