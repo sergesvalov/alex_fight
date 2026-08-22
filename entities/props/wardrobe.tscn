@@ -1,16 +1,15 @@
-[gd_scene load_steps=5 format=3 uid="uid://wardrobe_123"]
-
-[ext_resource type="Script" path="res://scripts/interactables/wardrobe_door.gd" id="1_script"]
+[gd_scene load_steps=4 format=3 uid="uid://wardrobe_123"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wood"]
 albedo_color = Color(0.25, 0.15, 0.05, 1)
 
-[sub_resource type="BoxMesh" id="BoxMesh_door"]
-material = SubResource("StandardMaterial3D_wood")
-size = Vector3(0.58, 2.1, 0.05)
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_metal"]
+albedo_color = Color(0.55, 0.55, 0.58, 1)
+metallic = 0.7
+roughness = 0.35
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_door"]
-size = Vector3(0.58, 2.1, 0.05)
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wood_light"]
+albedo_color = Color(0.32, 0.2, 0.08, 1)
 
 [node name="Wardrobe" type="Node3D"]
 
@@ -28,47 +27,29 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 1.1, 0.05)
 operation = 2
 size = Vector3(1.1, 2.1, 0.55)
 
+[node name="Divider" type="CSGBox3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 1.1, 0.05)
+size = Vector3(0.02, 2.1, 0.55)
+material = SubResource("StandardMaterial3D_wood_light")
+
 [node name="Shelf1" type="CSGBox3D" parent="Geometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0.575, 0.05)
-size = Vector3(1.1, 0.05, 0.55)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.28, 0.575, 0.05)
+size = Vector3(0.54, 0.05, 0.55)
 material = SubResource("StandardMaterial3D_wood")
 
 [node name="Shelf2" type="CSGBox3D" parent="Geometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 1.1, 0.05)
-size = Vector3(1.1, 0.05, 0.55)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.28, 1.1, 0.05)
+size = Vector3(0.54, 0.05, 0.55)
 material = SubResource("StandardMaterial3D_wood")
 
 [node name="Shelf3" type="CSGBox3D" parent="Geometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 1.625, 0.05)
-size = Vector3(1.1, 0.05, 0.55)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.28, 1.625, 0.05)
+size = Vector3(0.54, 0.05, 0.55)
 material = SubResource("StandardMaterial3D_wood")
 
-[node name="DoorLeft" type="AnimatableBody3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.58, 0, 0.3)
-collision_layer = 7
-collision_mask = 0
-script = ExtResource("1_script")
-open_angle = -1.5708
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="DoorLeft"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.29, 1.1, 0)
-mesh = SubResource("BoxMesh_door")
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="DoorLeft"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.29, 1.1, 0)
-shape = SubResource("BoxShape3D_door")
-
-[node name="DoorRight" type="AnimatableBody3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.58, 0, 0.3)
-collision_layer = 7
-collision_mask = 0
-script = ExtResource("1_script")
-open_angle = 1.5708
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="DoorRight"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.29, 1.1, 0)
-mesh = SubResource("BoxMesh_door")
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="DoorRight"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.29, 1.1, 0)
-shape = SubResource("BoxShape3D_door")
+[node name="HangingRod" type="CSGCylinder3D" parent="Geometry"]
+transform = Transform3D(0, 1, 0, -1, 0, 0, 0, 0, 1, 0.28, 1.9, 0.05)
+radius = 0.015
+height = 0.48
+sides = 12
+material = SubResource("StandardMaterial3D_metal")

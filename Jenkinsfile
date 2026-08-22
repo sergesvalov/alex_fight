@@ -86,6 +86,10 @@ pipeline {
                                     echo '❌ АВТОТЕСТ МЕНЕДЖЕРА УРОВНЕЙ ПРОВАЛЕН!'
                                     exit 1
                                 }
+                                godot --headless tests/test_layout_seams.tscn || {
+                                    echo '❌ АВТОТЕСТ СТЫКОВ ГЕОМЕТРИИ (СТЕНЫ/КОМНАТЫ/ЛИФТ/ЛЕСТНИЦЫ) ПРОВАЛЕН!'
+                                    exit 1
+                                }
                                 godot --headless tests/test_stairs_doors.tscn || {
                                     echo '❌ АВТОТЕСТ ЛЕСТНИЦ И ПРОЕМОВ ПРОВАЛЕН!'
                                     exit 1

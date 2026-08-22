@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" uid="uid://bed_123" path="res://entities/props/bed.tscn" id="5_bed"]
 [ext_resource type="PackedScene" uid="uid://table_123" path="res://entities/props/table.tscn" id="6_table"]
 [ext_resource type="PackedScene" uid="uid://chair_123" path="res://entities/props/chair.tscn" id="7_chair"]
+[ext_resource type="PackedScene" uid="uid://wardrobe_123" path="res://entities/props/wardrobe.tscn" id="8_wardrobe"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wall"]
 albedo_texture = ExtResource("1_wallpaper")
@@ -101,3 +102,8 @@ transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 3.55, 0.0, 1.93)
 # Стул: перед столом, смотрит на восток
 [node name="Chair" parent="." instance=ExtResource("7_chair")]
 transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 3.0, 0.0, 1.93)
+
+# Шкаф: спиной к северной стене (Z=0.1), открытой стороной в комнату (+Z, без поворота).
+# По чертежу в одиночных номерах тоже есть шкаф ("CLOSET"), которого раньше не было.
+[node name="Wardrobe" parent="." instance=ExtResource("8_wardrobe")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3, 0.0, 0.4)

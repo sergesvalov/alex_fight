@@ -251,13 +251,16 @@ func _build_floor_geometry(f_num: int, y_offset: float, suffix: String, c_color:
 	_create_static_box(parent, "Floor_SW", Vector3(x_sw_pos, floor_y, z_sw_pos), Vector3(x_sw_len, floor_thick, z_sw_len), floor_mat)
 	_create_static_box(parent, "Ceiling_SW", Vector3(x_sw_pos, ceil_y, z_sw_pos), Vector3(x_sw_len, floor_thick, z_sw_len), ceil_mat)
 	
-	# South Stairs Intermediate Landing (East side). Sits at half of the FULL floor-to-floor
-	# height (height + floor_thick), not half of the room height alone, so the two ramps
-	# built by _generate_south_stairs_ramp() land exactly on this floor's own floor level
-	# below and the floor-above's floor level above - see that function for the full layout.
+	# South Stairs Intermediate Landing (East side). y_landing is the box CENTER, not its
+	# walkable surface - the surface sits floor_thick/2 above center, at
+	# y_landing + floor_thick/2 = height/2 + floor_thick/2 = (height+floor_thick)/2, which is
+	# the true midpoint between this floor's surface (Y=0) and the floor-above's (Y=height+
+	# floor_thick). (A previous version set y_landing = (height+floor_thick)/2 directly,
+	# mistaking the desired *surface* height for the box's center - that left the landing
+	# floor_thick/2 (~0.15-0.25m) too high, forming an unwalkable step where the ramps meet it.)
 	var x_landing_len = (SOUTH_STAIRS_LANDING_OUTER_X - SOUTH_STAIRS_LANDING_INNER_X) * f_scale
 	var x_landing_pos = (SOUTH_STAIRS_LANDING_INNER_X + SOUTH_STAIRS_LANDING_OUTER_X) / 2.0 * f_scale
-	var y_landing = (height + floor_thick) / 2.0
+	var y_landing = height / 2.0
 	_create_static_box(parent, "Landing_SouthStairs", Vector3(x_landing_pos, y_landing, z_sw_pos), Vector3(x_landing_len, floor_thick, z_sw_len), floor_mat)
 	
 	# North West (covers Z=-30.0 to -25.2, X=-12.65 to -2.55)
@@ -408,6 +411,19 @@ func _generate_maintenance_room(parent: Node, f_scale: float, height: float, thi
 		var lintel_y = door_h + (lintel_h / 2.0)
 		_create_static_box(parent, "Maint_Inner_West_Lintel", Vector3(9.65 * f_scale, lintel_y, -23.0 * f_scale), Vector3(thickness, lintel_h, 2.0 * f_scale), wall_mat)
 
+	# Storage wardrobes, backs against the building's own east wall (X=12.65), opening
+	# facing west into the room. Kept north of the doorway gap (Z -24..-22) for clearance.
+	# maintenance_room.tscn (an older, unused standalone scene) had 2 wardrobes here too,
+	# but its own wall layout no longer matches this procedurally-built room - these are
+	# placed fresh against the room this function actually builds.
+	var wardrobe_scene = load("res://entities/props/wardrobe.tscn")
+	if wardrobe_scene:
+		for i in range(2):
+			var wardrobe_inst = wardrobe_scene.instantiate()
+			wardrobe_inst.name = "MaintWardrobe" + str(i + 1)
+			parent.add_child(wardrobe_inst)
+			wardrobe_inst.transform = Transform3D(Basis(Vector3(0, 0, 1), Vector3(0, 1, 0), Vector3(-1, 0, 0)), Vector3(12.25 * f_scale, 0, (-28.0 + i * 2.5) * f_scale))
+
 func _generate_elevator(parent: Node, f_scale: float, height: float, thickness: float, wall_mat: Material) -> void:
 	var scene = load("res://scenes/levels/hotel_siberia/blocks/elevator_shaft.tscn")
 	if scene:
@@ -480,7 +496,9 @@ func _generate_south_stairs_ramp(parent: Node, f_scale: float, height: float, fl
 	# Floor_SW edge sits, so it needs no landing of its own - the next floor provides it.
 	var x_inner = SOUTH_STAIRS_RAMP_INNER_X * f_scale      # Floor_SW's east edge
 	var x_outer = SOUTH_STAIRS_LANDING_INNER_X * f_scale   # Landing_SouthStairs' west edge
-	var mid_y = (height + floor_thick) / 2.0   # matches Landing_SouthStairs' y_landing
+	var mid_y = (height + floor_thick) / 2.0   # Landing_SouthStairs' walkable SURFACE height
+	                                            # (its box center, y_landing, sits floor_thick/2
+	                                            # below this, at height/2 - see that comment)
 	var full_y = height + floor_thick          # this floor's ceiling = next floor's floor
 
 	var band_depth = (SOUTH_STAIRS_ZONE_Z_END - SOUTH_STAIRS_ZONE_Z_START) / 2.0 * f_scale
@@ -491,11 +509,25 @@ func _generate_south_stairs_ramp(parent: Node, f_scale: float, height: float, fl
 	var ramp_len = sqrt(run * run + mid_y * mid_y)
 	var angle_up = atan2(mid_y, run)
 
+	# _create_static_box positions the box by its geometric CENTER, but a player walks on
+	# its top face (local +Y), which - once the box is rotated to form the incline - sits
+	# slab_half_t away from the center, perpendicular to the slope, not straight up. Naively
+	# centering the box on the two floor-surface points (as an earlier version did) leaves
+	# the walkable surface short of both ends by about slab_half_t * cos(angle_up), which
+	# was enough of a ledge at the landing to block walking up (not down, since a ledge you
+	# step down off doesn't stop you, only one you'd have to step up onto does).
+	# Shifting the center by this same perpendicular offset (derived from where a box's top
+	# face corners land after rotating around Z) puts the actual walking surface exactly on
+	# the intended points instead of the box's centerline.
+	var slab_half_t = 0.1 * f_scale
+	var offset_x = slab_half_t * sin(angle_up)
+	var offset_y = slab_half_t * cos(angle_up)
+
 	# RampA: rises to the east, Band 1
 	_create_static_box(
 		parent, "SouthStairsRampA",
-		Vector3((x_inner + x_outer) / 2.0, mid_y / 2.0, z_band1),
-		Vector3(ramp_len, 0.2 * f_scale, band_depth),
+		Vector3((x_inner + x_outer) / 2.0 + offset_x, mid_y / 2.0 - offset_y, z_band1),
+		Vector3(ramp_len, slab_half_t * 2.0, band_depth),
 		floor_mat,
 		Vector3(0, 0, angle_up)
 	)
@@ -503,8 +535,8 @@ func _generate_south_stairs_ramp(parent: Node, f_scale: float, height: float, fl
 	# RampB: rises to the west, Band 2 - same shape as RampA, mirrored in X and offset up by mid_y
 	_create_static_box(
 		parent, "SouthStairsRampB",
-		Vector3((x_inner + x_outer) / 2.0, mid_y + (full_y - mid_y) / 2.0, z_band2),
-		Vector3(ramp_len, 0.2 * f_scale, band_depth),
+		Vector3((x_inner + x_outer) / 2.0 - offset_x, mid_y + (full_y - mid_y) / 2.0 - offset_y, z_band2),
+		Vector3(ramp_len, slab_half_t * 2.0, band_depth),
 		floor_mat,
 		Vector3(0, 0, -angle_up)
 	)
@@ -590,7 +622,9 @@ func _spawn_cassettes(parent: Node, f_scale: float) -> void:
 		
 		if i == 0 and chosen_wardrobe != null:
 			inst.global_transform = chosen_wardrobe.global_transform
-			inst.global_position += chosen_wardrobe.global_basis * Vector3(0.0, 1.15, 0.05)
+			# X=-0.28 matches the shelf zone's center in wardrobe.tscn (the other half of the
+			# interior is now an open hanging compartment with a rod, not a shelf).
+			inst.global_position += chosen_wardrobe.global_basis * Vector3(-0.28, 1.15, 0.05)
 		elif i == 1 and chosen_table != null:
 			inst.global_transform = chosen_table.global_transform
 			inst.global_position += chosen_table.global_basis * Vector3(0.0, 0.8, 0.0)
