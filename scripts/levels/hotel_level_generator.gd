@@ -214,7 +214,7 @@ func _build_floor_geometry(f_num: int, y_offset: float, suffix: String, c_color:
 		_create_static_box(parent, "Floor_SouthStairs", Vector3(x_se_pos, floor_y, z_sw_pos), Vector3(x_se_len, floor_thick, z_sw_len), floor_mat)
 
 	# 3.6 Elevator
-	_generate_elevator(parent, f_scale, height, thickness, wall_mat, f_num)
+	_generate_elevator(parent, f_scale, height, thickness, wall_mat)
 	
 	# 3.7 North Stairs
 	_generate_north_stairs(parent, f_scale)
@@ -344,14 +344,14 @@ func _generate_maintenance_room(parent: Node, f_scale: float, height: float, thi
 		var lintel_y = door_h + (lintel_h / 2.0)
 		_create_static_box(parent, "Maint_Inner_West_Lintel", Vector3(9.65 * f_scale, lintel_y, -23.0 * f_scale), Vector3(thickness, lintel_h, 2.0 * f_scale), wall_mat)
 
-func _generate_elevator(parent: Node, f_scale: float, height: float, thickness: float, wall_mat: Material, f_num: int) -> void:
+func _generate_elevator(parent: Node, f_scale: float, height: float, thickness: float, wall_mat: Material) -> void:
 	var scene = load("res://scenes/levels/hotel_siberia/blocks/elevator_shaft.tscn")
 	if scene:
 		var inst = scene.instantiate()
 		parent.add_child(inst)
 		inst.position = Vector3(7.2 * f_scale, 0, -25.0 * f_scale)
 		inst.scale.z = -1.0
-		
+
 		var door_scene = load("res://entities/props/elevator_door.tscn")
 		if door_scene:
 			var door_inst = door_scene.instantiate()
@@ -359,39 +359,14 @@ func _generate_elevator(parent: Node, f_scale: float, height: float, thickness: 
 			inst.add_child(door_inst)
 			door_inst.position = Vector3(0, 0, 0.1 * f_scale)
 			door_inst.scale = Vector3(1.42, 1.0, 1.0)
-			
-		var btn_script = load("res://scripts/interactables/elevator_button.gd")
-		if btn_script:
-			var btn = AnimatableBody3D.new()
-			btn.name = "ButtonFloor" + str(f_num)
-			btn.collision_layer = 3
-			btn.set_script(btn_script)
-			
-			var btn_shape = CollisionShape3D.new()
-			var shape = BoxShape3D.new()
-			shape.size = Vector3(0.04, 0.1, 0.1)
-			btn_shape.shape = shape
-			btn.add_child(btn_shape)
-			
-			var btn_mesh = MeshInstance3D.new()
-			var mesh = BoxMesh.new()
-			var mat = StandardMaterial3D.new()
-			mat.albedo_color = Color(0.8, 0.8, 0.8)
-			mesh.material = mat
-			mesh.size = Vector3(0.04, 0.1, 0.1)
-			btn_mesh.mesh = mesh
-			btn.add_child(btn_mesh)
-			
-			var label = Label3D.new()
-			label.text = str(f_num)
-			label.font_size = 24
-			label.outline_size = 4
-			label.transform.basis = Basis(Vector3.UP, -PI/2)
-			label.position = Vector3(0.021, 0, 0)
-			btn.add_child(label)
-			
-			inst.add_child(btn)
-			btn.position = Vector3(-2.13 * f_scale, 1.2 * f_scale, 2.5 * f_scale)
+
+		# Floor buttons are NOT created here. elevator_shaft.tscn already ships a real,
+		# wired-up "ButtonFloor4" template under ElevatorPanel, and elevator_controller.gd's
+		# _setup_buttons() duplicates it for floors 1-10 and connects button_pressed itself.
+		# This function used to *also* spawn a second, disconnected AnimatableBody3D button
+		# almost exactly on top of the real one (off by 1cm) - it never fired
+		# _on_button_pressed (nothing connected to it) and was the reason a "phantom" button
+		# hitbox could be interacted with near the panel without doing anything.
 
 func _generate_north_stairs(parent: Node, f_scale: float) -> void:
 	var scene = load("res://scenes/levels/hotel_siberia/blocks/north_stairs.tscn")
