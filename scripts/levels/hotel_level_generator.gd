@@ -122,6 +122,11 @@ var _floor_lights_by_index: Dictionary = {}   # int floor index (1..10) -> Array
 var _lit_floor_index: int = -1
 var _light_y_step: float = 0.0
 
+# One-shot diagnostic latches for the "furniture missing from single_room.tscn (2026-08-22)"
+# investigation - only need the raw SceneState dumped once, not once per room per floor.
+var _diag_single_room_logged: bool = false
+var _diag_double_room_logged: bool = false
+
 func _ready() -> void:
 	if GameStateManager.has_signal("all_tapes_collected"):
 		GameStateManager.connect("all_tapes_collected", _on_all_tapes_collected)
@@ -681,6 +686,13 @@ func _generate_double_room(parent: Node, f_scale: float, f_num: int, orig_num: i
 	if not layout: return
 	var scene = load("res://scenes/levels/hotel_siberia/blocks/double_room.tscn")
 	if not scene: return
+	if not _diag_double_room_logged:
+		_diag_double_room_logged = true
+		var state = scene.get_state()
+		var raw_names: Array = []
+		for i in range(state.get_node_count()):
+			raw_names.append(state.get_node_name(i))
+		print("[generator] DIAG double_room.tscn SceneState: node_count=", state.get_node_count(), " names=", raw_names)
 	var inst = scene.instantiate()
 	var room_idx = orig_num % 100
 	var final_num = f_num * 100 + room_idx
@@ -699,6 +711,10 @@ func _generate_double_room(parent: Node, f_scale: float, f_num: int, orig_num: i
 	# Проём в WCSouthWall (X=2.35, Z=4.9), номер к югу -> basis.z смотрит +Z (без поворота).
 	_add_room_door(inst, "WCDoor", Vector3(2.35, 0.0, 4.9), 0.0)
 
+	if not inst.has_node("Bed1"):
+		print("[generator] _generate_double_room: ", inst.name, " MISSING FURNITURE - children=",
+			inst.get_child_count(), " names=", inst.get_children().map(func(c): return c.name))
+
 	parent.add_child(inst)
 
 func _generate_single_room(parent: Node, f_scale: float, f_num: int, orig_num: int) -> void:
@@ -706,6 +722,13 @@ func _generate_single_room(parent: Node, f_scale: float, f_num: int, orig_num: i
 	if not layout: return
 	var scene = load("res://scenes/levels/hotel_siberia/blocks/single_room.tscn")
 	if not scene: return
+	if not _diag_single_room_logged:
+		_diag_single_room_logged = true
+		var state = scene.get_state()
+		var raw_names: Array = []
+		for i in range(state.get_node_count()):
+			raw_names.append(state.get_node_name(i))
+		print("[generator] DIAG single_room.tscn SceneState: node_count=", state.get_node_count(), " names=", raw_names)
 	var inst = scene.instantiate()
 	var room_idx = orig_num % 100
 	var final_num = f_num * 100 + room_idx
