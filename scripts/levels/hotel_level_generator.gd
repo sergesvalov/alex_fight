@@ -6,10 +6,83 @@ class_name HotelLevelGenerator
 # and the floor slab of the floor above on Android (gl_compatibility / 16-bit depth).
 const CEIL_BIAS: float = 0.001
 
+# ============================================================================
+# LAYOUT CONSTANTS
+# Unscaled meters - every local var built from these still multiplies by f_scale,
+# same as before. Centralized here because several of these numbers used to be
+# hand-copied into 2-3 places with nothing linking them - that's exactly how the
+# west-wall dead zone (base_x vs building width) and the elevator's duplicate
+# phantom button (two independently-typed positions) happened. If you're about
+# to hardcode a coordinate that already has a name below, reference it instead.
+# World axes: +X = east, -X = west, +Z = south, -Z = north (see AGENTS.md).
+# ============================================================================
+
+const BASE_CORRIDOR_HEIGHT: float = 4.0
+const BASE_FLOOR_THICKNESS: float = 0.5
+# Full floor-to-floor height (room height + floor slab). elevator_controller.gd has no
+# generator instance to ask, so it reads this directly as
+# HotelLevelGenerator.BASE_FLOOR_TO_FLOOR_HEIGHT - keep it in sync with the two consts above.
+const BASE_FLOOR_TO_FLOOR_HEIGHT: float = BASE_CORRIDOR_HEIGHT + BASE_FLOOR_THICKNESS  # 4.5
+
+const BUILDING_LENGTH_Z: float = 60.0   # full north-south extent, Z = -30..+30
+const BUILDING_WIDTH_X: float = 25.3    # legacy symmetric width half_x is derived from
+const WEST_WING_TRIM: float = 4.9       # how far the west wall is pulled in from that
+                                         # symmetric half-width to sit flush with
+                                         # DoubleRoom's own wall (see _build_floor_geometry)
+const NORTH_ZONE_INNER_X: float = -2.55 # Floor_NW/Roof_NW's east edge (corridor side)
+
+const DOUBLE_ROOM_BASE_X: float = -7.65  # DoubleRoom instance X = its own outer (west) wall
+const SINGLE_ROOM_BASE_X: float = 8.7    # SingleRoom instance X
+
+const CORRIDOR_WEST_EDGE_X: float = -2.75  # DoubleRoom's east (corridor-facing) wall - must
+                                            # match double_room.tscn's RoomEastWall
+const CORRIDOR_EAST_EDGE_X: float = 4.85   # SingleRoom's west (corridor-facing) wall - must
+                                            # match single_room.tscn's RoomWestWall
+
+const NORTH_STAIRS_CENTER_X: float = 1.05
+const NORTH_STAIRS_CENTER_Z: float = -30.0
+
+const ELEVATOR_CENTER_X: float = 7.2
+const ELEVATOR_CENTER_Z: float = -25.0
+# Single source of truth for the elevator door's X scale - used to be duplicated (and
+# drifted slightly out of sync) between this generator and tests/test_elevator_alignment.gd.
+const ELEVATOR_DOOR_SCALE_X: float = 1.42
+
+const SOUTH_STAIRS_DOOR_CENTER_X: float = 1.05  # same corridor centerline as north stairs
+const SOUTH_STAIRS_ZONE_Z_START: float = 25.0
+const SOUTH_STAIRS_ZONE_Z_END: float = 30.0
+const SOUTH_STAIRS_RAMP_INNER_X: float = 1.87   # Floor_SW's east edge - shared by both ramps
+const SOUTH_STAIRS_LANDING_INNER_X: float = 8.03
+const SOUTH_STAIRS_LANDING_OUTER_X: float = 12.65
+
+# Room number -> {z: position along the corridor, mirror: whether scale.z=-1 is applied}.
+# Contiguous by design (e.g. 403/405 touch with no gap at z=0) - the missing numbers
+# (404, 407, 414, 418, 419) are intentional room-numbering flavor, not physical gaps;
+# the blueprint texture (assets/textures/hotel_map.jpg) shows the same skips.
+const DOUBLE_ROOM_LAYOUT := {
+	401: {"z": -30.0, "mirror": false},
+	402: {"z": -20.0, "mirror": false},
+	403: {"z": 0.0, "mirror": true},
+	405: {"z": 0.0, "mirror": false},
+	406: {"z": 10.0, "mirror": false},
+	408: {"z": 30.0, "mirror": true},
+}
+const SINGLE_ROOM_LAYOUT := {
+	410: {"z": -20.0, "mirror": false},
+	411: {"z": -10.0, "mirror": true},
+	412: {"z": -10.0, "mirror": false},
+	413: {"z": 0.0, "mirror": true},
+	415: {"z": 0.0, "mirror": false},
+	416: {"z": 10.0, "mirror": true},
+	417: {"z": 15.0, "mirror": true},
+	420: {"z": 15.0, "mirror": false},
+	421: {"z": 20.0, "mirror": false},
+}
+
 @export var floor_number: int = 4
 @export var player_spawn_pos: Vector3 = Vector3(0, 1.0, 0)
-@export var floor_thickness: float = 0.5
-@export var corridor_height: float = 4.0
+@export var floor_thickness: float = BASE_FLOOR_THICKNESS
+@export var corridor_height: float = BASE_CORRIDOR_HEIGHT
 @export var wall_thickness: float = 0.2
 @export var carpet_color: Color = Color(1.0, 1.0, 1.0, 1.0)
 @export var map_texture: Texture2D = null
@@ -109,19 +182,19 @@ func _build_floor_geometry(f_num: int, y_offset: float, suffix: String, c_color:
 	parent.position.y = y_offset
 	add_child(parent)
 	
-	var z_length = 60.0 * f_scale
-	var x_width = 25.3 * f_scale
+	var z_length = BUILDING_LENGTH_Z * f_scale
+	var x_width = BUILDING_WIDTH_X * f_scale
 	var height = corridor_height * f_scale
 	var thickness = wall_thickness * f_scale
 	var floor_thick = floor_thickness * f_scale
 
-	# DoubleRooms sit flush with their own outer wall at base_x=-7.65 (see
-	# _generate_double_room), which is 4.9m short of the old symmetric building
+	# DoubleRooms sit flush with their own outer wall at DOUBLE_ROOM_BASE_X (see
+	# _generate_double_room), which is WEST_WING_TRIM short of the old symmetric building
 	# shell - leaving a sealed, inaccessible void along the whole west side.
 	# half_x_west trims every west-side box (walls/floor/ceiling/roof) so the
 	# shell meets the room's own wall exactly instead of leaving dead space.
 	var half_x = x_width / 2.0
-	var west_trim = 4.9 * f_scale
+	var west_trim = WEST_WING_TRIM * f_scale
 	var half_x_west = half_x - west_trim
 	var main_width = half_x + half_x_west
 	var main_center_x = west_trim / 2.0
@@ -160,15 +233,15 @@ func _build_floor_geometry(f_num: int, y_offset: float, suffix: String, c_color:
 	
 	var z_north_len = 4.82 * f_scale
 	var z_north_pos = -27.59 * f_scale
-	var x_nw_east = -2.55 * f_scale
+	var x_nw_east = NORTH_ZONE_INNER_X * f_scale
 	var x_nw_len = x_nw_east + half_x_west
 	var x_nw_pos = (x_nw_east - half_x_west) / 2.0
 	var x_ne_len = 8.0 * f_scale
 	var x_ne_pos = 8.65 * f_scale
 
-	var z_sw_len = 5.0 * f_scale
-	var z_sw_pos = 27.5 * f_scale
-	var x_sw_east = 1.87 * f_scale
+	var z_sw_len = (SOUTH_STAIRS_ZONE_Z_END - SOUTH_STAIRS_ZONE_Z_START) * f_scale
+	var z_sw_pos = (SOUTH_STAIRS_ZONE_Z_START + SOUTH_STAIRS_ZONE_Z_END) / 2.0 * f_scale
+	var x_sw_east = SOUTH_STAIRS_RAMP_INNER_X * f_scale
 	var x_sw_len = x_sw_east + half_x_west
 	var x_sw_pos = (x_sw_east - half_x_west) / 2.0
 
@@ -184,8 +257,8 @@ func _build_floor_geometry(f_num: int, y_offset: float, suffix: String, c_color:
 	# height (height + floor_thick), not half of the room height alone, so the two ramps
 	# built by _generate_south_stairs_ramp() land exactly on this floor's own floor level
 	# below and the floor-above's floor level above - see that function for the full layout.
-	var x_landing_len = 4.62 * f_scale
-	var x_landing_pos = 10.34 * f_scale
+	var x_landing_len = (SOUTH_STAIRS_LANDING_OUTER_X - SOUTH_STAIRS_LANDING_INNER_X) * f_scale
+	var x_landing_pos = (SOUTH_STAIRS_LANDING_INNER_X + SOUTH_STAIRS_LANDING_OUTER_X) / 2.0 * f_scale
 	var y_landing = (height + floor_thick) / 2.0
 	_create_static_box(parent, "Landing_SouthStairs", Vector3(x_landing_pos, y_landing, z_sw_pos), Vector3(x_landing_len, floor_thick, z_sw_len), floor_mat)
 	
@@ -209,7 +282,7 @@ func _build_floor_geometry(f_num: int, y_offset: float, suffix: String, c_color:
 	_create_static_box(parent, "Wall_South", Vector3(main_center_x, outer_wall_y, half_z + thickness/2.0), Vector3(main_width + thickness * 2.0, outer_wall_height, thickness), wall_mat)
 	
 	if f_num == 1:
-		_create_static_box(parent, "Floor_NorthStairs", Vector3(1.05 * f_scale, floor_y, -27.6 * f_scale), Vector3(7.6 * f_scale, floor_thick, 4.8 * f_scale), floor_mat)
+		_create_static_box(parent, "Floor_NorthStairs", Vector3(NORTH_STAIRS_CENTER_X * f_scale, floor_y, -27.6 * f_scale), Vector3(7.6 * f_scale, floor_thick, 4.8 * f_scale), floor_mat)
 		
 		# Fill the South Stairs hole for the ground floor
 		var x_se_len = 10.78 * f_scale
@@ -233,22 +306,10 @@ func _build_floor_geometry(f_num: int, y_offset: float, suffix: String, c_color:
 	_generate_south_stairs_ramp(parent, f_scale, height, floor_thick, floor_mat)
 
 
-	_generate_double_room(parent, f_scale, f_num, 401)
-	_generate_double_room(parent, f_scale, f_num, 402)
-	_generate_double_room(parent, f_scale, f_num, 403)
-	_generate_double_room(parent, f_scale, f_num, 405)
-	_generate_double_room(parent, f_scale, f_num, 406)
-	_generate_double_room(parent, f_scale, f_num, 408)
-	
-	_generate_single_room(parent, f_scale, f_num, 410)
-	_generate_single_room(parent, f_scale, f_num, 411)
-	_generate_single_room(parent, f_scale, f_num, 412)
-	_generate_single_room(parent, f_scale, f_num, 413)
-	_generate_single_room(parent, f_scale, f_num, 415)
-	_generate_single_room(parent, f_scale, f_num, 416)
-	_generate_single_room(parent, f_scale, f_num, 417)
-	_generate_single_room(parent, f_scale, f_num, 420)
-	_generate_single_room(parent, f_scale, f_num, 421)
+	for room_num in DOUBLE_ROOM_LAYOUT:
+		_generate_double_room(parent, f_scale, f_num, room_num)
+	for room_num in SINGLE_ROOM_LAYOUT:
+		_generate_single_room(parent, f_scale, f_num, room_num)
 	
 	_spawn_cassettes(parent, f_scale)
 	_spawn_cerberus(parent, f_scale)
@@ -354,7 +415,7 @@ func _generate_elevator(parent: Node, f_scale: float, height: float, thickness: 
 	if scene:
 		var inst = scene.instantiate()
 		parent.add_child(inst)
-		inst.position = Vector3(7.2 * f_scale, 0, -25.0 * f_scale)
+		inst.position = Vector3(ELEVATOR_CENTER_X * f_scale, 0, ELEVATOR_CENTER_Z * f_scale)
 		inst.scale.z = -1.0
 
 		var door_scene = load("res://entities/props/elevator_door.tscn")
@@ -363,7 +424,7 @@ func _generate_elevator(parent: Node, f_scale: float, height: float, thickness: 
 			door_inst.name = "ElevatorDoor"
 			inst.add_child(door_inst)
 			door_inst.position = Vector3(0, 0, 0.1 * f_scale)
-			door_inst.scale = Vector3(1.42, 1.0, 1.0)
+			door_inst.scale = Vector3(ELEVATOR_DOOR_SCALE_X, 1.0, 1.0)
 
 		# Floor buttons are NOT created here. elevator_shaft.tscn already ships a real,
 		# wired-up "ButtonFloor4" template under ElevatorPanel, and elevator_controller.gd's
@@ -378,16 +439,16 @@ func _generate_north_stairs(parent: Node, f_scale: float) -> void:
 	if scene:
 		var inst = scene.instantiate()
 		parent.add_child(inst)
-		inst.position = Vector3(1.05 * f_scale, 0, -30.0 * f_scale)
+		inst.position = Vector3(NORTH_STAIRS_CENTER_X * f_scale, 0, NORTH_STAIRS_CENTER_Z * f_scale)
 
 func _generate_south_stairs_wall(parent: Node, f_scale: float, height: float, thickness: float, wall_mat: Material) -> void:
-	var z_pos = 25.0 * f_scale + (thickness / 2.0)
+	var z_pos = SOUTH_STAIRS_ZONE_Z_START * f_scale + (thickness / 2.0)
 	var door_w = 1.2 * f_scale
 	var door_h = 2.2 * f_scale
-	
-	var x_left = -2.75 * f_scale
-	var x_right = 4.85 * f_scale
-	var x_center = 1.05 * f_scale
+
+	var x_left = CORRIDOR_WEST_EDGE_X * f_scale
+	var x_right = CORRIDOR_EAST_EDGE_X * f_scale
+	var x_center = SOUTH_STAIRS_DOOR_CENTER_X * f_scale
 	
 	var left_w = (x_center - door_w / 2.0) - x_left
 	var left_cx = x_left + (left_w / 2.0)
@@ -419,14 +480,14 @@ func _generate_south_stairs_ramp(parent: Node, f_scale: float, height: float, fl
 	#   Band 2 (Z 27.5..30):  RampB climbs WEST,  X 8.03 -> 1.87,  Y mid_y -> full_y
 	# RampB's arrival point (X=1.87, Y=full_y) is exactly where the floor-above's own
 	# Floor_SW edge sits, so it needs no landing of its own - the next floor provides it.
-	var x_inner = 1.87 * f_scale   # Floor_SW's east edge - shared by both flights
-	var x_outer = 8.03 * f_scale   # Landing_SouthStairs' west edge - shared by both flights
+	var x_inner = SOUTH_STAIRS_RAMP_INNER_X * f_scale      # Floor_SW's east edge
+	var x_outer = SOUTH_STAIRS_LANDING_INNER_X * f_scale   # Landing_SouthStairs' west edge
 	var mid_y = (height + floor_thick) / 2.0   # matches Landing_SouthStairs' y_landing
 	var full_y = height + floor_thick          # this floor's ceiling = next floor's floor
 
-	var z_band1 = 26.25 * f_scale  # center of Z[25,27.5]
-	var z_band2 = 28.75 * f_scale  # center of Z[27.5,30]
-	var band_depth = 2.5 * f_scale
+	var band_depth = (SOUTH_STAIRS_ZONE_Z_END - SOUTH_STAIRS_ZONE_Z_START) / 2.0 * f_scale
+	var z_band1 = (SOUTH_STAIRS_ZONE_Z_START * f_scale) + band_depth / 2.0  # center of band 1
+	var z_band2 = (SOUTH_STAIRS_ZONE_Z_END * f_scale) - band_depth / 2.0    # center of band 2
 
 	var run = x_outer - x_inner
 	var ramp_len = sqrt(run * run + mid_y * mid_y)
@@ -451,6 +512,8 @@ func _generate_south_stairs_ramp(parent: Node, f_scale: float, height: float, fl
 	)
 
 func _generate_double_room(parent: Node, f_scale: float, f_num: int, orig_num: int) -> void:
+	var layout = DOUBLE_ROOM_LAYOUT.get(orig_num)
+	if not layout: return
 	var scene = load("res://scenes/levels/hotel_siberia/blocks/double_room.tscn")
 	if not scene: return
 	var inst = scene.instantiate()
@@ -458,20 +521,14 @@ func _generate_double_room(parent: Node, f_scale: float, f_num: int, orig_num: i
 	var final_num = f_num * 100 + room_idx
 	inst.name = "DoubleRoom_" + str(final_num)
 	parent.add_child(inst)
-	
-	var base_x = -7.65
-	if orig_num == 401: inst.position = Vector3(base_x * f_scale, 0, -30.0 * f_scale)
-	elif orig_num == 402: inst.position = Vector3(base_x * f_scale, 0, -20.0 * f_scale)
-	elif orig_num == 403: 
-		inst.position = Vector3(base_x * f_scale, 0, 0.0 * f_scale)
-		inst.scale.z = -1.0
-	elif orig_num == 405: inst.position = Vector3(base_x * f_scale, 0, 0.0 * f_scale)
-	elif orig_num == 406: inst.position = Vector3(base_x * f_scale, 0, 10.0 * f_scale)
-	elif orig_num == 408:
-		inst.position = Vector3(base_x * f_scale, 0, 30.0 * f_scale)
+
+	inst.position = Vector3(DOUBLE_ROOM_BASE_X * f_scale, 0, layout["z"] * f_scale)
+	if layout["mirror"]:
 		inst.scale.z = -1.0
 
 func _generate_single_room(parent: Node, f_scale: float, f_num: int, orig_num: int) -> void:
+	var layout = SINGLE_ROOM_LAYOUT.get(orig_num)
+	if not layout: return
 	var scene = load("res://scenes/levels/hotel_siberia/blocks/single_room.tscn")
 	if not scene: return
 	var inst = scene.instantiate()
@@ -479,25 +536,10 @@ func _generate_single_room(parent: Node, f_scale: float, f_num: int, orig_num: i
 	var final_num = f_num * 100 + room_idx
 	inst.name = "SingleRoom_" + str(final_num)
 	parent.add_child(inst)
-	
-	var base_x = 8.7
-	if orig_num == 410: inst.position = Vector3(base_x * f_scale, 0, -20.0 * f_scale)
-	elif orig_num == 411:
-		inst.position = Vector3(base_x * f_scale, 0, -10.0 * f_scale)
+
+	inst.position = Vector3(SINGLE_ROOM_BASE_X * f_scale, 0, layout["z"] * f_scale)
+	if layout["mirror"]:
 		inst.scale.z = -1.0
-	elif orig_num == 412: inst.position = Vector3(base_x * f_scale, 0, -10.0 * f_scale)
-	elif orig_num == 413:
-		inst.position = Vector3(base_x * f_scale, 0, 0.0 * f_scale)
-		inst.scale.z = -1.0
-	elif orig_num == 415: inst.position = Vector3(base_x * f_scale, 0, 0.0 * f_scale)
-	elif orig_num == 416:
-		inst.position = Vector3(base_x * f_scale, 0, 10.0 * f_scale)
-		inst.scale.z = -1.0
-	elif orig_num == 417:
-		inst.position = Vector3(base_x * f_scale, 0, 15.0 * f_scale)
-		inst.scale.z = -1.0
-	elif orig_num == 420: inst.position = Vector3(base_x * f_scale, 0, 15.0 * f_scale)
-	elif orig_num == 421: inst.position = Vector3(base_x * f_scale, 0, 20.0 * f_scale)
 
 func _create_static_box(parent: Node, node_name: String, pos: Vector3, size: Vector3, mat: Material, rot: Vector3 = Vector3.ZERO) -> void:
 	var static_body = StaticBody3D.new()
@@ -577,15 +619,15 @@ func _generate_roof(y_offset: float, f_scale: float) -> void:
 	parent.position.y = y_offset
 	add_child(parent)
 	
-	var z_length = 60.0 * f_scale
-	var x_width = 25.3 * f_scale
+	var z_length = BUILDING_LENGTH_Z * f_scale
+	var x_width = BUILDING_WIDTH_X * f_scale
 	var thickness = wall_thickness * f_scale
 	var floor_thick = floor_thickness * f_scale
 
 	# Same west-side trim as _build_floor_geometry - keeps the roof/parapet
 	# flush with the DoubleRoom wing instead of overhanging the sealed void.
 	var half_x = x_width / 2.0
-	var west_trim = 4.9 * f_scale
+	var west_trim = WEST_WING_TRIM * f_scale
 	var half_x_west = half_x - west_trim
 	var main_width = half_x + half_x_west
 	var main_center_x = west_trim / 2.0
@@ -605,7 +647,7 @@ func _generate_roof(y_offset: float, f_scale: float) -> void:
 	var z_north_len = 4.82 * f_scale
 	var z_north_pos = -27.59 * f_scale
 	
-	var x_nw_east = -2.55 * f_scale
+	var x_nw_east = NORTH_ZONE_INNER_X * f_scale
 	var x_nw_len = x_nw_east + half_x_west
 	var x_nw_pos = (x_nw_east - half_x_west) / 2.0
 	var x_ne_len = 8.0 * f_scale

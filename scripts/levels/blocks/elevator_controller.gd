@@ -121,7 +121,7 @@ func _teleport_player(target_floor: int) -> void:
 	var current_floor = _get_floor_from_elevator(self)
 	
 	if current_floor != target_floor:
-		var y_step = 4.5 * f_scale
+		var y_step = HotelLevelGenerator.BASE_FLOOR_TO_FLOOR_HEIGHT * f_scale
 		var target_y = (target_floor - 4) * y_step
 		var current_y = _get_base_y(self)
 		
@@ -149,7 +149,7 @@ func _get_base_y(elevator: ElevatorController) -> float:
 	return elevator.global_position.y
 
 func _get_floor_from_elevator(elevator: ElevatorController) -> int:
-	var y_step = 4.5 * f_scale
+	var y_step = HotelLevelGenerator.BASE_FLOOR_TO_FLOOR_HEIGHT * f_scale
 	return round(_get_base_y(elevator) / y_step) + 4
 
 func _find_elevator_on_floor(floor_num: int) -> ElevatorController:
