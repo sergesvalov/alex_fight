@@ -5,6 +5,7 @@ signal state_changed(new_state: GameState)
 signal tape_collected(tape_id: int)
 signal enemy_spawned
 signal all_tapes_collected
+signal floor_stairs_unlocked_changed(unlocked: bool)
 
 enum GameState {
     EXPLORING,      # Исследование
@@ -22,6 +23,10 @@ var collected_tapes: Array[Dictionary] = []  # [{"floor": 4, "id": 0}, ...] — 
                                               # всех когда-либо найденных кассет, НЕ сбрасывается
 var exit_code_known: bool = false
 var cerberus_spawned: bool = false
+# South/North Stairs normally teleport the player straight back to current_floor (see
+# stairs_gate.gd) - this is the programmatic override that cancels that block, once this
+# floor's own 3 tapes have been collected and viewed. Resets on every new floor (reset_floor()).
+var floor_stairs_unlocked: bool = false
 var current_floor: int = 4
 var entered_from_outer_door: bool = false
 var entered_from_stairs: bool = false
@@ -52,6 +57,8 @@ func collect_tape(tape_id: int) -> void:
         # После сбора 3 кассет
         if tapes_found.size() == 3:
             all_tapes_collected.emit()
+            floor_stairs_unlocked = true
+            floor_stairs_unlocked_changed.emit(true)
             if not cerberus_spawned:
                 cerberus_spawned = true
                 enemy_spawned.emit()
@@ -61,4 +68,5 @@ func reset_floor(new_floor: int) -> void:
     tapes_found.clear()
     cerberus_spawned = false
     exit_code_known = false
+    floor_stairs_unlocked = false
     current_state = GameState.EXPLORING

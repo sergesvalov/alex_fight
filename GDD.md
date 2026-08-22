@@ -449,7 +449,7 @@ extends CharacterBody3D
 @onready var camera_rig: Node3D = $CameraRig
 @onready var camera: Camera3D = $CameraRig/Camera3D
 @onready var ray_interact: RayCast3D = $RayCast3D
-@onready var weapon: Node3D = $CameraRig/Camera3D/WeaponHolder/Shotgun
+@onready var weapon: Node3D = $CameraRig/Camera3D/WeaponHolder/LaserPistol
 @onready var left_joystick: VirtualJoystick = %LeftJoystick
 @onready var right_joystick: VirtualJoystick = %RightJoystick
 
@@ -1034,7 +1034,7 @@ void fragment() {
 - [ ] Создать `player.tscn` с иерархией из раздела 2.2
 - [ ] Написать `player_controller.gd` (движение + взаимодействие)
 - [ ] Создать `virtual_joystick.gd` и `hud.tscn`
-- [ ] Реализовать `weapon_shotgun.gd` (стрельба + перезарядка)
+- [ ] Реализовать `laser_pistol.gd` (стрельба + перегрев)
 
 ### Фаза 3: Уровень
 - [ ] Создать `hotel_level.tscn` — серая-боксовая геометрия (greybox)
@@ -1054,6 +1054,6 @@ void fragment() {
 
 ### Фаза 6: Полировка
 - [ ] Добавить шейдеры (hologram.gdshader, crt_screen.gdshader)
-- [ ] Настроить аудио (ambient, combat, SFX шотгана)
+- [ ] Настроить аудио (ambient, combat, SFX лазерного пистолета)
 - [ ] Оптимизация: OccluderInstance3D, LOD, Occlusion Culling
 - [ ] Тест на Android (APK export через Godot Android Build)

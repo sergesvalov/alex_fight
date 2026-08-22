@@ -150,6 +150,10 @@ func _generate_level() -> void:
 	var height = corridor_height * f_scale
 	var floor_thick = floor_thickness * f_scale
 	var y_step = height + floor_thick
+
+	# Stairs gates (stairs_gate.gd, South and North) compare against this to tell a floor-hop
+	# attempt apart from the player just visiting their own floor's stairwell.
+	GameStateManager.current_floor = floor_number
 	
 	var get_color_from_scene = func(level_num: int) -> Color:
 		var scene_path = "res://scenes/levels/hotel_siberia/hotel_level_" + str(level_num) + ".tscn"
@@ -348,7 +352,7 @@ func _build_floor_geometry(f_num: int, y_offset: float, suffix: String, c_color:
 	_generate_elevator(parent, f_scale, height, thickness, wall_mat)
 	
 	# 3.7 North Stairs
-	_generate_north_stairs(parent, f_scale)
+	_generate_north_stairs(parent, f_scale, f_num)
 
 	if is_empty:
 		return parent
@@ -359,6 +363,7 @@ func _build_floor_geometry(f_num: int, y_offset: float, suffix: String, c_color:
 	# 3.7.5 South Stairs Wall
 	_generate_south_stairs_wall(parent, f_scale, height, thickness, wall_mat)
 	_generate_south_stairs_ramp(parent, f_scale, height, floor_thick, floor_mat)
+	_add_south_stairs_gate(parent, f_num, f_scale)
 
 
 	for room_num in DOUBLE_ROOM_LAYOUT:
@@ -554,7 +559,7 @@ func _generate_elevator(parent: Node, f_scale: float, height: float, thickness: 
 		# _on_button_pressed (nothing connected to it) and was the reason a "phantom" button
 		# hitbox could be interacted with near the panel without doing anything.
 
-func _generate_north_stairs(parent: Node, f_scale: float) -> void:
+func _generate_north_stairs(parent: Node, f_scale: float, f_num: int) -> void:
 	var scene = load("res://scenes/levels/hotel_siberia/blocks/north_stairs.tscn")
 	if scene:
 		var inst = scene.instantiate()
@@ -577,6 +582,27 @@ func _generate_north_stairs(parent: Node, f_scale: float) -> void:
 				door_inst.position = Vector3(door_data[1], 0, 4.9)
 				door_inst.scale = Vector3(1.2, 1.0, 1.0)
 				inst.add_child(door_inst)
+
+				# Floor-lock gate at this same doorway - see stairs_gate.gd. Left in inst's own
+				# UNSCALED local space like the door above - block.gd's apply_dynamic_scale()
+				# rescales this whole subtree itself (a plain Area3D with no
+				# "door/bed/table/chair/wardrobe" in its name takes the generic Node3D scaling
+				# path, not the human-sized prop path).
+				var gate = Area3D.new()
+				gate.name = door_data[0] + "Gate"
+				gate.collision_layer = 0
+				gate.collision_mask = 1 # Player layer
+				gate.set_script(load("res://scripts/levels/blocks/stairs_gate.gd"))
+				gate.floor_num = f_num
+				gate.y_step = BASE_FLOOR_TO_FLOOR_HEIGHT * f_scale
+				gate.position = Vector3(door_data[1], 1.1, 4.9)
+
+				var gate_coll = CollisionShape3D.new()
+				var gate_shape = BoxShape3D.new()
+				gate_shape.size = Vector3(1.2, 2.2, 1.0)
+				gate_coll.shape = gate_shape
+				gate.add_child(gate_coll)
+				inst.add_child(gate)
 
 		parent.add_child(inst)
 
@@ -680,6 +706,31 @@ func _generate_south_stairs_ramp(parent: Node, f_scale: float, height: float, fl
 		floor_mat,
 		Vector3(0, 0, -angle_up)
 	)
+
+# Locks South Stairs floor-hopping at floor f_num's own doorway - see stairs_gate.gd for
+# the actual check/teleport. Sized to span the full doorway so the player can't sidestep it.
+func _add_south_stairs_gate(parent: Node, f_num: int, f_scale: float) -> void:
+	var z_pos = SOUTH_STAIRS_ZONE_Z_START * f_scale
+	var x_center = SOUTH_STAIRS_DOOR_CENTER_X * f_scale
+	var door_w = 1.2 * f_scale
+	var door_h = 2.2 * f_scale
+
+	var gate = Area3D.new()
+	gate.name = "SouthStairsGate"
+	gate.collision_layer = 0
+	gate.collision_mask = 1 # Player layer
+	gate.set_script(load("res://scripts/levels/blocks/stairs_gate.gd"))
+	gate.floor_num = f_num
+	gate.y_step = BASE_FLOOR_TO_FLOOR_HEIGHT * f_scale
+	gate.position = Vector3(x_center, door_h / 2.0, z_pos)
+
+	var coll = CollisionShape3D.new()
+	var shape = BoxShape3D.new()
+	shape.size = Vector3(door_w, door_h, 1.0 * f_scale)
+	coll.shape = shape
+	gate.add_child(coll)
+
+	parent.add_child(gate)
 
 # Adds a door.tscn instance as a child of a room instance, positioned/rotated in the room's
 # OWN local space (so it inherits the room's position and mirror scale like every other prop).
