@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Texture2D" path="res://assets/textures/hotel_wallpaper.jpg" id="1_wallpaper"]
 [ext_resource type="Script" path="res://scripts/levels/blocks/block.gd" id="3_script"]
@@ -6,7 +6,6 @@
 [ext_resource type="PackedScene" path="res://entities/props/table.tscn" id="6_table"]
 [ext_resource type="PackedScene" path="res://entities/props/chair.tscn" id="7_chair"]
 [ext_resource type="PackedScene" path="res://entities/props/wardrobe.tscn" id="8_wardrobe"]
-[ext_resource type="PackedScene" path="res://entities/props/door.tscn" id="10_door"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wall"]
 albedo_texture = ExtResource("1_wallpaper")
@@ -108,10 +107,5 @@ transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 3.0, 0.0, 1.93)
 [node name="Wardrobe" parent="." instance=ExtResource("8_wardrobe")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3, 0.0, 0.4)
 
-# Дверь номера: проём в RoomWestWall (X=-3.75, Z=3.5), коридор к западу -> basis.z смотрит -X (поворот -90° вокруг Y).
-[node name="RoomDoor" parent="." instance=ExtResource("10_door")]
-transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -3.75, 0.0, 3.5)
-
-# Дверь санузла: проём в WCSouthWall (X=-2.55, Z=2.5), номер к югу -> basis.z смотрит +Z (без поворота).
-[node name="WCDoor" parent="." instance=ExtResource("10_door")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.55, 0.0, 2.5)
+# RoomDoor/WCDoor used to be embedded here as door.tscn instances - see double_room.tscn for
+# why they were moved into code (_generate_single_room in hotel_level_generator.gd).

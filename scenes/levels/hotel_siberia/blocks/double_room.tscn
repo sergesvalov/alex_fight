@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="Texture2D" path="res://assets/textures/hotel_wallpaper.jpg" id="1_wallpaper"]
 [ext_resource type="Script" path="res://scripts/levels/blocks/block.gd" id="3_script"]
@@ -6,7 +6,6 @@
 [ext_resource type="PackedScene" path="res://entities/props/chair.tscn" id="4_chair"]
 [ext_resource type="PackedScene" path="res://entities/props/bed.tscn" id="5_bed"]
 [ext_resource type="PackedScene" path="res://entities/props/wardrobe.tscn" id="6_wardrobe"]
-[ext_resource type="PackedScene" path="res://entities/props/door.tscn" id="10_door"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wall"]
 albedo_texture = ExtResource("1_wallpaper")
@@ -118,10 +117,9 @@ transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, -0.5, 
 [node name="Chair2" parent="." instance=ExtResource("4_chair")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5, 0.0, 8.5)
 
-# Дверь номера: проём в RoomEastWall (X=4.8, Z=8.5), корридор к востоку -> basis.z смотрит +X (поворот +90° вокруг Y).
-[node name="RoomDoor" parent="." instance=ExtResource("10_door")]
-transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 4.8, 0.0, 8.5)
-
-# Дверь санузла: проём в WCSouthWall (X=2.35, Z=4.9), номер к югу -> basis.z смотрит +Z (без поворота).
-[node name="WCDoor" parent="." instance=ExtResource("10_door")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.35, 0.0, 4.9)
+# RoomDoor/WCDoor used to be embedded here as door.tscn instances, but any single_room.tscn
+# or double_room.tscn that embeds door.tscn as a node instance loses nodes when packed into
+# an exported PCK (see hotel_level_generator.gd's _generate_double_room/_generate_single_room -
+# this was diagnosed 2026-08-22 via PackedScene.get_state(), which showed the raw resource
+# already missing nodes before instantiate() ever runs). Both doors are created in code there
+# instead, the same proven-reliable way MaintenanceDoor/SouthStairsDoor/ElevatorDoor already are.

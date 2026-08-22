@@ -122,11 +122,6 @@ var _floor_lights_by_index: Dictionary = {}   # int floor index (1..10) -> Array
 var _lit_floor_index: int = -1
 var _light_y_step: float = 0.0
 
-# One-shot diagnostic latch for the "single_room.tscn loses its furniture/door instances
-# in exported builds" investigation (2026-08-22) - only need to dump the raw SceneState
-# once, not once per room per floor.
-var _diag_single_room_state_logged: bool = false
-
 func _ready() -> void:
 	if GameStateManager.has_signal("all_tapes_collected"):
 		GameStateManager.connect("all_tapes_collected", _on_all_tapes_collected)
@@ -541,10 +536,26 @@ func _generate_north_stairs(parent: Node, f_scale: float) -> void:
 	var scene = load("res://scenes/levels/hotel_siberia/blocks/north_stairs.tscn")
 	if scene:
 		var inst = scene.instantiate()
-		# position MUST be set before add_child() - see _generate_maintenance_room() for why
-		# (add_child() fires _ready() synchronously on the whole subtree, including
-		# DoorEast/DoorWest, which would otherwise see this block still at local (0,0,0)).
+		# position MUST be set before add_child() - see _generate_maintenance_room() for why.
 		inst.position = Vector3(NORTH_STAIRS_CENTER_X * f_scale, 0, NORTH_STAIRS_CENTER_Z * f_scale)
+
+		# Обе двери на южной стене (лицом в коридор, +Z, без поворота), ширина проёма 1.2м.
+		# Local coords, NOT multiplied by f_scale here: this whole block (like double_room.tscn/
+		# single_room.tscn) is static authored content that GlobalConfig.apply_dynamic_scale()
+		# rescales on its own via block.gd's _ready() - scaling it again here would double it
+		# for any build with a non-default player/floor scale.
+		# Created in code, not embedded in north_stairs.tscn - see _add_room_door()'s comment
+		# for why (embedding a second door.tscn instance in one scene file loses nodes when
+		# packed into an exported PCK).
+		var door_scene = load("res://entities/props/door.tscn")
+		if door_scene:
+			for door_data in [["DoorEast", 2.8], ["DoorWest", -2.8]]:
+				var door_inst = door_scene.instantiate()
+				door_inst.name = door_data[0]
+				door_inst.position = Vector3(door_data[1], 0, 4.9)
+				door_inst.scale = Vector3(1.2, 1.0, 1.0)
+				inst.add_child(door_inst)
+
 		parent.add_child(inst)
 
 func _generate_south_stairs_wall(parent: Node, f_scale: float, height: float, thickness: float, wall_mat: Material) -> void:
@@ -648,15 +659,28 @@ func _generate_south_stairs_ramp(parent: Node, f_scale: float, height: float, fl
 		Vector3(0, 0, -angle_up)
 	)
 
+# Adds a door.tscn instance as a child of a room instance, positioned/rotated in the room's
+# OWN local space (so it inherits the room's position and mirror scale like every other prop).
+# RoomDoor/WCDoor used to be embedded directly in double_room.tscn/single_room.tscn instead,
+# but ANY room .tscn that embeds a door.tscn node instance loses nodes once packed into an
+# exported PCK (confirmed 2026-08-22 via PackedScene.get_state(), which showed nodes already
+# missing from the raw resource before instantiate() ever runs - not an add_child()/instantiate()
+# bug on this end). Creating the door in code sidesteps that entirely, the same way
+# MaintenanceDoor/SouthStairsDoor/ElevatorDoor already reliably do across all 10 floors.
+func _add_room_door(room_inst: Node, node_name: String, local_pos: Vector3, rot_y: float) -> void:
+	var door_scene = load("res://entities/props/door.tscn")
+	if not door_scene: return
+	var door_inst = door_scene.instantiate()
+	door_inst.name = node_name
+	door_inst.position = local_pos
+	door_inst.rotation.y = rot_y
+	room_inst.add_child(door_inst)
+
 func _generate_double_room(parent: Node, f_scale: float, f_num: int, orig_num: int) -> void:
 	var layout = DOUBLE_ROOM_LAYOUT.get(orig_num)
-	if not layout:
-		print("[generator] _generate_double_room: no layout for room ", orig_num, " - skipped")
-		return
+	if not layout: return
 	var scene = load("res://scenes/levels/hotel_siberia/blocks/double_room.tscn")
-	if not scene:
-		print("[generator] _generate_double_room: FAILED to load double_room.tscn for room ", orig_num)
-		return
+	if not scene: return
 	var inst = scene.instantiate()
 	var room_idx = orig_num % 100
 	var final_num = f_num * 100 + room_idx
@@ -669,29 +693,19 @@ func _generate_double_room(parent: Node, f_scale: float, f_num: int, orig_num: i
 	inst.position = Vector3(DOUBLE_ROOM_BASE_X * f_scale, 0, layout["z"] * f_scale)
 	if layout["mirror"]:
 		inst.scale.z = -1.0
+
+	# Проём в RoomEastWall (X=4.8, Z=8.5), коридор к востоку -> basis.z смотрит +X (поворот +90°).
+	_add_room_door(inst, "RoomDoor", Vector3(4.8, 0.0, 8.5), PI / 2.0)
+	# Проём в WCSouthWall (X=2.35, Z=4.9), номер к югу -> basis.z смотрит +Z (без поворота).
+	_add_room_door(inst, "WCDoor", Vector3(2.35, 0.0, 4.9), 0.0)
+
 	parent.add_child(inst)
-	var child_names: Array = []
-	for c in inst.get_children():
-		child_names.append(c.name)
-	print("[generator] _generate_double_room: added ", inst.name, " at ", inst.position,
-		" scale=", inst.scale, " children=", inst.get_child_count(), " names=", child_names)
 
 func _generate_single_room(parent: Node, f_scale: float, f_num: int, orig_num: int) -> void:
 	var layout = SINGLE_ROOM_LAYOUT.get(orig_num)
-	if not layout:
-		print("[generator] _generate_single_room: no layout for room ", orig_num, " - skipped")
-		return
+	if not layout: return
 	var scene = load("res://scenes/levels/hotel_siberia/blocks/single_room.tscn")
-	if not scene:
-		print("[generator] _generate_single_room: FAILED to load single_room.tscn for room ", orig_num)
-		return
-	if not _diag_single_room_state_logged:
-		_diag_single_room_state_logged = true
-		var state = scene.get_state()
-		var raw_names: Array = []
-		for i in range(state.get_node_count()):
-			raw_names.append(state.get_node_name(i))
-		print("[generator] DIAG single_room.tscn SceneState: node_count=", state.get_node_count(), " names=", raw_names)
+	if not scene: return
 	var inst = scene.instantiate()
 	var room_idx = orig_num % 100
 	var final_num = f_num * 100 + room_idx
@@ -701,12 +715,13 @@ func _generate_single_room(parent: Node, f_scale: float, f_num: int, orig_num: i
 	inst.position = Vector3(SINGLE_ROOM_BASE_X * f_scale, 0, layout["z"] * f_scale)
 	if layout["mirror"]:
 		inst.scale.z = -1.0
+
+	# Проём в RoomWestWall (X=-3.75, Z=3.5), коридор к западу -> basis.z смотрит -X (поворот -90°).
+	_add_room_door(inst, "RoomDoor", Vector3(-3.75, 0.0, 3.5), -PI / 2.0)
+	# Проём в WCSouthWall (X=-2.55, Z=2.5), номер к югу -> basis.z смотрит +Z (без поворота).
+	_add_room_door(inst, "WCDoor", Vector3(-2.55, 0.0, 2.5), 0.0)
+
 	parent.add_child(inst)
-	var child_names: Array = []
-	for c in inst.get_children():
-		child_names.append(c.name)
-	print("[generator] _generate_single_room: added ", inst.name, " at ", inst.position,
-		" scale=", inst.scale, " children=", inst.get_child_count(), " names=", child_names)
 
 func _create_static_box(parent: Node, node_name: String, pos: Vector3, size: Vector3, mat: Material, rot: Vector3 = Vector3.ZERO) -> void:
 	var static_body = StaticBody3D.new()
