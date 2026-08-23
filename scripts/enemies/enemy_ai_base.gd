@@ -97,16 +97,32 @@ func _on_navmesh_ready() -> void:
 	if current_state == State.IDLE and patrol_points.size() > 0:
 		_set_state(State.PATROL)
 
+# Horizontal-only distance from global_position to target - used everywhere below instead of
+# Vector3.distance_to()/nav_agent.distance_to_target(). Root cause of the "stuck in place,
+# spinning wildly" report (2026-08-23, confirmed via the ROTATION SPIKE diagnostic log): a target
+# whose Y differs from the enemy's own resting Y (e.g. spawn_position, captured in _ready() before
+# gravity ever settles the body onto the floor, so it can end up ~1m off) can never be closed to
+# zero in full 3D distance even once the enemy is standing right on top of it horizontally -
+# NavigationAgent3D.is_navigation_finished() then never reports true, and move_along_nav() keeps
+# recomputing a direction toward an unreachable point every physics tick, flipping ~180° each time
+# as the enemy overshoots back and forth across the one XZ point it CAN reach.
+func _flat_distance(target: Vector3) -> float:
+	var to_target: Vector3 = target - global_position
+	to_target.y = 0.0
+	return to_target.length()
+
 func _state_patrol(_delta: float) -> void:
 	if patrol_points.is_empty():
 		_set_state(State.IDLE)
 		return
 
 	var target_point: Vector3 = patrol_points[current_patrol_index].global_position
-	movement.nav_agent.target_position = target_point
+	var nav_target: Vector3 = target_point
+	nav_target.y = global_position.y
+	movement.nav_agent.target_position = nav_target
 	movement.move_along_nav(patrol_speed)
 
-	if global_position.distance_to(target_point) < 0.5:
+	if _flat_distance(target_point) < 0.5:
 		current_patrol_index = (current_patrol_index + 1) % patrol_points.size()
 		idle_timer = idle_wait_time
 		_set_state(State.IDLE)
@@ -123,7 +139,9 @@ func _state_chase(_delta: float) -> void:
 
 	# Throttle: обновляем маршрут раз в NAV_UPDATE_INTERVAL
 	if _nav_update_timer <= 0.0:
-		movement.nav_agent.target_position = player.global_position
+		var nav_target: Vector3 = player.global_position
+		nav_target.y = global_position.y
+		movement.nav_agent.target_position = nav_target
 		_nav_update_timer = NAV_UPDATE_INTERVAL
 	movement.move_along_nav(chase_speed)
 
@@ -138,7 +156,7 @@ func _state_chase(_delta: float) -> void:
 	else:
 		attack_timer = 0.0
 
-	if global_position.distance_to(player.global_position) <= attack_range:
+	if _flat_distance(player.global_position) <= attack_range:
 		_set_state(State.ATTACK)
 
 func _state_attack(_delta: float) -> void:
@@ -153,7 +171,7 @@ func _state_attack(_delta: float) -> void:
 		look_at(global_position + to_player, Vector3.UP)
 		_log_attack_rotation_spike_if_any(prev_facing, to_player)
 
-	if global_position.distance_to(player.global_position) > attack_range * 1.5:
+	if _flat_distance(player.global_position) > attack_range * 1.5:
 		_set_state(State.CHASE)
 		return
 
@@ -184,9 +202,11 @@ func _perform_attack() -> void:
 		print(name, " attacked player for ", attack_damage)
 
 func _state_return(_delta: float) -> void:
-	movement.nav_agent.target_position = spawn_position
+	var nav_target: Vector3 = spawn_position
+	nav_target.y = global_position.y
+	movement.nav_agent.target_position = nav_target
 	movement.move_along_nav(patrol_speed)
-	if global_position.distance_to(spawn_position) < 0.5:
+	if _flat_distance(spawn_position) < 0.5:
 		player = null
 		_set_state(State.IDLE)
 

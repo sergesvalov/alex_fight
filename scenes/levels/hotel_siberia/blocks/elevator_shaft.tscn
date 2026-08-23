@@ -75,6 +75,12 @@ operation = 2
 # resulting 1.65m pocket (2.25 - 0.6) once open_offset (elevator_door.tscn) slides it clear.
 size = Vector3(1.2, 2.5, 1.0)
 
+[node name="ElevatorLight" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.75, 2.5)
+light_color = Color(0.9, 0.95, 1, 1)
+light_energy = 1.15
+omni_range = 8.0
+
 # Floor/Ceiling/SouthWall added 2026-08-23 - this block used to be only 3 walls (West/East/North)
 # with no floor, ceiling, or south wall at all, so opening ElevatorDoor didn't reveal a car -
 # it left the whole 5m-deep interior open on 3 sides, letting the camera see straight through to
@@ -84,26 +90,35 @@ size = Vector3(1.2, 2.5, 1.0)
 # Sealing it with a distinct gunmetal material (StandardMaterial3D_car, matching
 # elevator_door.tscn's own door material) both fixes the leak and reads as an actual elevator car
 # rather than a hollow wallpapered nook.
-[node name="ElevatorFloor" type="CSGBox3D" parent="ElevatorGeometry"]
+#
+# Deliberately siblings of "." (like ElevatorPanel below), NOT children of the "ElevatorGeometry"
+# combiner above - that combiner's ElevatorDoorHole is a SUBTRACTION, and this project has already
+# hit "new union geometry touching/coplanar with an existing subtraction corrupts the whole cut"
+# once before (North Stairs South Wall, see AGENTS.md's CSG gotchas) with the door hole disappearing
+# in a completely unrelated-looking way. Adding these as standalone CSGBox3D roots (each is its own
+# independent CSG tree, same as ElevatorPanel already is) makes that class of bug structurally
+# impossible here, at the cost of not being able to boolean-merge with the walls (not needed - they
+# don't overlap the walls' own geometry, just sit flush against their inner faces).
+[node name="ElevatorFloor" type="CSGBox3D" parent="."]
+use_collision = true
+collision_layer = 2
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.05, 2.5)
 size = Vector3(4.5, 0.1, 5.0)
 material = SubResource("StandardMaterial3D_car")
 
-[node name="ElevatorCeiling" type="CSGBox3D" parent="ElevatorGeometry"]
+[node name="ElevatorCeiling" type="CSGBox3D" parent="."]
+use_collision = true
+collision_layer = 2
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.05, 2.5)
 size = Vector3(4.5, 0.1, 5.0)
 material = SubResource("StandardMaterial3D_car")
 
-[node name="ElevatorSouthWall" type="CSGBox3D" parent="ElevatorGeometry"]
+[node name="ElevatorSouthWall" type="CSGBox3D" parent="."]
+use_collision = true
+collision_layer = 2
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.0, 4.9)
 size = Vector3(4.7, 4.0, 0.2)
 material = SubResource("StandardMaterial3D_car")
-
-[node name="ElevatorLight" type="OmniLight3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.75, 2.5)
-light_color = Color(0.9, 0.95, 1, 1)
-light_energy = 1.15
-omni_range = 8.0
 
 [node name="ElevatorPanel" type="CSGBox3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.14, 1.2, 2.5)
