@@ -182,19 +182,64 @@ pipeline {
                             if (params.BUILD_WINDOWS) {
                                 echo "Запуск экспорта Windows-проекта для теста..."
                                 sh '''
+                                REPORT="build/windows_build_report.txt"
+                                mkdir -p build
+                                {
+                                    echo "=== Alex Fight - отчёт о сборке Windows ==="
+                                    echo "Jenkins build: #${BUILD_NUMBER}"
+                                    echo "Git commit: $(git rev-parse HEAD 2>/dev/null || echo неизвестен)"
+                                    echo "Дата (UTC): $(date -u '+%Y-%m-%d %H:%M:%S')"
+                                    echo ""
+                                } > "$REPORT"
+
                                 if grep -q 'name="Windows Desktop"' export_presets.cfg 2>/dev/null; then
                                     echo "Копируем конфиг ПК..."
                                     cp configs/project.pc.godot project.godot
+
+                                    # Полная чистка перед экспортом - без этого файл от ПРЕДЫДУЩЕЙ
+                                    # сборки мог бы остаться в build/windows и пройти проверку
+                                    # "файл существует" ниже, даже если сам export-release в этот
+                                    # раз реально провалился (тем более что || true глушит его код
+                                    # возврата) - именно так тестировался бы устаревший .exe
+                                    # незаметно для CI, при этом выглядя "успешной" сборкой.
+                                    rm -rf build/windows
                                     mkdir -p build/windows
-                                    godot --headless --export-release "Windows Desktop" build/windows/alex_fight.exe || true
-                                    if [ ! -f "build/windows/alex_fight.exe" ]; then echo 'Windows build failed!'; exit 1; fi
+
+                                    EXPORT_LOG="build/windows_export.log"
+                                    set +e
+                                    godot --headless --export-release "Windows Desktop" build/windows/alex_fight.exe > "$EXPORT_LOG" 2>&1
+                                    EXPORT_EXIT_CODE=$?
+                                    set -e
+
+                                    {
+                                        echo "Код возврата godot --export-release: $EXPORT_EXIT_CODE"
+                                        echo ""
+                                        echo "--- Ошибки/предупреждения из вывода Godot ---"
+                                        grep -iE 'error|ошибка|failed|warning' "$EXPORT_LOG" || echo "(не найдено)"
+                                        echo ""
+                                    } >> "$REPORT"
+
+                                    if [ -f "build/windows/alex_fight.exe" ]; then
+                                        {
+                                            echo "Статус: УСПЕХ"
+                                            echo "Файл: build/windows/alex_fight.exe"
+                                            echo "Размер: $(stat -c%s build/windows/alex_fight.exe 2>/dev/null || echo '?') байт"
+                                            echo "Время создания (UTC): $(date -u -r build/windows/alex_fight.exe '+%Y-%m-%d %H:%M:%S' 2>/dev/null || echo '?')"
+                                        } >> "$REPORT"
+                                    else
+                                        echo "Статус: ОШИБКА - build/windows/alex_fight.exe не создан" >> "$REPORT"
+                                        cat "$REPORT"
+                                        exit 1
+                                    fi
 
                                     echo "Архивируем сборку ПК в ZIP..."
                                     apt-get update && apt-get install -y zip
                                     cd build/windows && zip -r ../alex_fight_pc_test.zip * && cd ../..
                                 else
-                                    echo "Пресет 'Windows Desktop' не найден. Сборка под ПК пропущена."
+                                    echo "Статус: ПРОПУЩЕНО - пресет 'Windows Desktop' не найден в export_presets.cfg" >> "$REPORT"
                                 fi
+
+                                cat "$REPORT"
                                 '''
                             } else {
                                 echo "Сборка для Windows пропущена (BUILD_WINDOWS = false)"
@@ -230,10 +275,13 @@ pipeline {
 
     post {
         success {
-            archiveArtifacts artifacts: 'build/*.apk, build/*.zip', fingerprint: true, allowEmptyArchive: true
+            archiveArtifacts artifacts: 'build/*.apk, build/*.zip, build/windows_build_report.txt', fingerprint: true, allowEmptyArchive: true
             echo "Successfully built Alex Fight via Godot Docker Builder! 🎉"
         }
         failure {
+            // Отчёт по Windows-сборке архивируется и при падении пайплайна - именно тогда в нём
+            // и есть смысл смотреть, на чём и почему сборка сорвалась.
+            archiveArtifacts artifacts: 'build/windows_build_report.txt', fingerprint: true, allowEmptyArchive: true
             echo "Failed to build the game. Check logs for errors."
         }
     }
