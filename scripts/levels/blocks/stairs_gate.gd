@@ -29,4 +29,5 @@ func _on_body_entered(body: Node) -> void:
 	if GameStateManager.is_floor_unlocked(floor_num):
 		GameStateManager.current_floor = floor_num
 		return
+	DialogSystem.trigger_alex_line("endless_corridor")
 	body.global_position.y += (GameStateManager.current_floor - floor_num) * y_step

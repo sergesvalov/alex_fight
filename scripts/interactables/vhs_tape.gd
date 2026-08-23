@@ -67,4 +67,9 @@ func interact(player):
     GameStateManager.collect_tape(tape_id)
     GameStateManager.add_to_inventory(GameStateManager.current_floor, tape_id)
     DialogSystem.play_tape(tape_id, global_position)
+    # By now is_playing is already true (play_tape() runs synchronously up to its first await),
+    # so trigger_alex_line() will correctly wait for this tape's own narrative to finish first
+    # instead of stepping on it.
+    if tape_id == 0:
+        DialogSystem.trigger_alex_line("tape1")
     queue_free()

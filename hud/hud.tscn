@@ -9,6 +9,22 @@
 [ext_resource type="Script" path="res://scripts/ui/tapes_counter_ui.gd" id="tapes_script"]
 [ext_resource type="Script" path="res://scripts/ui/inventory_ui.gd" id="inventory_script"]
 [ext_resource type="Script" path="res://scripts/ui/elevator_panel_ui.gd" id="elevator_panel_script"]
+[ext_resource type="Script" path="res://scripts/ui/terminal_ui.gd" id="terminal_script"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_terminal_bg"]
+bg_color = Color(0.02, 0.03, 0.02, 0.96)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.18, 0.85, 0.25, 1)
+
+[sub_resource type="Theme" id="Theme_terminal"]
+Button/colors/font_color = Color(0.3, 1, 0.4, 1)
+Button/colors/font_hover_color = Color(0.6, 1, 0.7, 1)
+Button/colors/font_pressed_color = Color(0.85, 1, 0.9, 1)
+Button/colors/font_focus_color = Color(0.6, 1, 0.7, 1)
+Label/colors/font_color = Color(0.3, 1, 0.4, 1)
 [node name="HUD" type="CanvasLayer"]
 script = ExtResource("1_hud")
 
@@ -319,5 +335,75 @@ offset_bottom = -10.0
 grow_horizontal = 2
 grow_vertical = 0
 text = "CLOSE"
+
+[node name="TerminalUI" type="Panel" parent="."]
+process_mode = 3
+visible = false
+theme = SubResource("Theme_terminal")
+theme_override_styles/panel = SubResource("StyleBoxFlat_terminal_bg")
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -400.0
+offset_top = -280.0
+offset_right = 400.0
+offset_bottom = 280.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("terminal_script")
+
+[node name="Margin" type="MarginContainer" parent="TerminalUI"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 16
+
+[node name="VBox" type="VBoxContainer" parent="TerminalUI/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Title" type="Label" parent="TerminalUI/Margin/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = ">> АРХИВ СЕКТОРА-7 :: ДОСТУП ОГРАНИЧЕН <<"
+horizontal_alignment = 1
+
+[node name="HBox" type="HBoxContainer" parent="TerminalUI/Margin/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 16
+
+[node name="EntryList" type="VBoxContainer" parent="TerminalUI/Margin/VBox/HBox"]
+custom_minimum_size = Vector2(220, 0)
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 4
+
+[node name="BodyPanel" type="PanelContainer" parent="TerminalUI/Margin/VBox/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="BodyText" type="RichTextLabel" parent="TerminalUI/Margin/VBox/HBox/BodyPanel"]
+layout_mode = 2
+theme_override_colors/default_color = Color(0.3, 1, 0.4, 1)
+theme_override_font_sizes/normal_font_size = 16
+bbcode_enabled = true
+fit_content = true
+scroll_active = true
+
+[node name="CloseButton" type="Button" parent="TerminalUI/Margin/VBox"]
+layout_mode = 2
+size_flags_horizontal = 4
+custom_minimum_size = Vector2(160, 36)
+text = "ЗАКРЫТЬ"
 
 

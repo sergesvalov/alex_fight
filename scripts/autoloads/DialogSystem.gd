@@ -106,3 +106,28 @@ func end_narrative() -> void:
 func show_thought(text: String, duration: float = 5.0) -> void:
     if EventBus.has_signal("narrative_thought_requested"):
         EventBus.narrative_thought_requested.emit(text, duration)
+
+# --- Alex's reactive one-liners (LORE.md "Реплики Алекса") ---
+# Each fires at most once per playthrough, the first time its trigger actually happens -
+# _alex_lines_fired is the guard. Callable from anywhere (vhs_tape.gd, stairs_gate.gd,
+# cerberus_ai.gd, secret_portal.gd); if a tape/hologram is already showing, waits for it to
+# finish first so the two don't fight over the same subtitle bar.
+var _alex_lines_fired: Dictionary = {}
+
+const ALEX_LINES := {
+    "tape1": "Нечаев... Это же... я. Какого чёрта я здесь делал?",
+    "endless_corridor": "Я уже проходил здесь. Клянусь, я только что здесь был.",
+    "cerberus_sighting": "Сектор-7... Они активировали протокол карантина. Эта штука нас не выпустит.",
+    "secret_portal": "Реальность трещит по швам. Нужно идти глубже.",
+}
+
+func trigger_alex_line(key: String) -> void:
+    if _alex_lines_fired.get(key, false):
+        return
+    _alex_lines_fired[key] = true
+    var line: String = ALEX_LINES.get(key, "")
+    if line == "":
+        return
+    if is_playing:
+        await narrative_ended
+    show_thought(line, 4.0)

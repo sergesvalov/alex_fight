@@ -20,4 +20,5 @@ func _on_body_entered(body: Node) -> void:
 		return
 	if GameStateManager.floor4_corridor_unlocked:
 		return
+	DialogSystem.trigger_alex_line("endless_corridor")
 	body.global_position.z = return_z

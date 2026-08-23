@@ -16,5 +16,6 @@ func _on_body_entered(body: Node3D) -> void:
 		print("Teleporting player to: ", target_position)
 		body.global_position = target_position
 		if target_floor > 0:
+			DialogSystem.trigger_alex_line("secret_portal")
 			GameStateManager.unlock_floor(target_floor)
 			GameStateManager.current_floor = target_floor

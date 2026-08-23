@@ -36,6 +36,13 @@ func _ready() -> void:
 
 	super._ready()
 
+# Alex reacting to his first-ever sighting of a Cerberus unit specifically (LORE.md "Реплики
+# Алекса") - not something enemy_ai_base.gd should know about, since future enemy types won't
+# have this line.
+func _on_player_detected(p: Node3D) -> void:
+	DialogSystem.trigger_alex_line("cerberus_sighting")
+	super._on_player_detected(p)
+
 # Ranged attack - unlike a plain melee bite, a wall between the robot and the player must
 # actually block the shot, not just distance.
 func _perform_attack() -> void:
