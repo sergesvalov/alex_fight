@@ -4,6 +4,7 @@
 [ext_resource type="Texture2D" path="res://assets/textures/hotel_wallpaper.jpg" id="2_panel"]
 [ext_resource type="Script" path="res://scripts/interactables/elevator_button.gd" id="4_btn"]
 [ext_resource type="Script" path="res://scripts/levels/blocks/elevator_controller.gd" id="5_ctrl"]
+[ext_resource type="Script" path="res://scripts/interactables/elevator_panel_display.gd" id="6_display"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_panel"]
 albedo_texture = ExtResource("2_panel")
@@ -15,6 +16,9 @@ cull_mode = 0
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_button"]
 size = Vector3(0.04, 0.1, 0.1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_panel_display"]
+size = Vector3(0.02, 0.8, 0.4)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_button"]
 albedo_color = Color(0.8, 0.8, 0.8, 1)
@@ -82,3 +86,10 @@ shape = SubResource("BoxShape3D_button")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="ElevatorPanel/ButtonFloor4"]
 mesh = SubResource("BoxMesh_button")
+
+[node name="ElevatorPanelDisplay" type="StaticBody3D" parent="ElevatorPanel"]
+collision_layer = 5
+script = ExtResource("6_display")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ElevatorPanel/ElevatorPanelDisplay"]
+shape = SubResource("BoxShape3D_panel_display")

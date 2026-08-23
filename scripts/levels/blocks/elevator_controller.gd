@@ -108,6 +108,16 @@ func _setup_interior_detection() -> void:
 const HUB_FLOOR: int = 4
 
 func _on_button_pressed(floor_num: int) -> void:
+	request_floor(floor_num)
+
+# Public entry point shared by the physical 3D buttons (via button_pressed above) and the 2D
+# on-screen floor display (elevator_panel_ui.gd, opened by elevator_panel_display.gd) - the
+# latter exists because mobile locks the camera to horizontal-only look (see
+# player_camera.gd::process_swipe()), which makes most of the physical buttons literally
+# impossible to aim at: they're laid out across 5 rows spanning ~0.6m of vertical panel space,
+# but a mobile player can never tilt their raycast to reach any row but whichever one happens to
+# line up with their fixed eye height.
+func request_floor(floor_num: int) -> void:
 	# Same stairs-access range as stairs_gate.gd (GameStateManager's "FLOOR ACCESS" section) -
 	# the elevator used to be exempt from it entirely ("always open"), but that let it bypass the
 	# whole progressive unlock: pressing floor 7 straight from floor 4 would just teleport there

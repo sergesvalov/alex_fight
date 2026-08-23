@@ -8,6 +8,7 @@
 [ext_resource type="Script" path="res://scripts/ui/heat_bar_ui.gd" id="heat_script"]
 [ext_resource type="Script" path="res://scripts/ui/tapes_counter_ui.gd" id="tapes_script"]
 [ext_resource type="Script" path="res://scripts/ui/inventory_ui.gd" id="inventory_script"]
+[ext_resource type="Script" path="res://scripts/ui/elevator_panel_ui.gd" id="elevator_panel_script"]
 [node name="HUD" type="CanvasLayer"]
 script = ExtResource("1_hud")
 
@@ -250,6 +251,61 @@ size_flags_vertical = 3
 columns = 6
 
 [node name="CloseButton" type="Button" parent="InventoryUI"]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -60.0
+offset_top = -50.0
+offset_right = 60.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 0
+text = "CLOSE"
+
+[node name="ElevatorPanelUI" type="Panel" parent="."]
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -260.0
+offset_top = -180.0
+offset_right = 260.0
+offset_bottom = 180.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("elevator_panel_script")
+
+[node name="Label" type="Label" parent="ElevatorPanelUI"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 10.0
+offset_bottom = 40.0
+grow_horizontal = 2
+text = "ВЫБЕРИТЕ ЭТАЖ"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="GridContainer" type="GridContainer" parent="ElevatorPanelUI"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = 50.0
+offset_right = -20.0
+offset_bottom = -60.0
+grow_horizontal = 2
+grow_vertical = 2
+alignment = 1
+columns = 5
+
+[node name="CloseButton" type="Button" parent="ElevatorPanelUI"]
 layout_mode = 1
 anchors_preset = 7
 anchor_left = 0.5

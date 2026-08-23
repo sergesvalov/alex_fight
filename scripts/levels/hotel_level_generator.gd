@@ -374,7 +374,7 @@ func _build_floor_geometry(f_num: int, y_offset: float, suffix: String, c_color:
 	for room_num in SINGLE_ROOM_LAYOUT:
 		_generate_single_room(parent, f_scale, f_num, room_num)
 	
-	_spawn_cassettes(parent, f_scale)
+	_spawn_cassettes(parent, f_scale, f_num)
 	_spawn_cerberus(parent, f_scale)
 
 	# 5. Floor Map
@@ -843,10 +843,29 @@ func _closest_to_spawn(props: Array) -> Node:
 			closest = p
 	return closest
 
-func _spawn_cassettes(parent: Node, f_scale: float) -> void:
+# Used for cassette placement on every floor except 4 (see _spawn_cassettes_other_floor()) -
+# those floors have no "closest to spawn" relationship to preserve, so a genuinely random pick
+# keeps their layout from being predictable across floors.
+func _random_from(props: Array) -> Node:
+	if props.is_empty():
+		return null
+	return props[randi() % props.size()]
+
+func _spawn_cassettes(parent: Node, f_scale: float, f_num: int) -> void:
 	var scene = load("res://entities/interactables/vhs_tape.tscn")
 	if not scene: return
 
+	# Floor 4 is the player's starting floor - Cassette #1 ("Личность") always sits in the same
+	# room the player spawns in (see _move_player()), which relies on "closest wardrobe/table to
+	# world origin" specifically. Every other floor has no such spawn-point relationship, so it
+	# gets a simpler, fully-random layout instead (table/maintenance-room/wardrobe - see
+	# _spawn_cassettes_other_floor()).
+	if f_num == 4:
+		_spawn_cassettes_start_floor(parent, f_scale, scene)
+	else:
+		_spawn_cassettes_other_floor(parent, f_scale, scene)
+
+func _spawn_cassettes_start_floor(parent: Node, f_scale: float, scene: PackedScene) -> void:
 	var wardrobes = []
 	_find_props(parent, "Wardrobe", wardrobes)
 	var chosen_wardrobe = _closest_to_spawn(wardrobes)
@@ -868,7 +887,7 @@ func _spawn_cassettes(parent: Node, f_scale: float) -> void:
 			" chosen=", (chosen_wardrobe.get_path() if chosen_wardrobe else "NONE"),
 			" | tables found=", tables.size(),
 			" chosen=", (chosen_table.get_path() if chosen_table else "NONE"))
-		
+
 	for i in range(3):
 		var inst = scene.instantiate()
 		inst.name = "Cassette_" + str(i)
@@ -909,6 +928,59 @@ func _spawn_cassettes(parent: Node, f_scale: float) -> void:
 		parent.add_child(inst)
 		if parent.name == "GeneratedFloor_Main":
 			print("[generator] Cassette_", i, " global_position=", inst.global_position)
+
+# Every floor except 4 (see _spawn_cassettes()): one cassette on a table in a random room, one in
+# the maintenance room, one in a wardrobe in a random room - none of floor 4's "closest to spawn"
+# logic applies since the player doesn't start on these floors.
+func _spawn_cassettes_other_floor(parent: Node, f_scale: float, scene: PackedScene) -> void:
+	var tables = []
+	_find_props(parent, "Table", tables)
+	var chosen_table = _random_from(tables)
+
+	# Excludes the table's own room before picking the wardrobe - same reasoning as
+	# _spawn_cassettes_start_floor()'s wardrobe/table split: every room has both, so without this
+	# the two could easily land in the same room by pure chance.
+	var wardrobes = []
+	_find_props(parent, "Wardrobe", wardrobes)
+	if chosen_table != null:
+		var table_room = chosen_table.get_parent()
+		wardrobes = wardrobes.filter(func(w): return w.get_parent() != table_room)
+	var chosen_wardrobe = _random_from(wardrobes)
+
+	# _find_props() only matches nodes named "Wardrobe" - the maintenance room's own two
+	# ("MaintWardrobe1"/"MaintWardrobe2", see _generate_maintenance_room()) don't match that
+	# prefix, so they're never candidates for chosen_wardrobe above; used here instead as the
+	# actual "in the maintenance room" spot.
+	var maint_wardrobe = parent.get_node_or_null("MaintWardrobe1")
+
+	for i in range(3):
+		var inst = scene.instantiate()
+		inst.name = "Cassette_" + str(i)
+		inst.tape_id = i
+
+		# See _spawn_cassettes_start_floor() for why position must be set via a parent-relative
+		# LOCAL transform (converted from the target's global_transform) before add_child().
+		if i == 0 and chosen_table != null:
+			var target = chosen_table.global_transform
+			target.origin += chosen_table.global_basis * Vector3(0.0, 0.8, 0.0)
+			inst.transform = parent.global_transform.affine_inverse() * target
+		elif i == 1 and maint_wardrobe != null:
+			var target = maint_wardrobe.global_transform
+			target.origin += maint_wardrobe.global_basis * Vector3(-0.28, 1.15, 0.05)
+			inst.transform = parent.global_transform.affine_inverse() * target
+		elif i == 2 and chosen_wardrobe != null:
+			var target = chosen_wardrobe.global_transform
+			target.origin += chosen_wardrobe.global_basis * Vector3(-0.28, 1.15, 0.05)
+			inst.transform = parent.global_transform.affine_inverse() * target
+		else:
+			# Fallback if a floor is somehow missing one of the three spots (shouldn't happen -
+			# every floor generates the same room/maintenance layout).
+			var rand_x = randf_range(-2.0, 4.0)
+			var rand_z = randf_range(-20.0, 40.0)
+			inst.position = Vector3(rand_x * f_scale, 0.5 * f_scale, rand_z * f_scale)
+			inst.rotation.y = randf_range(0, PI * 2)
+
+		parent.add_child(inst)
 
 func _spawn_cerberus(parent: Node, f_scale: float) -> void:
 	var scene = load("res://entities/enemies/cerberus/cerberus.tscn")
