@@ -848,8 +848,16 @@ func _spawn_cassettes(parent: Node, f_scale: float) -> void:
 	_find_props(parent, "Wardrobe", wardrobes)
 	var chosen_wardrobe = _closest_to_spawn(wardrobes)
 
+	# Excludes tables in the wardrobe's own room before picking the closest one - every room has
+	# both a wardrobe and a table, so without this the globally-closest table is almost always in
+	# the SAME room as the globally-closest wardrobe (that room being closest to spawn is exactly
+	# why it got picked as the starting room in the first place), landing both Cassette #1 and #2
+	# on top of each other in the player's own starting room instead of two separate ones.
 	var tables = []
 	_find_props(parent, "Table", tables)
+	if chosen_wardrobe != null:
+		var wardrobe_room = chosen_wardrobe.get_parent()
+		tables = tables.filter(func(t): return t.get_parent() != wardrobe_room)
 	var chosen_table = _closest_to_spawn(tables)
 
 	if parent.name == "GeneratedFloor_Main":
