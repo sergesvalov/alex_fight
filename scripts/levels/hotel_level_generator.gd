@@ -906,6 +906,24 @@ func _spawn_cerberus(parent: Node, f_scale: float) -> void:
 	inst.name = "Cerberus"
 	# position MUST be set before add_child() - see _generate_maintenance_room() for why.
 	inst.position = Vector3(1.0 * f_scale, 0, 10.0 * f_scale)
+
+	# cerberus_ai.gd starts in State.IDLE and only ever leaves it for State.PATROL if
+	# patrol_points is non-empty - left empty (the default), a spawned robot just stands at this
+	# exact spot forever, only reacting if the player happens to wander into its 12m
+	# DetectionArea. Two Marker3D points give it a back-and-forth patrol instead of standing
+	# frozen - spanning the full central corridor (Z ~[-25.18, 25.0], see z_main_len/z_main_pos
+	# in _build_floor_geometry, inset 1.2m from each end wall) rather than just a few meters
+	# around the spawn point, so it actually walks the length of the hallway it's guarding.
+	# Positions are LOCAL to inst (which isn't in the tree yet), so they're offsets from its own
+	# origin (spawned at local Z=10.0), not world/parent coordinates.
+	var patrol_a = Marker3D.new()
+	patrol_a.position = Vector3(0, 0, (-24.0 - 10.0) * f_scale)
+	inst.add_child(patrol_a)
+	var patrol_b = Marker3D.new()
+	patrol_b.position = Vector3(0, 0, (24.0 - 10.0) * f_scale)
+	inst.add_child(patrol_b)
+	inst.patrol_points = [patrol_a, patrol_b]
+
 	parent.add_child(inst)
 
 func _generate_roof(y_offset: float, f_scale: float) -> void:

@@ -187,6 +187,15 @@ func _set_state(new_state: State) -> void:
         if GameStateManager.current_state == GameStateManager.GameState.COMBAT:
             GameStateManager.change_state(GameStateManager.GameState.EXPLORING)
 
+    # ATTACK/IDLE never touch velocity.x/z themselves (only CHASE/PATROL/RETURN do, via
+    # move_along_nav) - without this, a robot that just arrived here from CHASE keeps sliding at
+    # chase_speed on whatever direction it last had, fighting look_at()'s per-frame reorientation
+    # every physics tick. Harmless at the old attack_range=2.0 (stopped almost instantly), but at
+    # the current attack_range=10.0 that stale slide reads as standing in place and twitching.
+    if new_state == State.ATTACK or new_state == State.IDLE:
+        velocity.x = 0.0
+        velocity.z = 0.0
+
 func _on_player_detected(p: Node3D) -> void:
     if GameStateManager.current_state == GameStateManager.GameState.SPECTATOR:
         return

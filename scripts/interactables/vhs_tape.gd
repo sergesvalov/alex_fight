@@ -6,8 +6,7 @@ extends Area3D
 # Procedurally generated in Godot (Image/ImageTexture) instead of an external asset - the
 # previous vhs_retro.jpg was a glossy neon "SYNTHWAVE DREAMS" stock photo that had nothing to
 # do with this game's Soviet-institutional found-footage look. This draws a worn plastic shell
-# with a plain paper evidence-tag label instead; the glow color/intensity below still matches
-# what the .tscn used to bake into its material (Color(0.8, 0.2, 0.8), energy 0.5).
+# with a plain paper evidence-tag label instead.
 func _ready() -> void:
     var mesh_inst := get_node_or_null("MeshInstance3D")
     print("[vhs_tape] _ready tape_id=", tape_id, " path=", get_path(), " mesh_inst=", mesh_inst)
@@ -19,9 +18,10 @@ func _ready() -> void:
     var mat := StandardMaterial3D.new()
     mat.albedo_texture = tex
     mat.uv1_scale = Vector3(2, 1, 2)
-    mat.emission_enabled = true
-    mat.emission = Color(0.8, 0.2, 0.8, 1)
-    mat.emission_energy_multiplier = 0.5
+    # No emission: the old neon-magenta glow (Color(0.8, 0.2, 0.8)) was carried over from the
+    # replaced vhs_retro.jpg material by mistake - it swamped this texture's actual detail
+    # (worn plastic + label noise) under a flat glowing purple, especially with bloom/glow
+    # enabled, which is exactly what the screenshot that flagged this showed.
     mesh_inst.material_override = mat
     print("[vhs_tape] tape_id=", tape_id, " material_override set=", mesh_inst.material_override,
         " mesh=", mesh_inst.mesh, " global_position=", global_position)
