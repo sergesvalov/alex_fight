@@ -13,7 +13,13 @@ func _ready() -> void:
 
 func _on_body_entered(body: Node3D) -> void:
 	if body.name == "Player" or body.has_method("teleport"):
-		print("Teleporting player to: ", target_position)
+		# Diagnostic (2026-08-23) - see stairs_gate.gd's matching print for why. target_floor
+		# added here specifically because this is the one mechanism in the game that can land the
+		# player on floor 3 unprompted (secret exit door - see _create_exit_portal(), currently
+		# always floor 3) - relevant if a report ever describes ending up there unexpectedly.
+		print("[SecretPortal] ", name, " teleporting player from ", body.global_position,
+			" to ", target_position, " target_floor=", target_floor,
+			" secret_portal_active=", GameStateManager.secret_portal_active)
 		body.global_position = target_position
 		if target_floor > 0:
 			DialogSystem.trigger_alex_line("secret_portal")

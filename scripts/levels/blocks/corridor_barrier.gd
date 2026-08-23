@@ -20,5 +20,8 @@ func _on_body_entered(body: Node) -> void:
 		return
 	if GameStateManager.floor4_corridor_unlocked:
 		return
+	# Diagnostic (2026-08-23) - see stairs_gate.gd's matching print for why.
+	print("[CorridorBarrier] ", name, " bouncing player from z=", body.global_position.z,
+		" to return_z=", return_z)
 	DialogSystem.trigger_alex_line("endless_corridor")
 	body.global_position.z = return_z

@@ -26,8 +26,16 @@ func _on_body_entered(body: Node) -> void:
 		return
 	if floor_num == GameStateManager.current_floor:
 		return
+	# Diagnostic (2026-08-23) - user reported unexplained teleports ("as if I'm on floor 3").
+	# Every gate that can move the player prints its own name/floor_num/current_floor/position
+	# now, so a log can show exactly which gate fired instead of guessing from the symptom alone.
+	print("[StairsGate] ", name, " floor_num=", floor_num, " current_floor=",
+		GameStateManager.current_floor, " player_pos=", body.global_position)
 	if GameStateManager.is_floor_unlocked(floor_num):
+		print("[StairsGate]   unlocked - advancing current_floor to ", floor_num)
 		GameStateManager.current_floor = floor_num
 		return
+	var shift: float = (GameStateManager.current_floor - floor_num) * y_step
+	print("[StairsGate]   locked - bouncing back, y += ", shift)
 	DialogSystem.trigger_alex_line("endless_corridor")
-	body.global_position.y += (GameStateManager.current_floor - floor_num) * y_step
+	body.global_position.y += shift

@@ -51,6 +51,9 @@ func _physics_process(delta: float) -> void:
 		set_physics_process(false)
 
 func _rescue(body: Node) -> void:
+	# Diagnostic (2026-08-23) - see stairs_gate.gd's matching print for why.
+	print("[StairsFallCatcher] ", name, " rescuing ", body.name, " from ", body.global_position,
+		" to floor4_spawn_position=", GameStateManager.floor4_spawn_position)
 	body.global_position = GameStateManager.floor4_spawn_position
 	if "velocity" in body:
 		body.velocity = Vector3.ZERO

@@ -128,6 +128,11 @@ func trigger_alex_line(key: String) -> void:
     var line: String = ALEX_LINES.get(key, "")
     if line == "":
         return
+    # Diagnostic (2026-08-23) - this is the single place every "why is there a line of text on
+    # screen" report traces back to (tape1/endless_corridor/cerberus_sighting/secret_portal all
+    # funnel through here). Printing the key up front means the next log always says exactly
+    # which trigger fired and when, instead of having to reason backward from a screenshot.
+    print("[DialogSystem] trigger_alex_line key=", key, " line=\"", line, "\"")
     if is_playing:
         await narrative_ended
     show_thought(line, 4.0)
