@@ -42,6 +42,13 @@ var current_floor: int = 4:
             tapes_found.clear()
             cerberus_spawned = false
             exit_code_known = false
+            # Reactive line for the first time floor 3 is actually reached, regardless of how
+            # (secret door, stairs, elevator once unlocked) - distinct from "secret_portal"
+            # (fired the moment the door is stepped through, if that's how they got here) since
+            # this is specifically about the destination, not the act of crossing. Same
+            # at-most-once guard as every other trigger_alex_line() call (_alex_lines_fired).
+            if value == 3:
+                DialogSystem.trigger_alex_line("floor3_arrival")
         current_floor = value
 
 # ============================================================================

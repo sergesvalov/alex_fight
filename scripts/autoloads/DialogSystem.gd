@@ -19,6 +19,7 @@ var tape_data: Dictionary = {}
 
 func _ready() -> void:
     load_tape_data()
+    load_narrative_data()
 
 func load_tape_data() -> void:
     var file = FileAccess.open("res://assets/data/tapes.json", FileAccess.READ)
@@ -108,30 +109,42 @@ func show_thought(text: String, duration: float = 5.0) -> void:
         EventBus.narrative_thought_requested.emit(text, duration)
 
 # --- Alex's reactive one-liners (LORE.md "Реплики Алекса") ---
-# Each fires at most once per playthrough, the first time its trigger actually happens -
+# Text lives in assets/data/narrative_lines.json now (2026-08-23), not hardcoded here - the same
+# "content separate from code" convention tapes.json already established, and it's also what
+# terminal_ui.gd's archive entries load from (see load_narrative_data() below - one file, one
+# parse, shared by both systems instead of two separate copies of similar data drifting apart).
+# Each key fires at most once per playthrough, the first time its trigger actually happens -
 # _alex_lines_fired is the guard. Callable from anywhere (vhs_tape.gd, stairs_gate.gd,
-# cerberus_ai.gd, secret_portal.gd); if a tape/hologram is already showing, waits for it to
-# finish first so the two don't fight over the same subtitle bar.
+# cerberus_ai.gd, secret_portal.gd, hotel_level_generator.gd); if a tape/hologram is already
+# showing, waits for it to finish first so the two don't fight over the same subtitle bar.
 var _alex_lines_fired: Dictionary = {}
+var alex_lines: Dictionary = {}
+var terminal_entries: Array = []
 
-const ALEX_LINES := {
-    "tape1": "Нечаев... Это же... я. Какого чёрта я здесь делал?",
-    "endless_corridor": "Я уже проходил здесь. Клянусь, я только что здесь был.",
-    "cerberus_sighting": "Сектор-7... Они активировали протокол карантина. Эта штука нас не выпустит.",
-    "secret_portal": "Реальность трещит по швам. Нужно идти глубже.",
-}
+func load_narrative_data() -> void:
+    var file = FileAccess.open("res://assets/data/narrative_lines.json", FileAccess.READ)
+    if file:
+        var json = JSON.new()
+        var error = json.parse(file.get_as_text())
+        if error == OK:
+            alex_lines = json.data.get("alex_lines", {})
+            terminal_entries = json.data.get("terminal_entries", [])
+        else:
+            push_error("Failed to parse narrative_lines.json")
+    else:
+        push_error("Could not open narrative_lines.json")
 
 func trigger_alex_line(key: String) -> void:
     if _alex_lines_fired.get(key, false):
         return
     _alex_lines_fired[key] = true
-    var line: String = ALEX_LINES.get(key, "")
+    var line: String = alex_lines.get(key, "")
     if line == "":
         return
     # Diagnostic (2026-08-23) - this is the single place every "why is there a line of text on
-    # screen" report traces back to (tape1/endless_corridor/cerberus_sighting/secret_portal all
-    # funnel through here). Printing the key up front means the next log always says exactly
-    # which trigger fired and when, instead of having to reason backward from a screenshot.
+    # screen" report traces back to (all reactive lines funnel through here). Printing the key up
+    # front means the next log always says exactly which trigger fired and when, instead of
+    # having to reason backward from a screenshot.
     print("[DialogSystem] trigger_alex_line key=", key, " line=\"", line, "\"")
     if is_playing:
         await narrative_ended

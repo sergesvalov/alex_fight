@@ -538,6 +538,13 @@ func _move_player(f_scale: float) -> void:
 		# stairs_fall_catcher.gd to rescue a player who fell through a stairwell shaft.
 		GameStateManager.floor4_spawn_position = p_spawn
 
+		# Reactive line for the very first moment of the game - the player waking up with no
+		# memory (LORE.md's "Концепция и Сеттинг"). Fired here, not in some node's own _ready(),
+		# because this is the exact point the player is actually placed in the world for the
+		# first time - trigger_alex_line()'s own at-most-once guard keeps a level reload from
+		# repeating it.
+		DialogSystem.trigger_alex_line("floor4_start")
+
 func _generate_maintenance_room(parent: Node, f_scale: float, height: float, thickness: float, wall_mat: Material) -> void:
 	var wall_y = height / 2.0
 	_create_static_box(parent, "Maint_Inner_South", Vector3(11.15 * f_scale, wall_y, -20.0 * f_scale), Vector3(3.0 * f_scale, height, thickness), wall_mat)
