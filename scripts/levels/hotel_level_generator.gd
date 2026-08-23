@@ -343,7 +343,32 @@ func _build_floor_geometry(f_num: int, y_offset: float, suffix: String, c_color:
 	var x_landing_pos = (SOUTH_STAIRS_LANDING_INNER_X + SOUTH_STAIRS_LANDING_OUTER_X) / 2.0 * f_scale
 	var y_landing = height / 2.0
 	_create_static_box(parent, "Landing_SouthStairs", Vector3(x_landing_pos, y_landing, z_sw_pos), Vector3(x_landing_len, floor_thick, z_sw_len), floor_mat)
-	
+
+	# Landing checkpoint (see stairs_gate.gd) - a second floor-lock check on this flat landing,
+	# roughly halfway up the flight. Independent of stairs_fall_catcher.gd (that one catches
+	# falling through open air on North Stairs specifically) - this instead catches a player who
+	# slips slightly past the South Stairs door gate while still walking on solid ground, same
+	# "went a bit below/above a locked floor - bounce back" idea, just checked a second time on
+	# the one flat spot every up/down trip through this staircase is guaranteed to cross. Skipped
+	# on floor 1 (is_empty) like the door/wall/ramp themselves - see the is_empty check a few
+	# lines below in this same function.
+	if not is_empty:
+		var landing_gate = Area3D.new()
+		landing_gate.name = "SouthStairsLandingGate"
+		landing_gate.collision_layer = 0
+		landing_gate.collision_mask = 1 # Player layer
+		landing_gate.set_script(load("res://scripts/levels/blocks/stairs_gate.gd"))
+		landing_gate.floor_num = f_num
+		landing_gate.y_step = BASE_FLOOR_TO_FLOOR_HEIGHT * f_scale
+		landing_gate.position = Vector3(x_landing_pos, y_landing + floor_thick / 2.0 + 1.1, z_sw_pos)
+
+		var landing_gate_coll = CollisionShape3D.new()
+		var landing_gate_shape = BoxShape3D.new()
+		landing_gate_shape.size = Vector3(x_landing_len, 2.2, z_sw_len)
+		landing_gate_coll.shape = landing_gate_shape
+		landing_gate.add_child(landing_gate_coll)
+		parent.add_child(landing_gate)
+
 	# North West (covers Z=-30.0 to -25.2, X=-12.65 to -2.55)
 	_create_static_box(parent, "Floor_NW", Vector3(x_nw_pos, floor_y, z_north_pos), Vector3(x_nw_len, floor_thick, z_north_len), floor_mat)
 	_create_static_box(parent, "Ceiling_NW", Vector3(x_nw_pos, ceil_y, z_north_pos), Vector3(x_nw_len, floor_thick, z_north_len), ceil_mat)
@@ -507,6 +532,12 @@ func _move_player(f_scale: float) -> void:
 			player.velocity = Vector3.ZERO
 		print("Player moved to: ", p_spawn)
 
+		# floor_number defaults to 4 and this is always that floor's own instance
+		# ("GeneratedFloor_Main" sits at world Y=0 - see the i == floor_number check in
+		# _generate_level()), so p_spawn IS floor 4's spawn point. Cached for
+		# stairs_fall_catcher.gd to rescue a player who fell through a stairwell shaft.
+		GameStateManager.floor4_spawn_position = p_spawn
+
 func _generate_maintenance_room(parent: Node, f_scale: float, height: float, thickness: float, wall_mat: Material) -> void:
 	var wall_y = height / 2.0
 	_create_static_box(parent, "Maint_Inner_South", Vector3(11.15 * f_scale, wall_y, -20.0 * f_scale), Vector3(3.0 * f_scale, height, thickness), wall_mat)
@@ -635,6 +666,51 @@ func _generate_north_stairs(parent: Node, f_scale: float, f_num: int) -> void:
 				gate_coll.shape = gate_shape
 				gate.add_child(gate_coll)
 				inst.add_child(gate)
+
+		# Fall-through-the-shaft safety net (see stairs_fall_catcher.gd) - spans this floor's
+		# own slice of the stairwell interior (Y 0..4.5, between StairsWestWall/EastWall at
+		# X -3.7/+3.7 and StairsSouthWall/north wall at Z 4.9/0.0), same unscaled local space
+		# as the door/gate above. Stacking one of these per floor forms one continuous column
+		# covering the whole shaft, so a player who falls off a ramp/landing edge anywhere in
+		# the building gets caught regardless of which floor they started falling from.
+		var fall_catcher = Area3D.new()
+		fall_catcher.name = "FallCatcher"
+		fall_catcher.collision_layer = 0
+		fall_catcher.collision_mask = 1 # Player layer
+		fall_catcher.set_script(load("res://scripts/levels/blocks/stairs_fall_catcher.gd"))
+		fall_catcher.position = Vector3(0, 2.25, 2.45)
+
+		var fall_coll = CollisionShape3D.new()
+		var fall_shape = BoxShape3D.new()
+		fall_shape.size = Vector3(7.0, 4.5, 4.6)
+		fall_coll.shape = fall_shape
+		fall_catcher.add_child(fall_coll)
+		inst.add_child(fall_catcher)
+
+		# Landing checkpoints (see stairs_gate.gd) - a second floor-lock check on each of the
+		# two flat landings a player walks across climbing this floor's own dog-leg flights
+		# (NELanding, NWLanding - see north_stairs.tscn/AGENTS.md's "North Stairs Block Map").
+		# Same idea as the South Stairs landing gate in _build_floor_geometry(): catches a
+		# player who slips slightly past the DoorEast/DoorWest gates above while still walking
+		# on solid ground, distinct from stairs_fall_catcher.gd's job of catching an actual fall
+		# through open air. Same unscaled local space as the doors/gates/fall-catcher above.
+		for landing_data in [["NELandingGate", Vector3(2.5, 1.5, 0.6)], ["NWLandingGate", Vector3(-2.5, 3.0, 0.6)]]:
+			var l_center: Vector3 = landing_data[1]
+			var landing_gate = Area3D.new()
+			landing_gate.name = landing_data[0]
+			landing_gate.collision_layer = 0
+			landing_gate.collision_mask = 1 # Player layer
+			landing_gate.set_script(load("res://scripts/levels/blocks/stairs_gate.gd"))
+			landing_gate.floor_num = f_num
+			landing_gate.y_step = BASE_FLOOR_TO_FLOOR_HEIGHT * f_scale
+			landing_gate.position = Vector3(l_center.x, l_center.y + 0.1 + 1.1, l_center.z)
+
+			var landing_gate_coll = CollisionShape3D.new()
+			var landing_gate_shape = BoxShape3D.new()
+			landing_gate_shape.size = Vector3(2.4, 2.2, 1.2)
+			landing_gate_coll.shape = landing_gate_shape
+			landing_gate.add_child(landing_gate_coll)
+			inst.add_child(landing_gate)
 
 		parent.add_child(inst)
 

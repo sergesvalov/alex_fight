@@ -24,6 +24,11 @@ var collected_tapes: Array[Dictionary] = []  # [{"floor": 4, "id": 0}, ...] — 
 var exit_code_known: bool = false
 var cerberus_spawned: bool = false
 
+# Cached by hotel_level_generator.gd's _move_player() the one time it computes floor 4's own
+# spawn spot (next to Cassette #1's wardrobe) - stairs_fall_catcher.gd reads this to rescue a
+# player who fell through a stairwell shaft instead of recomputing the same wardrobe lookup.
+var floor4_spawn_position: Vector3 = Vector3.ZERO
+
 # Setter fires on every genuine floor change (stairs_gate.gd, elevator_controller.gd, or the
 # generator's own initial assignment) - centralizing the "entering a floor resets ITS OWN
 # objective progress" reset here means every writer of current_floor gets this for free, instead
