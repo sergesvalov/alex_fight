@@ -58,11 +58,17 @@ material = SubResource("StandardMaterial3D_wall")
 [node name="ElevatorDoorHole" type="CSGBox3D" parent="ElevatorGeometry"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.15, 0.1)
 operation = 2
-# Width narrowed from 2.0 to 1.5: with the wall at 4.7m wide, a 2.0m hole left only 1.35m
-# of solid wall on each side to hide a 1.4m-wide sliding door behind - wider than the pocket,
-# so no open_offset could ever fully clear it (confirmed in-game: door visible through the
-# wall when "open"). 1.5m leaves a 1.6m pocket, comfortably wider than the door panel.
-size = Vector3(1.5, 2.5, 1.0)
+# Narrowed again 1.5 -> 1.2 (2026-08-23): the *previous* fix (2.0 -> 1.5, see the stale comment
+# this replaces) compared the 1.6m pocket it left against the door's NATIVE 1.4m mesh width,
+# but the door is actually stretched by HotelLevelGenerator.ELEVATOR_DOOR_SCALE_X (was 1.42,
+# now 0.93 - see that constant's own comment) to ~1.99m when placed - wider than even that
+# "comfortably wide" 1.6m pocket, so the door could never fully retract into it: part of the
+# panel always stuck out in the doorway, and the rest punched straight through the car's own
+# ElevatorEastWall into the hotel wall beyond, i.e. exactly "the door vanished behind the hotel
+# wall, leaving the hole visible" as reported in-game. At 0.93 scale the door is ~1.3m wide -
+# still wider than this 1.2m hole (no gap when closed) but narrow enough to fit inside the
+# resulting 1.65m pocket (2.25 - 0.6) once open_offset (elevator_door.tscn) slides it clear.
+size = Vector3(1.2, 2.5, 1.0)
 
 [node name="ElevatorLight" type="OmniLight3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.75, 2.5)

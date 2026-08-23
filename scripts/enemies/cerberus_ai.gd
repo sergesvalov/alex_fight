@@ -52,10 +52,17 @@ func _ready() -> void:
     sensors.player_detected.connect(_on_player_detected)
     sensors.player_lost.connect(_on_player_lost)
     
-    if patrol_points.size() > 0:
-        _set_state(State.PATROL)
-    else:
-        _set_state(State.IDLE)
+    # Always start in IDLE, even with patrol points, and hold it for idle_wait_time - not the
+    # default 0.0 idle_timer starts at, which would let _state_idle() jump straight to PATROL on
+    # the very next physics frame. hotel_level_generator.gd bakes the NavigationRegion3D's navmesh
+    # AFTER the whole level (including this robot) is already in the tree (2 physics frames, then
+    # bake_navigation_mesh() - see its _ready()). Entering PATROL before any navmesh exists sets
+    # NavigationAgent3D.target_position with nothing to path across, and since _state_patrol()
+    # re-assigns that SAME target_position every frame, NavigationAgent3D never sees a value
+    # change and never retries the query once the navmesh actually becomes available - the robot
+    # silently never moves, forever. idle_wait_time (2s) comfortably outlasts the bake.
+    idle_timer = idle_wait_time
+    _set_state(State.IDLE)
 
 func _physics_process(delta: float) -> void:
     movement.apply_gravity(delta)
