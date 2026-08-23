@@ -102,9 +102,24 @@ func _setup_interior_detection() -> void:
 
 # --- Elevator Logic ---
 
+# Floor 4 is this whole script's existing hub/anchor floor already (see the hardcoded "+4"/"-4"
+# in _get_floor_from_elevator()/_teleport_player() below) - every other place in this file already
+# treats it as "the" base floor, so it's the natural fallback destination here too.
+const HUB_FLOOR: int = 4
+
 func _on_button_pressed(floor_num: int) -> void:
-	print("Elevator button pressed for floor: ", floor_num)
-	_run_elevator_sequence(floor_num)
+	# Same stairs-access range as stairs_gate.gd (GameStateManager's "FLOOR ACCESS" section) -
+	# the elevator used to be exempt from it entirely ("always open"), but that let it bypass the
+	# whole progressive unlock: pressing floor 7 straight from floor 4 would just teleport there
+	# with no door/portal ever found. Unlike stairs (which just bounce the player back), a locked
+	# floor's button here still runs the elevator - it just always delivers to HUB_FLOOR instead
+	# of the pressed floor, same as a building directory that only lists authorized floors and
+	# defaults elsewhere back to the lobby.
+	var target_floor = floor_num
+	if not GameStateManager.is_floor_unlocked(floor_num):
+		target_floor = HUB_FLOOR
+	print("Elevator button pressed for floor: ", floor_num, " -> routing to ", target_floor)
+	_run_elevator_sequence(target_floor)
 
 func _run_elevator_sequence(target_floor: int) -> void:
 	# 1. Close doors if open
@@ -131,9 +146,14 @@ func _teleport_player(target_floor: int) -> void:
 		var y_step = HotelLevelGenerator.BASE_FLOOR_TO_FLOOR_HEIGHT * f_scale
 		var target_y = (target_floor - 4) * y_step
 		var current_y = _get_base_y(self)
-		
+
 		player.global_position.y += (target_y - current_y)
-		
+		# Keep GameStateManager's floor tracking in sync - stairs_gate.gd compares against
+		# current_floor to tell a legitimate arrival apart from a floor-hop attempt, and it would
+		# otherwise go stale the moment the elevator (which doesn't go through any stairs gate)
+		# moves the player to a different floor.
+		GameStateManager.current_floor = target_floor
+
 		var target_elevator = _find_elevator_on_floor(target_floor)
 		if target_elevator:
 			target_elevator._arrive_and_open()

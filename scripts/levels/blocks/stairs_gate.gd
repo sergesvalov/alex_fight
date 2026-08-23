@@ -8,9 +8,11 @@
 #
 # If the player steps through a gate whose floor_num differs from GameStateManager.current_floor,
 # that's a floor-hop attempt: it's teleported straight back to current_floor (same X/Z, shifted
-# by exactly one floor-to-floor height) unless GameStateManager.floor_stairs_unlocked is true
-# (set once this floor's 3 tapes are collected and viewed), in which case the hop is allowed and
-# current_floor updates to match.
+# by exactly one floor-to-floor height) unless floor_num falls inside
+# GameStateManager.[unlocked_floor_min, unlocked_floor_max] (see GameStateManager's "FLOOR ACCESS"
+# section), in which case the hop is allowed and current_floor updates to match. Collecting all 3
+# tapes on the CURRENT floor does NOT by itself widen this range - only actually reaching a new
+# floor through the secret exit door does (see hotel_level_generator.gd's _create_exit_portal()).
 extends Area3D
 
 var floor_num: int = 0
@@ -24,7 +26,7 @@ func _on_body_entered(body: Node) -> void:
 		return
 	if floor_num == GameStateManager.current_floor:
 		return
-	if GameStateManager.floor_stairs_unlocked:
+	if GameStateManager.is_floor_unlocked(floor_num):
 		GameStateManager.current_floor = floor_num
 		return
 	body.global_position.y += (GameStateManager.current_floor - floor_num) * y_step

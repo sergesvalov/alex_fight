@@ -127,7 +127,7 @@ func _ready() -> void:
 		GameStateManager.connect("all_tapes_collected", _on_all_tapes_collected)
 	_generate_level()
 	if "secret_portal_active" in GameStateManager and GameStateManager.secret_portal_active:
-		_create_secret_portal()
+		_create_exit_portal()
 		
 	if not Engine.is_editor_hint():
 		# Allow physics to settle
@@ -154,7 +154,10 @@ func _generate_level() -> void:
 	# Stairs gates (stairs_gate.gd, South and North) compare against this to tell a floor-hop
 	# attempt apart from the player just visiting their own floor's stairwell.
 	GameStateManager.current_floor = floor_number
-	
+	# Seeds the stairs-access range at the spawn floor only - a no-op if already initialized
+	# (e.g. this level scene reloading mid-playthrough), since the range is meant to persist.
+	GameStateManager.init_floor_access(floor_number)
+
 	var get_color_from_scene = func(level_num: int) -> Color:
 		var scene_path = "res://scenes/levels/hotel_siberia/hotel_level_" + str(level_num) + ".tscn"
 		if ResourceLoader.exists(scene_path):
@@ -871,7 +874,7 @@ func _spawn_cassettes(parent: Node, f_scale: float) -> void:
 		inst.name = "Cassette_" + str(i)
 		# Without this, every cassette keeps vhs_tape.gd's @export default (tape_id=0) - all 3
 		# would collect as the same id, so GameStateManager.tapes_found (a Set keyed by id) never
-		# grows past size 1, all_tapes_collected/exit_code_known/floor_stairs_unlocked never fire,
+		# grows past size 1, all_tapes_collected/exit_code_known never fire,
 		# and every cassette narrates tape #1's text regardless of which one was picked up.
 		inst.tape_id = i
 
@@ -982,69 +985,146 @@ func _generate_roof(y_offset: float, f_scale: float) -> void:
 	_create_static_box(parent, "Parapet_North", Vector3(0, parapet_y, -half_z - thickness/2.0), Vector3(x_width + thickness * 2.0, parapet_height, thickness), roof_mat)
 	_create_static_box(parent, "Parapet_South", Vector3(0, parapet_y, half_z + thickness/2.0), Vector3(x_width + thickness * 2.0, parapet_height, thickness), roof_mat)
 
+# Fires once for the FIRST floor whose 3 tapes are all collected (any floor - see
+# GameStateManager.collect_tape()). Punches a doorway through a random room's OUTER wall on that
+# floor and connects it to a random room on floor 3, permanently widening the stairs-access range
+# to include floor 3 (see stairs_gate.gd / GameStateManager's "FLOOR ACCESS" section). Gated by
+# secret_portal_active so it only ever happens once, regardless of how many other floors' tapes
+# get collected afterward.
 func _on_all_tapes_collected() -> void:
 	if GameStateManager.secret_portal_active: return
-	var valid_rooms = [1, 2, 3, 5, 6, 8, 10, 11, 12, 13, 15, 16, 17, 20, 21]
-	GameStateManager.secret_portal_room_a = valid_rooms[randi() % valid_rooms.size()]
-	GameStateManager.secret_portal_room_b = valid_rooms[randi() % valid_rooms.size()]
 	GameStateManager.secret_portal_active = true
-	_create_secret_portal()
 
-func _create_secret_portal() -> void:
-	_create_portal_for_room(GameStateManager.secret_portal_room_a, 4, GameStateManager.secret_portal_room_b, 3)
-	_create_portal_for_room(GameStateManager.secret_portal_room_b, 3, GameStateManager.secret_portal_room_a, 4)
+	var is_double = randi() % 2 == 0
+	var layout = DOUBLE_ROOM_LAYOUT if is_double else SINGLE_ROOM_LAYOUT
+	var keys = layout.keys()
 
-func _create_portal_for_room(room_idx: int, floor_num: int, target_room_idx: int, target_floor_num: int) -> void:
-	var is_single = (room_idx >= 10)
+	GameStateManager.secret_portal_floor = GameStateManager.current_floor
+	GameStateManager.secret_portal_is_double = is_double
+	GameStateManager.secret_portal_room_num = keys[randi() % keys.size()]
+	GameStateManager.secret_portal_target = _pick_random_floor3_target()
+	GameStateManager.secret_portal_target_floor = 3
+
+	_create_exit_portal()
+
+# Rebuilds the same doorway from GameStateManager's persisted secret_portal_* fields - called
+# both right after _on_all_tapes_collected() rolls them, and from _ready() if this level scene
+# reloads after the door already exists (so it doesn't move to a new random spot on reload).
+func _create_exit_portal() -> void:
+	var f_scale = GlobalConfig.get_floor_scale()
+	var floor_num = GameStateManager.secret_portal_floor
+	var suffix = "Main" if floor_num == floor_number else str(floor_num)
+	var floor_node = get_node_or_null("GeneratedFloor_" + suffix)
+	if not floor_node: return
+
+	var is_double = GameStateManager.secret_portal_is_double
+	var layout = DOUBLE_ROOM_LAYOUT if is_double else SINGLE_ROOM_LAYOUT
+	var room_layout = layout.get(GameStateManager.secret_portal_room_num)
+	if not room_layout: return
+	var room_z = room_layout["z"] * f_scale
+
+	# Rooms only own their corridor-facing wall (RoomEastWall/RoomWestWall's equivalent) - the
+	# building's actual OUTER wall is one long Wall_West/Wall_East shared by every room on that
+	# side, built once per floor in _build_floor_geometry(). It's a plain StaticBody3D+BoxMesh,
+	# not CSG, so a doorway is cut by replacing it with two shorter segments plus a gap - the
+	# same "union boxes instead of CSG subtraction" approach already used for the wardrobe back
+	# panel and the stairs walls (CSG subtraction on a wall this size is exactly the kind of
+	# operation that's repeatedly made a WHOLE combined shape vanish elsewhere in this project).
+	var wall_name = "Wall_West" if is_double else "Wall_East"
+	var old_wall = floor_node.get_node_or_null(wall_name)
+	if not old_wall: return
+
+	var wall_mesh: MeshInstance3D = old_wall.get_node("MeshInstance3D")
+	var wall_mat: Material = wall_mesh.mesh.material
+
+	var half_x = (BUILDING_WIDTH_X * f_scale) / 2.0
+	var half_z = (BUILDING_LENGTH_Z * f_scale) / 2.0
+	var thickness = wall_thickness * f_scale
+	var height = corridor_height * f_scale
+	var floor_thick = floor_thickness * f_scale
+	var outer_wall_height = height + floor_thick
+	var outer_wall_y = (height - floor_thick) / 2.0
+	var wall_x = (-half_x - thickness / 2.0) if is_double else (half_x + thickness / 2.0)
+
+	var door_w = 1.2 * f_scale
+	var door_h = 2.2 * f_scale
+	var gap_half = door_w / 2.0
+
+	old_wall.queue_free()
+
+	var seg_a_len = (room_z - gap_half) - (-half_z)
+	if seg_a_len > 0.1:
+		var seg_a_z = (-half_z + (room_z - gap_half)) / 2.0
+		_create_static_box(floor_node, wall_name + "_A", Vector3(wall_x, outer_wall_y, seg_a_z), Vector3(thickness, outer_wall_height, seg_a_len), wall_mat)
+
+	var seg_b_len = half_z - (room_z + gap_half)
+	if seg_b_len > 0.1:
+		var seg_b_z = ((room_z + gap_half) + half_z) / 2.0
+		_create_static_box(floor_node, wall_name + "_B", Vector3(wall_x, outer_wall_y, seg_b_z), Vector3(thickness, outer_wall_height, seg_b_len), wall_mat)
+
+	# Standard door.tscn, same as everywhere else in the hotel - basis.z points outward, away
+	# from the building interior, matching the "always points toward the corridor" rule doors
+	# use elsewhere (here there's no corridor beyond it, just the portal).
+	var door_scene = load("res://entities/props/door.tscn")
+	if door_scene:
+		var door_inst = door_scene.instantiate()
+		door_inst.name = "SecretExitDoor"
+		door_inst.position = Vector3(wall_x, 0, room_z)
+		door_inst.rotation.y = (-PI / 2.0) if is_double else (PI / 2.0)
+		door_inst.scale = Vector3(door_w, f_scale, f_scale)
+		floor_node.add_child(door_inst)
+
+	# Teleport trigger filling the doorway - stepping through leads to the fixed floor-3 room
+	# rolled once in _on_all_tapes_collected(), and permanently unlocks stairs access to floor 3
+	# (secret_portal.gd calls GameStateManager.unlock_floor() itself once target_floor is set).
+	if GameStateManager.secret_portal_target != Vector3.ZERO:
+		var area = Area3D.new()
+		area.collision_layer = 0
+		area.collision_mask = 1 # Player layer
+		var coll = CollisionShape3D.new()
+		var shape = BoxShape3D.new()
+		shape.size = Vector3(thickness + 0.6, door_h, door_w * 0.8)
+		coll.shape = shape
+		area.add_child(coll)
+		var script = load("res://scripts/interactables/secret_portal.gd")
+		if script:
+			area.set_script(script)
+		area.target_position = GameStateManager.secret_portal_target
+		area.target_floor = GameStateManager.secret_portal_target_floor
+		area.position = Vector3(wall_x, door_h / 2.0, room_z)
+		floor_node.add_child(area)
+
+	# "Something heavy just fell/crashed somewhere in the hotel" cue, per the request that
+	# triggered this feature - reusing door_open.wav pitched way down instead of a new asset,
+	# the same trick this project's now-deleted legacy exit_door rumble sound used.
+	var audio = AudioStreamPlayer3D.new()
+	audio.stream = load("res://assets/audio/sfx/door_open.wav")
+	audio.pitch_scale = 0.3
+	audio.volume_db = 15.0
+	audio.position = Vector3(wall_x, outer_wall_y, room_z)
+	floor_node.add_child(audio)
+	audio.finished.connect(audio.queue_free)
+	audio.play()
+
+# Picks a random room on floor 3 specifically (per the request this implements) and a safe
+# standing spot just inside it - same relative offsets already proven by the room-to-room secret
+# portal this replaces.
+func _pick_random_floor3_target() -> Vector3:
+	var is_single = randi() % 2 == 1
+	var layout = SINGLE_ROOM_LAYOUT if is_single else DOUBLE_ROOM_LAYOUT
+	var keys = layout.keys()
+	var room_num = keys[randi() % keys.size()]
 	var prefix = "SingleRoom_" if is_single else "DoubleRoom_"
-	var room_name = prefix + str(floor_num * 100 + room_idx)
+	var room_name = prefix + str(3 * 100 + (room_num % 100))
 	var room_node = find_child(room_name, true, false)
-	if not room_node: return
-	
-	var geometry = room_node.get_node_or_null("RoomGeometry")
-	if not geometry: return
-	
-	var hole = CSGBox3D.new()
-	hole.operation = CSGBox3D.OPERATION_SUBTRACTION
-	hole.size = Vector3(1.0, 2.2, 1.0)
-	
+	if not room_node:
+		return Vector3.ZERO
+	var target_pos = room_node.global_position
 	if is_single:
-		# West wall
-		hole.position = Vector3(-3.75, 1.1, 2.5)
+		target_pos += room_node.global_basis * Vector3(-1.5, 0.5, 2.5)
 	else:
-		# East wall
-		hole.position = Vector3(4.8, 1.1, 5.0)
-		
-	geometry.add_child(hole)
-	
-	var area = Area3D.new()
-	area.collision_layer = 0
-	area.collision_mask = 1 # Player layer
-	
-	var coll = CollisionShape3D.new()
-	var shape = BoxShape3D.new()
-	shape.size = Vector3(0.8, 2.0, 0.8)
-	coll.shape = shape
-	area.add_child(coll)
-	
-	var script = load("res://scripts/interactables/secret_portal.gd")
-	if script:
-		area.set_script(script)
-		
-	var target_is_single = (target_room_idx >= 10)
-	var target_prefix = "SingleRoom_" if target_is_single else "DoubleRoom_"
-	var target_room_name = target_prefix + str(target_floor_num * 100 + target_room_idx)
-	var target_room_node = find_child(target_room_name, true, false)
-	
-	if target_room_node:
-		var target_pos = target_room_node.global_position
-		if target_is_single:
-			target_pos += target_room_node.global_basis * Vector3(-1.5, 0.5, 2.5)
-		else:
-			target_pos += target_room_node.global_basis * Vector3(2.5, 0.5, 7.5)
-		area.target_position = target_pos
-		
-	hole.add_child(area)
+		target_pos += room_node.global_basis * Vector3(2.5, 0.5, 7.5)
+	return target_pos
 
 var _retro_wall_mat: StandardMaterial3D
 
