@@ -144,7 +144,19 @@ func _ready() -> void:
 		
 		var nav_region = get_parent()
 		if nav_region is NavigationRegion3D:
+			print("[generator] baking navigation mesh...")
+			# bake_navigation_mesh() defaults to on_thread=true - it returns immediately and bakes
+			# in the background, it does NOT block until the mesh is ready. A fixed-time guess for
+			# "surely long enough" (what cerberus_ai.gd's own idle_wait_time delay assumed) breaks
+			# on slower hardware if baking this whole 10-floor hotel takes longer than that guess.
+			# Awaiting the region's own bake_finished signal is the actual correct completion
+			# signal regardless of how long baking takes.
 			nav_region.bake_navigation_mesh()
+			await nav_region.bake_finished
+			print("[generator] navigation mesh baked - releasing enemies to patrol")
+			get_tree().call_group("enemies", "_on_navmesh_ready")
+		else:
+			print("[generator] WARNING: parent is not NavigationRegion3D, navmesh never baked - ", nav_region)
 
 func _generate_level() -> void:
 	print("Generating 3 hotel levels geometry with StaticBodies...")
