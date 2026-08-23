@@ -38,6 +38,15 @@ var _last_los: bool = false
 const NAV_UPDATE_INTERVAL: float = 0.3
 const LOS_CHECK_INTERVAL: float = 0.2
 
+# Diagnostic only - catches "stuck in place, spinning wildly" reports (reported 2026-08-23 on
+# floor 4). ATTACK is the one state that never calls move_along_nav() - if it IS the state
+# reported as "spinning on the spot", this look_at() toward a jittering to_player is the only
+# candidate (e.g. the player standing pressed right up against the enemy's own collider, so
+# their relative position swings wildly frame to frame even though both bodies barely move).
+const ATTACK_ROTATION_SPIKE_DEG_THRESHOLD: float = 60.0
+const ATTACK_ROTATION_SPIKE_LOG_INTERVAL: float = 0.5
+var _attack_rotation_spike_log_timer: float = 0.0
+
 func _ready() -> void:
 	add_to_group("enemies")
 	spawn_position = global_position
@@ -140,7 +149,9 @@ func _state_attack(_delta: float) -> void:
 	var to_player: Vector3 = player.global_position - global_position
 	to_player.y = 0.0
 	if to_player.length_squared() > 0.0001:
+		var prev_facing: Vector3 = -global_transform.basis.z
 		look_at(global_position + to_player, Vector3.UP)
+		_log_attack_rotation_spike_if_any(prev_facing, to_player)
 
 	if global_position.distance_to(player.global_position) > attack_range * 1.5:
 		_set_state(State.CHASE)
@@ -149,6 +160,20 @@ func _state_attack(_delta: float) -> void:
 	if attack_timer <= 0.0:
 		_perform_attack()
 		attack_timer = attack_cooldown
+
+func _log_attack_rotation_spike_if_any(prev_facing: Vector3, to_player: Vector3) -> void:
+	var new_facing: Vector3 = -global_transform.basis.z
+	var angle_deg: float = rad_to_deg(prev_facing.angle_to(new_facing))
+	if angle_deg <= ATTACK_ROTATION_SPIKE_DEG_THRESHOLD:
+		return
+	_attack_rotation_spike_log_timer -= get_physics_process_delta_time()
+	if _attack_rotation_spike_log_timer > 0.0:
+		return
+	_attack_rotation_spike_log_timer = ATTACK_ROTATION_SPIKE_LOG_INTERVAL
+	print("[EnemyAI] ", name, " ATTACK ROTATION SPIKE ", angle_deg, "deg/tick pos=", global_position,
+		" player_pos=", (player.global_position if is_instance_valid(player) else "?"),
+		" to_player=", to_player, " to_player_len=", to_player.length(),
+		" attack_timer=", attack_timer, " velocity=", velocity)
 
 # Generic default: plain melee, no line-of-sight check, no visual/audio effect - good enough for
 # a simple contact-damage enemy as-is. Ranged or otherwise fancier enemies (see cerberus_ai.gd's

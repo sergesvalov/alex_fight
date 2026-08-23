@@ -32,6 +32,11 @@ albedo_texture = ExtResource("1_wallpaper")
 uv1_scale = Vector3(20, 2, 2)
 roughness = 0.9
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_car"]
+albedo_color = Color(0.35, 0.35, 0.4, 1)
+metallic = 0.6
+roughness = 0.35
+
 
 [node name="ElevatorShaftBlock" type="Node3D"]
 script = ExtResource("5_ctrl")
@@ -69,6 +74,30 @@ operation = 2
 # still wider than this 1.2m hole (no gap when closed) but narrow enough to fit inside the
 # resulting 1.65m pocket (2.25 - 0.6) once open_offset (elevator_door.tscn) slides it clear.
 size = Vector3(1.2, 2.5, 1.0)
+
+# Floor/Ceiling/SouthWall added 2026-08-23 - this block used to be only 3 walls (West/East/North)
+# with no floor, ceiling, or south wall at all, so opening ElevatorDoor didn't reveal a car -
+# it left the whole 5m-deep interior open on 3 sides, letting the camera see straight through to
+# whatever hotel geometry happened to be physically coincident there (all 10 floors share the
+# same X/Z, stacked only in Y - see AGENTS.md's "P.T. Non-Euclidean Loop" note), which is why the
+# "open door" screenshot showed an unrelated wallpaper/carpet patch instead of a coherent cabin.
+# Sealing it with a distinct gunmetal material (StandardMaterial3D_car, matching
+# elevator_door.tscn's own door material) both fixes the leak and reads as an actual elevator car
+# rather than a hollow wallpapered nook.
+[node name="ElevatorFloor" type="CSGBox3D" parent="ElevatorGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.05, 2.5)
+size = Vector3(4.5, 0.1, 5.0)
+material = SubResource("StandardMaterial3D_car")
+
+[node name="ElevatorCeiling" type="CSGBox3D" parent="ElevatorGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.05, 2.5)
+size = Vector3(4.5, 0.1, 5.0)
+material = SubResource("StandardMaterial3D_car")
+
+[node name="ElevatorSouthWall" type="CSGBox3D" parent="ElevatorGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.0, 4.9)
+size = Vector3(4.7, 4.0, 0.2)
+material = SubResource("StandardMaterial3D_car")
 
 [node name="ElevatorLight" type="OmniLight3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.75, 2.5)
