@@ -58,6 +58,19 @@ pipeline {
                         sh "if [ -f export_presets.cfg ]; then sed -i -E 's/version\\/code=[0-9]+/version\\/code=${env.BUILD_NUMBER}/' export_presets.cfg; fi"
                         sh "if [ -f export_presets.cfg ]; then sed -i -E \"s/version\\/name=\\\".*\\\"/version\\/name=\\\"1.0.${env.BUILD_NUMBER}\\\"/\" export_presets.cfg; fi"
 
+                        // --- Clean stale Godot cache ---
+                        // Jenkins переиспользует одну и ту же рабочую директорию между сборками
+                        // (cleanWs() нигде не вызывается) - checkout scm обновляет отслеживаемые
+                        // git-файлы, но НЕ трогает .godot/ (в .gitignore), включая uid_cache.bin
+                        // и кэш импорта. Обнаружено 2026-08-23: сборка с подтверждённо верным
+                        // исходником в git и успешным (exit 0) --export-release всё равно
+                        // упаковывала устаревшее содержимое одной конкретной сцены
+                        // (elevator_shaft.tscn) - единственное объяснение: устаревший кэш
+                        // ресурсов от предыдущей сборки на том же агенте. Полная чистка перед
+                        // каждым импортом/экспортом устраняет этот класс бага целиком.
+                        echo "Удаляем кэш .godot/ от предыдущей сборки (если остался)..."
+                        sh "rm -rf .godot"
+
                         // --- Import Assets ---
                         echo "Подготовка дефолтного конфига для импорта и тестов (PC)..."
                         sh "cp configs/project.pc.godot project.godot"
@@ -187,7 +200,10 @@ pipeline {
                                 {
                                     echo "=== Alex Fight - отчёт о сборке Windows ==="
                                     echo "Jenkins build: #${BUILD_NUMBER}"
-                                    echo "Git commit: $(git rev-parse HEAD 2>/dev/null || echo неизвестен)"
+                                    # git сам по себе не установлен в образе сборщика (см.
+                                    # Dockerfile.android) - используем переменную окружения,
+                                    # которую checkout scm уже выставил, вместо git rev-parse.
+                                    echo "Git commit: ${GIT_COMMIT:-неизвестен}"
                                     echo "Дата (UTC): $(date -u '+%Y-%m-%d %H:%M:%S')"
                                     echo ""
                                 } > "$REPORT"
