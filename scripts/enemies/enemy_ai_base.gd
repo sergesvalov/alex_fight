@@ -215,6 +215,16 @@ func _set_state(new_state: State) -> void:
 		" pos=", global_position, " patrol_points=", patrol_points.size())
 	current_state = new_state
 	if new_state == State.CHASE:
+		# attack_timer decrements unconditionally every physics tick regardless of state (see
+		# _physics_process), so after any stretch of time spent IDLE/PATROL/RETURN before this
+		# detection (which, in practice, is however long this enemy has existed since its own
+		# _ready() - easily tens of seconds during level generation) it can already be deeply
+		# negative. _state_chase()'s "give up after 3s without line of sight" check
+		# (attack_timer <= -3.0) doesn't care WHY it's negative - without this reset, a fresh
+		# detection could see a stale timer already past -3.0 and instantly bail back to RETURN
+		# on its very first tick, before line-of-sight is even checked once. Reported 2026-08-23
+		# as "robot notices me but never actually attacks."
+		attack_timer = 0.0
 		GameStateManager.change_state(GameStateManager.GameState.COMBAT)
 		AudioManager.play_music("combat")
 	elif new_state == State.RETURN or new_state == State.IDLE:
