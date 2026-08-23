@@ -5,6 +5,9 @@ This file provides architectural guidelines and debugging instructions for AI ag
 > [!IMPORTANT]
 > **Keep this file honest.** When you change level geometry, edit or delete the section describing it in the *same* commit — never append a new section on top of a stale one. Past confusion on the North Stairs block happened because an old single-floor door design and the current multi-floor design were both documented here at once, contradicting each other. If a section's numbers don't match the current `.tscn`, delete the section — don't leave it "for reference."
 
+> [!IMPORTANT]
+> **Trust the user's bug report like it came from a senior engineer - then go verify it, don't substitute your own guess for it.** Incident (2026-08-23): the user reported the elevator doorway looked square/wrong ("проём"). The agent diagnosed it as a flashlight specular highlight ("блик") and fixed the light instead of checking the actual doorway geometry first. The glare fix was real and worth keeping, but it wasn't what the user reported, and the user had to repeat themselves before the actual bug (the door hole's CSGBox3D size not matching what was authored - see `elevator_shaft.tscn`/`elevator_controller.gd::_log_shaft_geometry()`) got investigated. When the user names a specific symptom ("there's a gap", "it's square", "the door doesn't open"), start by checking the geometry/state THEY named against the actual `.tscn`/runtime values (logs, `_log_shaft_geometry()`-style dumps) before reaching for an adjacent, more familiar explanation - even a plausible-sounding one (lighting, materials) can be a distraction from the literal thing reported.
+
 ## Architecture & Responsibilities
 
 1. **Master Generator (`hotel_level_generator.gd`)**:
