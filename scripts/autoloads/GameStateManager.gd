@@ -78,6 +78,13 @@ var secret_portal_room_num: int = 0     # room number on secret_portal_floor, fo
 var secret_portal_target: Vector3 = Vector3.ZERO  # fixed floor-3 destination, rolled once
 var secret_portal_target_floor: int = 3
 
+# Separate from the secret door above (that one stays untouched, still leads to floor 3) - floor
+# 4's own main corridor is split in half by a permanent physical barrier (corridor_barrier.gd)
+# that keeps the elevator/North Stairs off-limits until floor 4's own 3 tapes are collected. Set
+# true (never reset) the instant that happens, in the same handler that creates the secret door -
+# see hotel_level_generator.gd's _on_all_tapes_collected().
+var floor4_corridor_unlocked: bool = false
+
 func change_state(new_state: GameState) -> void:
     current_state = new_state
     state_changed.emit(new_state)

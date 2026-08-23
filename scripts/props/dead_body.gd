@@ -17,25 +17,6 @@ func _ready() -> void:
 	var c_scale = GlobalConfig.player_height / 1.8
 	scale = Vector3(c_scale, c_scale, c_scale)
 
-	var mesh_inst := get_node_or_null("MeshInstance3D")
-	if not mesh_inst:
-		return
-	var mat := StandardMaterial3D.new()
-	mat.albedo_texture = _generate_body_texture()
-	mat.roughness = 0.85
-	mesh_inst.material_override = mat
-
-# Procedurally generated (Image/ImageTexture, no external asset) - a flat solid-red capsule
-# reads as a placeholder, not a body. This paints pale skin at both ends (head, hands/feet)
-# with a dark worn coat and darker trousers along the middle, plus a dried-blood stain patch
-# over the chest - since CapsuleMesh's V texture coordinate runs along its full length
-# (including both end caps), a texture banded along the vertical (Y) axis wraps sensibly onto
-# it lying on its side.
-func _generate_body_texture() -> ImageTexture:
-	var w = 32
-	var h = 64
-	var img = Image.create_empty(w, h, false, Image.FORMAT_RGB8)
-
 	var rng = RandomNumberGenerator.new()
 	rng.seed = body_id + 1
 
@@ -43,31 +24,66 @@ func _generate_body_texture() -> ImageTexture:
 	var clothing = CLOTHING_PALETTE[body_id % CLOTHING_PALETTE.size()]
 	var clothing_dark = Color(clothing.r * 0.55, clothing.g * 0.55, clothing.b * 0.55)
 
-	for y in range(h):
-		var t = float(y) / float(h - 1) # 0 = one end (head/hands), 1 = other end (feet)
-		var base: Color
-		if t < 0.12 or t > 0.94:
-			base = skin
-		elif t < 0.55:
-			base = clothing
-		else:
-			base = clothing_dark
-		for x in range(w):
-			var n = rng.randf_range(-0.03, 0.03)
+	var skin_mat = _noisy_material(skin, rng)
+	var clothing_mat = _noisy_material(clothing, rng)
+	var dark_mat = _noisy_material(clothing_dark, rng)
+	# Only the torso gets the blood stain - putting it on every part would look like the corpse
+	# was dyed red rather than actually wounded somewhere specific.
+	var torso_mat = _stained_material(clothing, rng)
+
+	_apply("Head", skin_mat)
+	_apply("Torso", torso_mat)
+	_apply("Hips", clothing_mat)
+	_apply("LegL", dark_mat)
+	_apply("LegR", dark_mat)
+	_apply("ArmL", clothing_mat)
+	_apply("ArmR", clothing_mat)
+
+func _apply(node_name: String, mat: Material) -> void:
+	var node := get_node_or_null(node_name)
+	if node:
+		node.material_override = mat
+
+# Procedurally generated (Image/ImageTexture, no external asset, same approach as vhs_tape.gd) -
+# a small noise texture tiled over each body part so it doesn't read as a flat solid color.
+func _noisy_material(base: Color, rng: RandomNumberGenerator) -> StandardMaterial3D:
+	var size = 16
+	var img = Image.create_empty(size, size, false, Image.FORMAT_RGB8)
+	for y in range(size):
+		for x in range(size):
+			var n = rng.randf_range(-0.035, 0.035)
 			img.set_pixel(x, y, Color(base.r + n, base.g + n, base.b + n))
 
-	# Dried-blood stain over the chest area - dark reddish-brown, not bright red, so it reads
-	# as grim rather than cartoonish.
+	var mat := StandardMaterial3D.new()
+	mat.albedo_texture = ImageTexture.create_from_image(img)
+	mat.uv1_scale = Vector3(2, 2, 2)
+	mat.roughness = 0.85
+	return mat
+
+# Same noise as _noisy_material(), plus a dried-blood patch (dark reddish-brown, not bright red,
+# so it reads as grim rather than cartoonish) roughly where a torso wound would be.
+func _stained_material(base: Color, rng: RandomNumberGenerator) -> StandardMaterial3D:
+	var size = 24
+	var img = Image.create_empty(size, size, false, Image.FORMAT_RGB8)
+	for y in range(size):
+		for x in range(size):
+			var n = rng.randf_range(-0.035, 0.035)
+			img.set_pixel(x, y, Color(base.r + n, base.g + n, base.b + n))
+
 	var stain = Color(0.22, 0.05, 0.04)
-	var stain_cx = w * 0.5
-	var stain_cy = h * 0.3
-	var stain_r = w * 0.4
-	for y in range(h):
-		for x in range(w):
-			var dx = x - stain_cx
-			var dy = (y - stain_cy) * 0.6
-			if dx * dx + dy * dy < stain_r * stain_r:
+	var cx = size * 0.55
+	var cy = size * 0.4
+	var radius = size * 0.3
+	for y in range(size):
+		for x in range(size):
+			var dx = x - cx
+			var dy = y - cy
+			if dx * dx + dy * dy < radius * radius:
 				var n = rng.randf_range(-0.03, 0.03)
 				img.set_pixel(x, y, Color(stain.r + n, stain.g + n, stain.b + n))
 
-	return ImageTexture.create_from_image(img)
+	var mat := StandardMaterial3D.new()
+	mat.albedo_texture = ImageTexture.create_from_image(img)
+	mat.uv1_scale = Vector3(1.5, 1.5, 1.5)
+	mat.roughness = 0.85
+	return mat
