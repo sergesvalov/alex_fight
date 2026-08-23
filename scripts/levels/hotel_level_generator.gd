@@ -422,9 +422,9 @@ func _build_floor_geometry(f_num: int, y_offset: float, suffix: String, c_color:
 	_spawn_cassettes(parent, f_scale, f_num)
 	_spawn_cerberus(parent, f_scale)
 
-	# Floor 4 only - see _add_floor4_corridor_barrier()'s own comment for why.
-	if f_num == 4:
-		_add_floor4_corridor_barrier(parent, f_scale)
+	# Floor 3 only - see _add_floor3_corridor_barrier()'s own comment for why.
+	if f_num == 3:
+		_add_floor3_corridor_barrier(parent, f_scale)
 
 	# Every floor that reaches this line already excludes floor 1 (empty_box_mode returns out of
 	# this function before the room loop above) and the roof (a separate function entirely,
@@ -847,20 +847,22 @@ func _add_south_stairs_gate(parent: Node, f_num: int, f_scale: float) -> void:
 
 	parent.add_child(gate)
 
-# Floor 4's own "endless corridor" nightmare: until its 3 tapes are collected, this splits the
+# Floor 3's own "endless corridor" nightmare: until its 3 tapes are collected, this splits the
 # main corridor in half at its own center (z_main_pos in _build_floor_geometry - reused here as
-# a plain constant since that local var isn't in scope) and bounces the player back whenever they
-# cross it, keeping the elevator and North Stairs (the north end) permanently just out of reach -
-# the corridor never actually gets you there, no matter how far you walk. Percentages per the
-# original request: South Stairs' own Z (SOUTH_STAIRS_ZONE_Z_START) is 0%, this barrier's own
-# position is 100%, and crossing it always sends the player back to the 50% mark - halfway back
-# toward the South Stairs end, comfortably clear of the barrier so it doesn't immediately
-# re-trigger. Pairs with the OTHER nightmare this session added - the secret exit door
-# (_create_exit_portal()) that leads to an unknown room on floor 3, wherever the dice landed;
-# that one is untouched by this and stays reachable from the south side regardless of where it
-# ended up (per the request: "if the door didn't land in the south part, that's fine - it just
-# becomes the far edge of the reachable area").
-func _add_floor4_corridor_barrier(parent: Node, f_scale: float) -> void:
+# a plain constant since that local var isn't in scope, but it's the same for every floor - just
+# the corridor's own layout, not floor-4-specific) and bounces the player back whenever they cross
+# it, keeping the elevator and North Stairs (the north end) permanently just out of reach - the
+# corridor never actually gets you there, no matter how far you walk. Percentages per the original
+# request: South Stairs' own Z (SOUTH_STAIRS_ZONE_Z_START) is 0%, this barrier's own position is
+# 100%, and crossing it always sends the player back to the 50% mark - halfway back toward the
+# South Stairs end, comfortably clear of the barrier so it doesn't immediately re-trigger.
+# Deliberately floor 3, not floor 4 (moved 2026-08-23, corrected per user report) - floor 4 is the
+# starting floor and is meant to be fully open with no corridor gating; this nightmare belongs to
+# the floor reached through the secret exit door (_create_exit_portal(), always floor 3 today),
+# pairing with that door's own "leads to an unknown room, wherever the dice landed" nightmare -
+# the South Stairs door on floor 3 stays reachable from the south side regardless of where that
+# door ended up.
+func _add_floor3_corridor_barrier(parent: Node, f_scale: float) -> void:
 	var mid_z = -0.09 * f_scale # matches z_main_pos - Floor_Main's own Z center
 	var south_z = SOUTH_STAIRS_ZONE_Z_START * f_scale
 	var return_z = (south_z + mid_z) / 2.0
@@ -869,7 +871,7 @@ func _add_floor4_corridor_barrier(parent: Node, f_scale: float) -> void:
 	var corridor_width = (CORRIDOR_EAST_EDGE_X - CORRIDOR_WEST_EDGE_X) * f_scale
 
 	var barrier = Area3D.new()
-	barrier.name = "Floor4CorridorBarrier"
+	barrier.name = "Floor3CorridorBarrier"
 	barrier.collision_layer = 0
 	barrier.collision_mask = 1 # Player layer
 	barrier.set_script(load("res://scripts/levels/blocks/corridor_barrier.gd"))
@@ -1268,37 +1270,40 @@ func _generate_roof(y_offset: float, f_scale: float) -> void:
 	_create_static_box(parent, "Parapet_North", Vector3(0, parapet_y, -half_z - thickness/2.0), Vector3(x_width + thickness * 2.0, parapet_height, thickness), roof_mat)
 	_create_static_box(parent, "Parapet_South", Vector3(0, parapet_y, half_z + thickness/2.0), Vector3(x_width + thickness * 2.0, parapet_height, thickness), roof_mat)
 
-# Fires once for the FIRST floor whose 3 tapes are all collected (any floor - see
-# GameStateManager.collect_tape()) - in practice this is always floor 4, since it's the only
-# floor unlocked at game start and every other floor is gated behind mechanics this same
-# function unlocks. Two independent rewards happen together:
-#   1. Punches a doorway through a random room's OUTER wall on that floor and connects it to a
-#      random room on floor 3 (_create_exit_portal()) - an unmarked door to an unknown room,
-#      permanently widening the stairs-access range to include floor 3 once actually walked
-#      through (secret_portal.gd calls GameStateManager.unlock_floor()).
-#   2. Floor 4's own corridor-splitting barrier (_add_floor4_corridor_barrier(),
-#      corridor_barrier.gd) is switched off outright, and floor 5 unlocks immediately - no need
-#      to walk anywhere first, collecting the tapes is the whole trigger.
-# Gated by secret_portal_active so both only ever happen once, regardless of how many other
-# floors' tapes get collected afterward.
+# Fires every time ANY floor's 3 tapes are all collected (see GameStateManager.collect_tape()) -
+# two INDEPENDENT rewards, each with its own one-time guard, since they no longer happen on the
+# same floor (corrected 2026-08-23 per user report - floor 4, the starting floor, must stay fully
+# open with no corridor gating at all):
+#   1. The first time EVER any floor's tapes complete (in practice always floor 4, the only floor
+#      unlocked at game start) - punches a doorway through a random room's OUTER wall on that
+#      floor and connects it to a random room on floor 3 (_create_exit_portal()), an unmarked
+#      door to an unknown room, permanently widening the stairs-access range to include floor 3
+#      once actually walked through (secret_portal.gd calls GameStateManager.unlock_floor()).
+#      Gated by secret_portal_active so it only ever happens once.
+#   2. The first time floor 3's OWN tapes complete - floor 3's corridor-splitting barrier
+#      (_add_floor3_corridor_barrier(), corridor_barrier.gd) switches off outright, and floor 5
+#      unlocks immediately - no need to walk anywhere first, collecting the tapes is the whole
+#      trigger. Gated separately by floor3_corridor_unlocked, since by the time floor 3 is even
+#      reachable, secret_portal_active from event 1 is already true and would otherwise skip this.
 func _on_all_tapes_collected() -> void:
-	if GameStateManager.secret_portal_active: return
-	GameStateManager.secret_portal_active = true
+	if not GameStateManager.secret_portal_active:
+		GameStateManager.secret_portal_active = true
 
-	var is_double = randi() % 2 == 0
-	var layout = DOUBLE_ROOM_LAYOUT if is_double else SINGLE_ROOM_LAYOUT
-	var keys = layout.keys()
+		var is_double = randi() % 2 == 0
+		var layout = DOUBLE_ROOM_LAYOUT if is_double else SINGLE_ROOM_LAYOUT
+		var keys = layout.keys()
 
-	GameStateManager.secret_portal_floor = GameStateManager.current_floor
-	GameStateManager.secret_portal_is_double = is_double
-	GameStateManager.secret_portal_room_num = keys[randi() % keys.size()]
-	GameStateManager.secret_portal_target = _pick_random_floor3_target()
-	GameStateManager.secret_portal_target_floor = 3
+		GameStateManager.secret_portal_floor = GameStateManager.current_floor
+		GameStateManager.secret_portal_is_double = is_double
+		GameStateManager.secret_portal_room_num = keys[randi() % keys.size()]
+		GameStateManager.secret_portal_target = _pick_random_floor3_target()
+		GameStateManager.secret_portal_target_floor = 3
 
-	_create_exit_portal()
+		_create_exit_portal()
 
-	GameStateManager.floor4_corridor_unlocked = true
-	GameStateManager.unlock_floor(5)
+	if GameStateManager.current_floor == 3 and not GameStateManager.floor3_corridor_unlocked:
+		GameStateManager.floor3_corridor_unlocked = true
+		GameStateManager.unlock_floor(5)
 
 # Rebuilds the same doorway from GameStateManager's persisted secret_portal_* fields - called
 # both right after _on_all_tapes_collected() rolls them, and from _ready() if this level scene
