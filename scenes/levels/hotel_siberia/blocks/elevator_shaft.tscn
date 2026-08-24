@@ -77,36 +77,6 @@ operation = 2
 # hole's width when opening - see that scene's own comment for the full clearance numbers.
 size = Vector3(1.2, 2.5, 1.0)
 
-# Doorway frame trim (2026-08-24) - a flat dark door sitting flush against the wallpaper with no
-# surface detail read as an unlit "hole" rather than a door in-game (reported from a screenshot).
-# Four independent CSGBox3D strips bordering ElevatorDoorHole on all sides, in a brighter brushed-
-# steel material than either the door panels or the wallpaper, so the opening has a visible
-# silhouette even under a dim flashlight. Deliberately standalone roots (like ElevatorFloor/
-# Ceiling/SouthWall/Panel below), NOT children of the ElevatorGeometry combiner above - same CSG-
-# subtraction-corruption reasoning as those (see AGENTS.md's CSG gotchas). Each protrudes 0.04m
-# past both faces of ElevatorNorthWall (which spans local Z 0..0.2) so it reads from either side
-# regardless of which way this whole block ends up mirrored (scale.z=-1.0, see
-# hotel_level_generator.gd::_generate_elevator()).
-[node name="ElevatorFrameTop" type="CSGBox3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.45, 0.1)
-size = Vector3(1.36, 0.1, 0.28)
-material = SubResource("StandardMaterial3D_frame")
-
-[node name="ElevatorFrameBottom" type="CSGBox3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.15, 0.1)
-size = Vector3(1.36, 0.1, 0.28)
-material = SubResource("StandardMaterial3D_frame")
-
-[node name="ElevatorFrameLeft" type="CSGBox3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.64, 1.15, 0.1)
-size = Vector3(0.08, 2.7, 0.28)
-material = SubResource("StandardMaterial3D_frame")
-
-[node name="ElevatorFrameRight" type="CSGBox3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.64, 1.15, 0.1)
-size = Vector3(0.08, 2.7, 0.28)
-material = SubResource("StandardMaterial3D_frame")
-
 [node name="ElevatorLight" type="OmniLight3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.75, 2.5)
 light_color = Color(0.9, 0.95, 1, 1)
@@ -151,6 +121,40 @@ collision_layer = 2
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.0, 4.9)
 size = Vector3(4.7, 4.0, 0.2)
 material = SubResource("StandardMaterial3D_car")
+
+# Doorway frame trim (2026-08-24) - a flat dark door sitting flush against the wallpaper with no
+# surface detail read as an unlit "hole" rather than a door in-game (reported from a screenshot).
+# Four independent CSGBox3D strips bordering ElevatorDoorHole (in ElevatorGeometry above) on all
+# sides, in a brighter brushed-steel material than either the door panels or the wallpaper, so the
+# opening has a visible silhouette even under a dim flashlight. Standalone roots, same reasoning as
+# ElevatorFloor/Ceiling/SouthWall above (see AGENTS.md's CSG gotchas) - moved to sit right after
+# them (2026-08-24) rather than immediately after ElevatorDoorHole itself: a build kept reporting
+# ElevatorDoorHole's own size as (1.36, 0.1, 0.28) - exactly these frame nodes' size - even from a
+# git commit verified correct via `git show`, which stopped once these were no longer adjacent to
+# it in the file. Root cause in Godot's own .tscn loading never fully confirmed, but the symptom
+# tracked file adjacency, not file content. Each protrudes 0.04m past both faces of
+# ElevatorNorthWall (which spans local Z 0..0.2) so it reads from either side regardless of which
+# way this whole block ends up mirrored (scale.z=-1.0, see
+# hotel_level_generator.gd::_generate_elevator()).
+[node name="ElevatorFrameTop" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.45, 0.1)
+size = Vector3(1.36, 0.1, 0.28)
+material = SubResource("StandardMaterial3D_frame")
+
+[node name="ElevatorFrameBottom" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.15, 0.1)
+size = Vector3(1.36, 0.1, 0.28)
+material = SubResource("StandardMaterial3D_frame")
+
+[node name="ElevatorFrameLeft" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.64, 1.15, 0.1)
+size = Vector3(0.08, 2.7, 0.28)
+material = SubResource("StandardMaterial3D_frame")
+
+[node name="ElevatorFrameRight" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.64, 1.15, 0.1)
+size = Vector3(0.08, 2.7, 0.28)
+material = SubResource("StandardMaterial3D_frame")
 
 [node name="ElevatorPanel" type="CSGBox3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.14, 1.2, 2.5)
