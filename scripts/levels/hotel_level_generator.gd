@@ -51,17 +51,13 @@ const NORTH_STAIRS_CENTER_Z: float = -30.0
 
 const ELEVATOR_CENTER_X: float = 7.2
 const ELEVATOR_CENTER_Z: float = -25.0
-# Single source of truth for the elevator door's X scale - used to be duplicated (and
-# drifted slightly out of sync) between this generator and tests/test_elevator_alignment.gd.
-# 1.42 (native 1.4m panel -> ~1.99m wide) never fit: the pocket between ElevatorDoorHole's edge
-# and the car's own ElevatorEastWall is only 1.5m (2.25 - 0.75), so a ~2m-wide door could never
-# be slid fully clear of the hole no matter the open_offset - some of the panel always remained
-# stuck in the doorway, and the rest punched through the car's side wall into the hotel wall
-# beyond it, appearing to "vanish behind the hotel wall" (confirmed via the ASCII bounds test in
-# tests/test_elevator_alignment.gd, which only ever checked the CLOSED position and so never
-# caught this - see hole size in elevator_shaft.tscn and open_offset in elevator_door.tscn,
-# updated together with this value).
-const ELEVATOR_DOOR_SCALE_X: float = 0.93
+# The old single-panel door (native 1.4m mesh, squeezed by a generator-applied X scale down to
+# ~1.3m to fit) needed that scale retuned every time the hole size or open_offset changed, and
+# still had only ~0.25m of clearance from the car's own side wall when open - see
+# elevator_door.tscn's own history. Replaced 2026-08-24 with two panels
+# (sliding_door_pair.gd) sized directly at their real width, no generator-side scale hack
+# needed any more - removed the constant entirely, not just its usage, since nothing else
+# referenced it once tests/test_elevator_alignment.gd was updated for the two-panel layout.
 
 const SOUTH_STAIRS_DOOR_CENTER_X: float = 1.05  # same corridor centerline as north stairs
 const SOUTH_STAIRS_ZONE_Z_START: float = 25.0
@@ -616,7 +612,6 @@ func _generate_elevator(parent: Node, f_scale: float, height: float, thickness: 
 			var door_inst = door_scene.instantiate()
 			door_inst.name = "ElevatorDoor"
 			door_inst.position = Vector3(0, 0, 0.1 * f_scale)
-			door_inst.scale = Vector3(ELEVATOR_DOOR_SCALE_X, 1.0, 1.0)
 			inst.add_child(door_inst)
 
 		parent.add_child(inst)

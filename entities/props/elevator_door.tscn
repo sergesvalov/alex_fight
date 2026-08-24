@@ -1,48 +1,70 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=8 format=3]
 
-[ext_resource type="Script" path="res://scripts/interactables/sliding_door.gd" id="1_script"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/door_open.wav" id="2_open"]
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/door_close.wav" id="3_close"]
+[ext_resource type="Script" path="res://scripts/interactables/sliding_door_pair.gd" id="1_pair"]
+[ext_resource type="Script" path="res://scripts/interactables/door_panel_relay.gd" id="2_relay"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/door_open.wav" id="3_open"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/door_close.wav" id="4_close"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_door"]
 albedo_color = Color(0.4, 0.4, 0.45, 1)
 metallic = 0.8
 roughness = 0.2
 
-[sub_resource type="BoxMesh" id="BoxMesh_door"]
+[sub_resource type="BoxMesh" id="BoxMesh_panel"]
 material = SubResource("StandardMaterial3D_door")
-size = Vector3(1.4, 2.4, 0.2)
+size = Vector3(0.65, 2.5, 0.2)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_door"]
-size = Vector3(1.4, 2.4, 0.2)
+[sub_resource type="BoxShape3D" id="BoxShape3D_panel"]
+size = Vector3(0.65, 2.5, 0.2)
 
 [node name="ElevatorDoorRoot" type="Node3D"]
 
-[node name="AnimatableBody3D" type="AnimatableBody3D" parent="."]
-collision_layer = 7
-collision_mask = 0
-script = ExtResource("1_script")
-# 0.8 never slid the (scaled ~1.99m-wide) door clear of the 1.5m ElevatorDoorHole - see the
-# ElevatorDoorHole/ELEVATOR_DOOR_SCALE_X comments (elevator_shaft.tscn / hotel_level_generator.gd)
-# for the full "vanished behind the hotel wall" story. With the door now ~1.3m wide and the hole
-# 1.2m, 1.3 slides its near edge (starts at -0.65 from center) past the hole's edge (0.6) with a
-# small margin, landing its far edge at 1.3+0.65=1.95 - still inside the car's own side wall at
-# X=2.25, so nothing punches through into the hotel wall beyond it.
+[node name="AnimatableBody3D" type="Node3D" parent="."]
+script = ExtResource("1_pair")
+# Panel half-width 0.325 - closed centers at +-0.28 give a 0.045m overlap in the middle (real
+# elevator doors meet with a slight overlap, not a hairline seam) and each panel's outer edge
+# lands at 0.605, just past ElevatorDoorHole's own 0.6 half-width (elevator_shaft.tscn) - no gap
+# when closed. open_offset=1.3 sends each panel's near edge to 1.58-0.325=1.255 (clear of the
+# 0.6 hole edge) and far edge to 1.905, still well inside the car's own side wall inner face at
+# 2.15 (ElevatorWestWall/EastWall centered at +-2.25, half-thickness 0.1) - so neither panel
+# punches through into the hotel wall beyond, the exact failure this replaces fixed for good.
+# Panel mesh/collision is also sized (2.5) and offset (y=1.15) to match the hole's own height and
+# vertical center exactly, closing the ~0.1m gap the old single door left at floor level.
 open_offset = Vector3(1.3, 0, 0)
 move_time = 1.5
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="AnimatableBody3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 0)
-mesh = SubResource("BoxMesh_door")
+[node name="LeftPanel" type="AnimatableBody3D" parent="AnimatableBody3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.28, 0, 0)
+collision_layer = 7
+collision_mask = 0
+script = ExtResource("2_relay")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="AnimatableBody3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 0)
-shape = SubResource("BoxShape3D_door")
+[node name="MeshInstance3D" type="MeshInstance3D" parent="AnimatableBody3D/LeftPanel"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.15, 0)
+mesh = SubResource("BoxMesh_panel")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="AnimatableBody3D/LeftPanel"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.15, 0)
+shape = SubResource("BoxShape3D_panel")
+
+[node name="RightPanel" type="AnimatableBody3D" parent="AnimatableBody3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.28, 0, 0)
+collision_layer = 7
+collision_mask = 0
+script = ExtResource("2_relay")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="AnimatableBody3D/RightPanel"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.15, 0)
+mesh = SubResource("BoxMesh_panel")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="AnimatableBody3D/RightPanel"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.15, 0)
+shape = SubResource("BoxShape3D_panel")
 
 [node name="SfxOpen" type="AudioStreamPlayer3D" parent="."]
-stream = ExtResource("2_open")
+stream = ExtResource("3_open")
 max_distance = 15.0
 
 [node name="SfxClose" type="AudioStreamPlayer3D" parent="."]
-stream = ExtResource("3_close")
+stream = ExtResource("4_close")
 max_distance = 15.0

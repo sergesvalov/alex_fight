@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene load_steps=13 format=3]
 
 [ext_resource type="Texture2D" path="res://assets/textures/hotel_wallpaper.jpg" id="1_wallpaper"]
 [ext_resource type="Texture2D" path="res://assets/textures/hotel_wallpaper.jpg" id="2_panel"]
@@ -37,6 +37,15 @@ albedo_color = Color(0.35, 0.35, 0.4, 1)
 metallic = 0.3
 roughness = 0.6
 
+# Brushed-steel look, deliberately brighter/more reflective than the dark door panels
+# (StandardMaterial3D_door in elevator_door.tscn) and the cream wallpaper around it - added
+# 2026-08-24 so the doorway reads as an actual door frame under a flashlight instead of a flat
+# dark opening with no silhouette against the wall (see ElevatorFrame* nodes below).
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_frame"]
+albedo_color = Color(0.75, 0.75, 0.78, 1)
+metallic = 0.9
+roughness = 0.25
+
 
 [node name="ElevatorShaftBlock" type="Node3D"]
 script = ExtResource("5_ctrl")
@@ -63,17 +72,44 @@ material = SubResource("StandardMaterial3D_wall")
 [node name="ElevatorDoorHole" type="CSGBox3D" parent="ElevatorGeometry"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.15, 0.1)
 operation = 2
-# Narrowed again 1.5 -> 1.2 (2026-08-23): the *previous* fix (2.0 -> 1.5, see the stale comment
-# this replaces) compared the 1.6m pocket it left against the door's NATIVE 1.4m mesh width,
-# but the door is actually stretched by HotelLevelGenerator.ELEVATOR_DOOR_SCALE_X (was 1.42,
-# now 0.93 - see that constant's own comment) to ~1.99m when placed - wider than even that
-# "comfortably wide" 1.6m pocket, so the door could never fully retract into it: part of the
-# panel always stuck out in the doorway, and the rest punched straight through the car's own
-# ElevatorEastWall into the hotel wall beyond, i.e. exactly "the door vanished behind the hotel
-# wall, leaving the hole visible" as reported in-game. At 0.93 scale the door is ~1.3m wide -
-# still wider than this 1.2m hole (no gap when closed) but narrow enough to fit inside the
-# resulting 1.65m pocket (2.25 - 0.6) once open_offset (elevator_door.tscn) slides it clear.
+# Hole stayed 1.2m wide through the 2026-08-24 door redesign - what changed is the door itself
+# (elevator_door.tscn), which used to be one panel squeezed by a generator-side X scale
+# (HotelLevelGenerator.ELEVATOR_DOOR_SCALE_X, since removed) to fit this hole and had to travel
+# its FULL width to clear it, leaving only ~0.25m of margin before punching through the car's
+# own side wall. It's now two panels (sliding_door_pair.gd) sized directly at 0.65m each,
+# meeting with a small overlap in the closed position, each only needing to clear HALF this
+# hole's width when opening - see that scene's own comment for the full clearance numbers.
 size = Vector3(1.2, 2.5, 1.0)
+
+# Doorway frame trim (2026-08-24) - a flat dark door sitting flush against the wallpaper with no
+# surface detail read as an unlit "hole" rather than a door in-game (reported from a screenshot).
+# Four independent CSGBox3D strips bordering ElevatorDoorHole on all sides, in a brighter brushed-
+# steel material than either the door panels or the wallpaper, so the opening has a visible
+# silhouette even under a dim flashlight. Deliberately standalone roots (like ElevatorFloor/
+# Ceiling/SouthWall/Panel below), NOT children of the ElevatorGeometry combiner above - same CSG-
+# subtraction-corruption reasoning as those (see AGENTS.md's CSG gotchas). Each protrudes 0.04m
+# past both faces of ElevatorNorthWall (which spans local Z 0..0.2) so it reads from either side
+# regardless of which way this whole block ends up mirrored (scale.z=-1.0, see
+# hotel_level_generator.gd::_generate_elevator()).
+[node name="ElevatorFrameTop" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.45, 0.1)
+size = Vector3(1.36, 0.1, 0.28)
+material = SubResource("StandardMaterial3D_frame")
+
+[node name="ElevatorFrameBottom" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.15, 0.1)
+size = Vector3(1.36, 0.1, 0.28)
+material = SubResource("StandardMaterial3D_frame")
+
+[node name="ElevatorFrameLeft" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.64, 1.15, 0.1)
+size = Vector3(0.08, 2.7, 0.28)
+material = SubResource("StandardMaterial3D_frame")
+
+[node name="ElevatorFrameRight" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.64, 1.15, 0.1)
+size = Vector3(0.08, 2.7, 0.28)
+material = SubResource("StandardMaterial3D_frame")
 
 [node name="ElevatorLight" type="OmniLight3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.75, 2.5)
