@@ -1,4 +1,4 @@
-﻿[gd_scene load_steps=20 format=3 uid="uid://cerb123"]
+[gd_scene load_steps=20 format=3 uid="uid://cerb123"]
 
 [ext_resource type="Script" path="res://scripts/enemies/cerberus_ai.gd" id="1_cerb"]
 [ext_resource type="Script" path="res://scripts/enemies/components/enemy_movement.gd" id="move_script"]

@@ -1,4 +1,4 @@
-﻿[gd_scene load_steps=4 format=3 uid="uid://hotel_level_2"]
+[gd_scene load_steps=4 format=3 uid="uid://hotel_level_2"]
 
 [ext_resource type="PackedScene" uid="uid://level123" path="res://scenes/levels/hotel_siberia/base_hotel_level.tscn" id="1_base"]
 [ext_resource type="Script" path="res://scripts/levels/hotel_level_2.gd" id="2_script"]
