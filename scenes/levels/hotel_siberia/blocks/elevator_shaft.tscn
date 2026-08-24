@@ -37,10 +37,6 @@ albedo_color = Color(0.35, 0.35, 0.4, 1)
 metallic = 0.3
 roughness = 0.6
 
-# Brushed-steel look, deliberately brighter/more reflective than the dark door panels
-# (StandardMaterial3D_door in elevator_door.tscn) and the cream wallpaper around it - added
-# 2026-08-24 so the doorway reads as an actual door frame under a flashlight instead of a flat
-# dark opening with no silhouette against the wall (see ElevatorFrame* nodes below).
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_frame"]
 albedo_color = Color(0.75, 0.75, 0.78, 1)
 metallic = 0.9
