@@ -53,7 +53,7 @@ func _make_tape_slot(tape: Dictionary) -> Control:
     # Full title never fits a 90x90 cell, so the button itself only shows a short slot label -
     # the full title (plus the replay hint) shows on hover via the tooltip instead.
     btn.text = "№ " + str(tape["id"] + 1)
-    btn.tooltip_text = _tape_title(tape["floor"], tape["id"]) + "\n\nПрослушать ещё раз"
+    btn.tooltip_text = _tape_title(tape["floor"], tape["id"]) + "\n\n" + UIStrings.get_string("inventory_replay_hint")
     btn.pressed.connect(func(): _replay_tape(tape["floor"], tape["id"]))
     return btn
 
@@ -62,8 +62,8 @@ func _tape_title(floor_num: int, tape_id: int) -> String:
     if DialogSystem.tape_data.has(floor_str):
         var floor_tapes = DialogSystem.tape_data[floor_str]
         if tape_id >= 0 and tape_id < floor_tapes.size():
-            return floor_tapes[tape_id].get("title", "Кассета " + str(tape_id + 1))
-    return "Кассета " + str(tape_id + 1)
+            return floor_tapes[tape_id].get("title", UIStrings.get_string("inventory_tape_fallback") % (tape_id + 1))
+    return UIStrings.get_string("inventory_tape_fallback") % (tape_id + 1)
 
 func _replay_tape(floor_num: int, tape_id: int) -> void:
     var player = get_tree().current_scene.get_node_or_null("Player")

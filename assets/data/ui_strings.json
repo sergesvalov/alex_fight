@@ -1,0 +1,6 @@
+{
+    "inventory_replay_hint": "Прослушать ещё раз",
+    "inventory_tape_fallback": "Кассета %d",
+    "elevator_floor_locked": "Этаж ещё не разблокирован",
+    "tapes_counter_format": "Кассеты: %d/%d"
+}

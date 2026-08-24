@@ -5,4 +5,4 @@ func _ready() -> void:
         EventBus.tapes_collected_updated.connect(_on_tapes_updated)
 
 func _on_tapes_updated(current: int, max_tapes: int) -> void:
-    text = "Tapes: " + str(current) + "/" + str(max_tapes)
+    text = UIStrings.get_string("tapes_counter_format") % [current, max_tapes]

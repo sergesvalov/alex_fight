@@ -50,7 +50,7 @@ func _refresh_button_states() -> void:
 			btn.tooltip_text = ""
 		else:
 			btn.modulate = Color(1, 1, 1, 0.4)
-			btn.tooltip_text = "Этаж ещё не разблокирован"
+			btn.tooltip_text = UIStrings.get_string("elevator_floor_locked")
 
 func _on_floor_pressed(floor_num: int) -> void:
 	if controller and controller.has_method("request_floor"):
