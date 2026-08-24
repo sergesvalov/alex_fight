@@ -165,6 +165,14 @@ pipeline {
                                 if grep -q 'name="Android"' export_presets.cfg 2>/dev/null; then
                                     echo "Копируем конфиг телефона..."
                                     cp configs/project.phone.godot project.godot
+                                    # Тот же класс бага, что уже чинили для Windows (см. ниже,
+                                    # секцию "Build PC (Windows)", "Полная чистка перед
+                                    # экспортом") - build/ не чистится между
+                                    # прогонами Jenkins, а --export-release гасится через || true,
+                                    # так что без явного удаления apk от ПРЕДЫДУЩЕЙ сборки
+                                    # проверка "файл существует" ниже сочла бы упавший экспорт
+                                    # успешным и подписала бы устаревший apk.
+                                    rm -f build/alex_fight.apk
                                     godot --headless --export-release "Android" build/alex_fight.apk || true
                                     if [ ! -f "build/alex_fight.apk" ]; then echo 'APK build failed!'; exit 1; fi
                                     echo "Подписываем build/alex_fight.apk..."
@@ -178,6 +186,8 @@ pipeline {
                                     cp configs/project.vr.godot project.godot
                                     echo "Запуск автотеста конфигурации VR..."
                                     godot --headless -s tests/verify_vr_config.gd || { echo 'VR CONFIG TEST FAILED!'; exit 1; }
+                                    # См. комментарий у Android-сборки выше - тот же риск устаревшего apk.
+                                    rm -f build/alex_fight_vr.apk
                                     godot --headless --export-release "Android Quest 2" build/alex_fight_vr.apk || true
                                     if [ ! -f "build/alex_fight_vr.apk" ]; then echo 'VR APK build failed!'; exit 1; fi
                                     echo "Подписываем build/alex_fight_vr.apk..."
@@ -250,6 +260,12 @@ pipeline {
 
                                     echo "Архивируем сборку ПК в ZIP..."
                                     apt-get update && apt-get install -y zip
+                                    # zip -r ДОБАВЛЯЕТ/ОБНОВЛЯЕТ существующий архив, а не пересоздаёт
+                                    # его с нуля - если alex_fight_pc_test.zip уцелел от предыдущего
+                                    # прогона (build/ между сборками не чистится), в свежий архив
+                                    # попали бы вперемешку файлы старой сборки, которых в текущей
+                                    # build/windows уже нет.
+                                    rm -f build/alex_fight_pc_test.zip
                                     cd build/windows && zip -r ../alex_fight_pc_test.zip * && cd ../..
                                 else
                                     echo "Статус: ПРОПУЩЕНО - пресет 'Windows Desktop' не найден в export_presets.cfg" >> "$REPORT"
@@ -269,6 +285,9 @@ pipeline {
                                 if grep -q 'name="macOS"' export_presets.cfg 2>/dev/null; then
                                     echo "Копируем конфиг ПК..."
                                     cp configs/project.pc.godot project.godot
+                                    # См. комментарий у Windows-сборки выше ("Build PC (Windows)") -
+                                    # тот же риск устаревшего zip от предыдущего прогона Jenkins.
+                                    rm -rf build/mac
                                     mkdir -p build/mac
                                     godot --headless --export-release "macOS" build/mac/alex_fight_mac.zip || true
                                     if [ ! -f "build/mac/alex_fight_mac.zip" ]; then echo 'macOS build failed!'; exit 1; fi

@@ -191,6 +191,15 @@ func _teleport_player(target_floor: int) -> void:
 		var target_y = (target_floor - 4) * y_step
 		var current_y = _get_base_y(self)
 
+		# Diagnostic (2026-08-24) - matching the print every other teleport site in this project
+		# already has (stairs_gate.gd, corridor_barrier.gd, secret_portal.gd,
+		# stairs_fall_catcher.gd): before/after position plus the floor numbers involved, so a
+		# report of "ended up somewhere wrong" can be traced back to which mechanism moved the
+		# player and what it computed, instead of only seeing "Elevator arrived!" with no numbers.
+		print("[ElevatorController] ", name, " teleporting player from y=", player.global_position.y,
+			" to y=", player.global_position.y + (target_y - current_y),
+			" (current_floor=", current_floor, " -> target_floor=", target_floor,
+			", current_y=", current_y, ", target_y=", target_y, ")")
 		player.global_position.y += (target_y - current_y)
 		# Keep GameStateManager's floor tracking in sync - stairs_gate.gd compares against
 		# current_floor to tell a legitimate arrival apart from a floor-hop attempt, and it would
