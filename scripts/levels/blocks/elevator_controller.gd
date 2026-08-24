@@ -18,40 +18,54 @@ func _ready() -> void:
 	_setup_audio()
 	_setup_interior_detection()
 	add_to_group("elevator_controller")
-	_log_shaft_geometry()
+	_log_shaft_geometry("_ready")
 
-# Diagnostic only (2026-08-23) - dumps the actual world-space transform of every piece of the
-# shaft's own geometry (walls, door hole, car floor/ceiling/back wall, the door prop itself) right
-# after this instance is fully built, so a screenshot of something looking wrong ("the doorway is
-# still square", stray bright reflections, etc.) can be cross-checked against real numbers instead
-# of guessed from hotel_level_generator.gd's authored constants. Print, not push_warning - this is
-# expected on every elevator instance (10 per level), not an error condition.
-func _log_shaft_geometry() -> void:
+	# Diagnostic (2026-08-24) - re-checks ElevatorDoorHole one frame later. If this reads
+	# differently than the "_ready" pass right above, something mutates it AFTER scene setup
+	# (a deferred CSG rebuild, a signal callback, etc.) rather than the value being wrong from
+	# the moment the scene is built - narrows down where in the pipeline to keep looking.
+	await get_tree().process_frame
+	_log_shaft_geometry("_deferred+1frame")
+
+# Diagnostic only (2026-08-23, extended 2026-08-24) - dumps the actual world-space transform of
+# every piece of the shaft's own geometry (walls, door hole, frame trim, car floor/ceiling/back
+# wall, the door prop itself) right after this instance is fully built, so a screenshot of
+# something looking wrong ("the doorway is still square", stray bright reflections, etc.) can be
+# cross-checked against real numbers instead of guessed from hotel_level_generator.gd's authored
+# constants. `tag` distinguishes which call site triggered this (see call sites below) - compare
+# against hotel_level_generator.gd's own "[ElevatorDiag] instantiation #N" print (same instance,
+# right after PackedScene.instantiate(), before this node ever entered the tree) via instance_id
+# to see whether ElevatorDoorHole's size is already wrong at that earliest possible point or only
+# becomes wrong later. Print, not push_warning - this is expected on every elevator instance
+# (10 per level), not an error condition.
+func _log_shaft_geometry(tag: String) -> void:
 	var f_scale_str := "f_scale=%s" % f_scale
-	print("[ElevatorShaft] ", name, " ", f_scale_str, " root_global_pos=", global_position,
+	print("[ElevatorShaft:", tag, "] ", name, " ", f_scale_str, " root_global_pos=", global_position,
 		" root_global_scale=", global_transform.basis.get_scale())
 	for path in ["ElevatorGeometry/ElevatorWestWall", "ElevatorGeometry/ElevatorEastWall",
 			"ElevatorGeometry/ElevatorNorthWall", "ElevatorGeometry/ElevatorDoorHole",
+			"ElevatorFrameTop", "ElevatorFrameBottom", "ElevatorFrameLeft", "ElevatorFrameRight",
 			"ElevatorFloor", "ElevatorCeiling", "ElevatorSouthWall", "ElevatorPanel"]:
 		var node = get_node_or_null(path)
 		if not node:
-			print("[ElevatorShaft]   ", path, " -> MISSING")
+			print("[ElevatorShaft:", tag, "]   ", path, " -> MISSING")
 			continue
 		var size_str := ""
 		if node is CSGBox3D:
 			size_str = " size=%s operation=%s" % [node.size, node.operation]
-		print("[ElevatorShaft]   ", path, " global_pos=", node.global_position,
+		print("[ElevatorShaft:", tag, "]   ", path, " id=", node.get_instance_id(),
+			" global_pos=", node.global_position,
 			" global_scale=", node.global_transform.basis.get_scale(), size_str)
 	var door = get_node_or_null("ElevatorDoor")
 	if door:
-		print("[ElevatorShaft]   ElevatorDoor global_pos=", door.global_position,
+		print("[ElevatorShaft:", tag, "]   ElevatorDoor global_pos=", door.global_position,
 			" scale=", door.scale)
 		if door_animatable:
-			print("[ElevatorShaft]   ElevatorDoor/AnimatableBody3D open_offset=",
+			print("[ElevatorShaft:", tag, "]   ElevatorDoor/AnimatableBody3D open_offset=",
 				door_animatable.open_offset, " is_open=", door_animatable.is_open,
 				" global_pos=", door_animatable.global_position)
 	else:
-		print("[ElevatorShaft]   ElevatorDoor -> MISSING")
+		print("[ElevatorShaft:", tag, "]   ElevatorDoor -> MISSING")
 
 func _process(_delta: float) -> void:
 	var is_door_closed = (door_animatable and not door_animatable.is_open)

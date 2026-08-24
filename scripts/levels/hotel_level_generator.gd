@@ -591,10 +591,34 @@ func _generate_maintenance_room(parent: Node, f_scale: float, height: float, thi
 			wardrobe_inst.transform = Transform3D(Basis(Vector3(0, 0, 1), Vector3(0, 1, 0), Vector3(-1, 0, 0)), Vector3(12.25 * f_scale, 0, (-28.0 + i * 2.5) * f_scale))
 			parent.add_child(wardrobe_inst)
 
+# Counts calls across the whole level generation pass (10 elevator instances, one per floor) -
+# tags each diagnostic line below so a log can tell which of the 10 PackedScene.instantiate()
+# calls on the SAME loaded elevator_shaft.tscn resource a given reading came from, in case the
+# ElevatorDoorHole-size corruption (README/AGENTS.md, 2026-08-24) turns out to depend on
+# instantiation order/count rather than file content or layout.
+var _elevator_instantiation_count: int = 0
+
 func _generate_elevator(parent: Node, f_scale: float, height: float, thickness: float, wall_mat: Material) -> void:
 	var scene = load("res://scenes/levels/hotel_siberia/blocks/elevator_shaft.tscn")
 	if scene:
 		var inst = scene.instantiate()
+		_elevator_instantiation_count += 1
+
+		# Diagnostic (2026-08-24) - checks ElevatorDoorHole/ElevatorFrameTop's size THE INSTANT
+		# instantiate() returns, before position/scale/add_child touch anything. If the size is
+		# already wrong here, the corruption happens inside PackedScene.instantiate() itself (or
+		# is baked into the resource some other way) - if it's still correct here but wrong by
+		# the time elevator_controller.gd's own _log_shaft_geometry() runs (after add_child()),
+		# something between instantiate() and _ready() is responsible instead.
+		var _door_hole_a = inst.get_node_or_null("ElevatorGeometry/ElevatorDoorHole")
+		var _frame_top_a = inst.get_node_or_null("ElevatorFrameTop")
+		print("[ElevatorDiag] instantiation #", _elevator_instantiation_count,
+			" right after instantiate() - DoorHole size=",
+			(_door_hole_a.size if _door_hole_a else "MISSING"),
+			" id=", (_door_hole_a.get_instance_id() if _door_hole_a else -1),
+			" | FrameTop size=", (_frame_top_a.size if _frame_top_a else "MISSING"),
+			" id=", (_frame_top_a.get_instance_id() if _frame_top_a else -1))
+
 		# position/scale MUST be set before add_child() - see _generate_maintenance_room()
 		# for why (add_child() fires _ready() synchronously on the whole subtree).
 		inst.position = Vector3(ELEVATOR_CENTER_X * f_scale, 0, ELEVATOR_CENTER_Z * f_scale)
