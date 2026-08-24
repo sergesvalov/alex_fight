@@ -24,6 +24,19 @@ func _ready() -> void:
 	detection_area.body_entered.connect(_on_body_entered)
 	detection_area.body_exited.connect(_on_body_exited)
 
+	# Bug (reported 2026-08-24 as "shoots through the wall as soon as he's near a room door"):
+	# RayCast3D's collision_mask was never set here or in cerberus.tscn, so it kept Godot's
+	# engine default of 1 - the player's own layer (player.tscn: collision_layer=1), but NOT
+	# hotel walls, which _create_static_box() in hotel_level_generator.gd puts on layer 2
+	# ("static_body.collision_layer = 2 # Matches old floor layer"). A mask of 1 alone means the
+	# ray physically cannot collide with a wall at all - it passes straight through layer-2
+	# geometry and always lands on the player, so has_line_of_sight() was true no matter what
+	# solid geometry actually stood between them. Room/elevator doors (collision_layer=7, see
+	# door.tscn/elevator_door.tscn) already include bit 1, so adding wall layer 2 here doesn't
+	# change how a closed door blocks the ray - it only adds the walls that were silently
+	# invisible to it before.
+	ray_sight.collision_mask = 1 | 2
+
 func _on_body_entered(body: Node3D) -> void:
 	if not body.is_in_group("player"):
 		return
