@@ -15,6 +15,12 @@ func _ready() -> void:
         print("OpenXR initialized successfully")
         get_viewport().use_xr = true
         is_vr = true
+        # Screen-space effects are off in the headset: glow and fog are full-screen passes
+        # the stereo view pays for twice, and VR_QUEST2.md asks for fog off on Quest anyway.
+        var vr_env: Environment = get_world_3d().fallback_environment
+        if vr_env:
+            vr_env.glow_enabled = false
+            vr_env.fog_enabled = false
         
         # Setup VR cameras
         var xr_cam = $XROrigin3D/XRCamera3D

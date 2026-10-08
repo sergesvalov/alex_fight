@@ -45,6 +45,13 @@ func _ready() -> void:
 		_defaults[field] = value.duplicate(true) if value is Array or value is Dictionary else value
 	GameStateManager.tape_collected.connect(func(_id): save_game.call_deferred())
 	GameStateManager.state_changed.connect(_on_state_changed)
+	# The headset build has no start screen (a flat menu cannot be seen or clicked in VR, and
+	# its main scene is the level itself - see configs/project.vr.godot): the choice the
+	# screen offers is made here instead, before the level loads. Continue if there is
+	# something to continue, otherwise a new game.
+	if ProjectSettings.get_setting("xr/openxr/enabled", false) and DisplayServer.get_name() != "headless":
+		if not load_game():
+			new_game()
 
 func _process(delta: float) -> void:
 	if not active:
