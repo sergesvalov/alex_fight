@@ -255,6 +255,8 @@ func _generate_level() -> void:
 			light.distance_fade_shadow = LIGHT_SHADOW_FADE_DISTANCE
 		_floor_lights_by_index[i] = lights
 		_floor_nodes_by_index[i] = floor_node
+		if i == 9 or i == 10:
+			_add_floor_wide_trap(floor_node, i, f_scale)
 		# Floor 2 replays "that night": the blackouts of floor 7 and the sleepers of floor 6 at once.
 		if i == 7 or i == 2:
 			_add_blackout_trap(floor_node, i, lights, f_scale)
@@ -1508,6 +1510,25 @@ func _add_blackout_trap(parent: Node3D, f_num: int, lights: Array, f_scale: floa
 	trap.return_position = parent.global_position + Vector3(ELEVATOR_CENTER_X * f_scale, 0.1, (ELEVATOR_CENTER_Z + 2.0) * f_scale)
 	parent.add_child(trap)
 
+# Floor 9's sweeping ceiling units (sweep_camera_trap.gd) and floor 10's advancing edge
+# (edge_wall_trap.gd): one node each, sitting at the floor's own origin so the script can work
+# in floor-local coordinates. Both put a caught player back by that floor's elevator.
+func _add_floor_wide_trap(parent: Node3D, f_num: int, f_scale: float) -> void:
+	var trap = Node3D.new()
+	if f_num == 9:
+		trap.name = "SweepCameraTrap"
+		trap.set_script(load("res://scripts/levels/blocks/sweep_camera_trap.gd"))
+		trap.corridor_x_min = CORRIDOR_WEST_EDGE_X * f_scale
+		trap.corridor_x_max = CORRIDOR_EAST_EDGE_X * f_scale
+	else:
+		trap.name = "EdgeWallTrap"
+		trap.set_script(load("res://scripts/levels/blocks/edge_wall_trap.gd"))
+		trap.width = BUILDING_WIDTH_X * f_scale
+		trap.height = corridor_height * f_scale
+	trap.floor_num = f_num
+	trap.return_position = parent.global_position + Vector3(ELEVATOR_CENTER_X * f_scale, 0.1, (ELEVATOR_CENTER_Z + 2.0) * f_scale)
+	parent.add_child(trap)
+
 func _generate_roof(y_offset: float, f_scale: float) -> void:
 	var parent = Node3D.new()
 	parent.name = "GeneratedRoof"
@@ -1779,14 +1800,17 @@ func _on_all_tapes_collected() -> void:
 		GameStateManager.unlock_floor(9)
 		DialogSystem.trigger_alex_line("floor2_done")
 
-	# 8. Floors 9 and 10 have no nightmare of their own yet. Floor 9's tapes unlock floor 10;
-	#    floor 10 is the top of the route (4-3-5-6-7-8-2-9-10) and its tapes open the roof,
+	# 8. Floor 9's tapes stop its sweeping units (sweep_camera_trap.gd) and unlock floor 10;
+	#    floor 10's stop its advancing edge (edge_wall_trap.gd).
+	#    Floor 10 is the top of the route (4-3-5-6-7-8-2-9-10) and its tapes also open the roof,
 	#    where the lift machine room holds the code that sends the elevator to floor 1
 	#    (roof_code_plate.gd).
-	if GameStateManager.current_floor == 9 and not GameStateManager.is_floor_unlocked(10):
+	if GameStateManager.current_floor == 9 and not GameStateManager.floor9_cameras_off:
+		GameStateManager.floor9_cameras_off = true
 		GameStateManager.unlock_floor(10)
 		DialogSystem.trigger_alex_line("floor9_done")
-	if GameStateManager.current_floor == 10 and not GameStateManager.is_floor_unlocked(ROOF_FLOOR_INDEX):
+	if GameStateManager.current_floor == 10 and not GameStateManager.floor10_edge_stopped:
+		GameStateManager.floor10_edge_stopped = true
 		# The roof is "floor 11" to the stair gates (_build_roof_structures()) - this is what
 		# lets the player through the doors at the top of both stairwells.
 		GameStateManager.unlock_floor(ROOF_FLOOR_INDEX)

@@ -135,6 +135,12 @@ var floor8_named: bool = false
 # floor 6's sleepers together. Set true the moment floor 2's 3 tapes are collected.
 var floor2_done: bool = false
 
+# Floor 9 (sweep_camera_trap.gd - bars of light sweeping the corridor) and floor 10
+# (edge_wall_trap.gd - a wall creeping up the floor from its south end). Each is set true the
+# moment that floor's 3 tapes are collected; floor 9's also unlocks floor 10, floor 10's the roof.
+var floor9_cameras_off: bool = false
+var floor10_edge_stopped: bool = false
+
 func change_state(new_state: GameState) -> void:
     current_state = new_state
     state_changed.emit(new_state)

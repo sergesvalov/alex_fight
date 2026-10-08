@@ -354,15 +354,56 @@ func _ready() -> void:
 	_check(sleepers2[1].current_state != sleepers2[1].State.INVESTIGATE, "...and its sleepers no longer wake")
 	_check(GameStateManager.is_floor_unlocked(9) and not GameStateManager.is_floor_unlocked(10), "floor 2's three tapes unlock floor 9")
 
-	# --- 9 -> 10: the top of the route ---
+	# --- Floor 9: the sweeping units ---
 	GameStateManager.current_floor = 9
-	for id in range(3):
-		_collect(9, id)
-	_check(GameStateManager.is_floor_unlocked(10), "floor 9's three tapes unlock floor 10")
+	var floor9: Node3D = generator.get_floor_node(9)
+	var sweep = floor9.get_node_or_null("SweepCameraTrap")
+	_check(sweep != null and generator.get_floor_node(8).get_node_or_null("SweepCameraTrap") == null, "floor 9, and only floor 9, has the sweeping units")
+	_check(sweep.active_count() == 2, "two units run at first")
+	var bar_at: float = sweep.bar_z(0, sweep._time)
+	listener.global_position = floor9.global_position + Vector3(1.0, 0.1, bar_at)
+	sweep._process(0.0)
+	_check(listener.global_position.distance_to(sweep.return_position) < 0.01, "standing in a bar of light puts the player back by the elevator")
+	sweep._grace = 0.0
+	listener.global_position = floor9.global_position + Vector3(-8.0, 0.1, sweep.bar_z(0, sweep._time))
+	var in_room: Vector3 = listener.global_position
+	sweep._process(0.0)
+	_check(listener.global_position == in_room, "the same spot along the floor but inside a room is safe - the bars only cover the corridor")
+	_collect(9, 0)
+	_check(sweep.active_count() == 3, "each tape found switches on one more unit")
+	_collect(9, 1)
+	_collect(9, 2)
+	_check(GameStateManager.floor9_cameras_off and GameStateManager.is_floor_unlocked(10), "floor 9's three tapes stop the units and unlock floor 10")
+	listener.global_position = floor9.global_position + Vector3(1.0, 0.1, sweep.bar_z(0, sweep._time))
+	var after_off: Vector3 = listener.global_position
+	sweep._process(0.0)
+	_check(listener.global_position == after_off, "after that the corridor is safe")
 	_check(_routes() == [4, 2, 3, 4, 5, 6, 7, 8, 9, 10], "the elevator now reaches every furnished floor: " + str(_routes()))
+
+	# --- Floor 10: the edge ---
 	GameStateManager.current_floor = 10
-	for id in range(3):
-		_collect(10, id)
+	var floor10: Node3D = generator.get_floor_node(10)
+	var edge = floor10.get_node_or_null("EdgeWallTrap")
+	_check(edge != null and floor9.get_node_or_null("EdgeWallTrap") == null, "floor 10, and only floor 10, has the edge")
+	listener.global_position = floor10.global_position + Vector3(1.0, 0.1, -20.0)
+	edge._process(0.0)
+	var start_z: float = edge.edge_z
+	edge._process(10.0)
+	_check(edge.edge_z < start_z and is_equal_approx(start_z - edge.edge_z, 10.0 * edge.speed_for(0)), "the edge creeps north at a steady pace")
+	_check(edge.speed_for(0) < edge.speed_for(1) and edge.speed_for(1) < edge.speed_for(2), "each tape found makes it faster")
+	edge._process(1000.0)
+	_check(is_equal_approx(edge.edge_z, edge.NORTH_LIMIT_Z) and edge.NORTH_LIMIT_Z > HotelLevelGenerator.ELEVATOR_CENTER_Z + 3.0, "it stops short of the elevator")
+	_collect(10, 0)
+	edge._process(0.0)
+	_check(is_equal_approx(edge.edge_z, edge.SOUTH_Z), "a tape found throws it back to the south end")
+	listener.global_position = floor10.global_position + Vector3(1.0, 0.1, edge.edge_z - 0.1)
+	edge._process(0.0)
+	_check(listener.global_position.distance_to(edge.return_position) < 0.01 and is_equal_approx(edge.edge_z, edge.SOUTH_Z),
+		"touching the edge puts the player back by the elevator and resets it")
+	_collect(10, 1)
+	_collect(10, 2)
+	edge._process(1.0)
+	_check(GameStateManager.floor10_edge_stopped and not edge._wall.visible, "floor 10's three tapes stop the edge for good")
 	_check(not GameStateManager.is_floor_unlocked(1), "floor 10's tapes do not open floor 1 - that takes the code on the roof")
 
 	# --- The roof: stair exits, the lift machine room, the code that opens floor 1 ---
