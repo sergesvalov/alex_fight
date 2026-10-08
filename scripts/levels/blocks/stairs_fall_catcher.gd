@@ -79,7 +79,7 @@ func _rescue(body: Node) -> void:
 	# plus that same Y offset for whatever floor the player is ACTUALLY on lands them in the
 	# equivalent room on THEIR OWN floor, not floor 4's.
 	var f_scale: float = GlobalConfig.get_floor_scale() if GlobalConfig else 1.0
-	var y_step: float = HotelLevelGenerator.BASE_FLOOR_TO_FLOOR_HEIGHT * f_scale
+	var y_step: float = HotelConstants.BASE_FLOOR_TO_FLOOR_HEIGHT * f_scale
 	var current_floor: int = GameStateManager.current_floor
 	var rescue_pos: Vector3 = GameStateManager.floor4_spawn_position
 	rescue_pos.y += (current_floor - 4) * y_step

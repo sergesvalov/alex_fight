@@ -16,7 +16,7 @@ func _on_enemy_spawned() -> void:
         return
     var generator = get_node_or_null("../NavigationRegion3D/HotelGeometry")
     var level_floor: int = generator.floor_number if generator else 4
-    var y_step: float = HotelLevelGenerator.BASE_FLOOR_TO_FLOOR_HEIGHT * GlobalConfig.get_floor_scale()
+    var y_step: float = HotelConstants.BASE_FLOOR_TO_FLOOR_HEIGHT * GlobalConfig.get_floor_scale()
 
     var enemy = enemy_scene.instantiate()
     add_child(enemy)

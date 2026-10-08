@@ -26,4 +26,6 @@ func hear_noise(noise_position: Vector3) -> void:
 		
 	print("[EnemyHearing] ", ai.name, " heard a noise at ", noise_position, " - going to look")
 	ai._noise_position = noise_position
+	ai._investigate_look_left = ai.INVESTIGATE_LOOK_TIME
+	ai._investigate_time_left = ai.INVESTIGATE_MAX_TIME
 	sm.change_state("INVESTIGATE")

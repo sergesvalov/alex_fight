@@ -130,7 +130,7 @@ func _ready() -> void:
 	_check(GameStateManager.current_floor == 5, "rebuilding the level does not put a continued game back on floor 4")
 	await get_tree().process_frame # _move_player() is deferred
 	var floor5_y: float = continued.get_floor_node(5).global_position.y
-	_check(absf(player.global_position.y - floor5_y) < 0.5 and absf(player.global_position.x - HotelLevelGenerator.ELEVATOR_CENTER_X) < 0.01,
+	_check(absf(player.global_position.y - floor5_y) < 0.5 and absf(player.global_position.x - HotelConstants.ELEVATOR_CENTER_X) < 0.01,
 		"the player continues by floor 5's elevator: " + str(player.global_position))
 
 	# --- The end, and a broken file ---

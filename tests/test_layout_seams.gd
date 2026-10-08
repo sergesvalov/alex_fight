@@ -23,11 +23,11 @@ func _ready() -> void:
 
 	_check_room_vs_building_wall(
 		"res://scenes/levels/hotel_siberia/blocks/double_room.tscn",
-		HotelLevelGenerator.DOUBLE_ROOM_BASE_X, false, "DoubleRoom", f_scale
+		HotelConstants.DOUBLE_ROOM_BASE_X, false, "DoubleRoom", f_scale
 	)
 	_check_room_vs_building_wall(
 		"res://scenes/levels/hotel_siberia/blocks/single_room.tscn",
-		HotelLevelGenerator.SINGLE_ROOM_BASE_X, true, "SingleRoom", f_scale
+		HotelConstants.SINGLE_ROOM_BASE_X, true, "SingleRoom", f_scale
 	)
 
 	_check_generated_floor(f_scale)
@@ -79,7 +79,7 @@ func _check_room_vs_building_wall(scene_path: String, base_x: float, is_east_sid
 
 	var global_min = (base_x + local_range.x) * f_scale
 	var global_max = (base_x + local_range.y) * f_scale
-	var half_x = (HotelLevelGenerator.BUILDING_WIDTH_X / 2.0) * f_scale
+	var half_x = (HotelConstants.BUILDING_WIDTH_X / 2.0) * f_scale
 
 	if is_east_side:
 		_assert_seam(half_x - global_max, label + " east edge <-> building east wall")
@@ -160,7 +160,7 @@ func _check_south_stairs_floor_slabs(floor_node: Node, f_scale: float) -> void:
 
 	var sw_range = _static_box_x_range(floor_sw)
 	var landing_range = _static_box_x_range(landing)
-	var expected_run = (HotelLevelGenerator.SOUTH_STAIRS_LANDING_INNER_X - HotelLevelGenerator.SOUTH_STAIRS_RAMP_INNER_X) * f_scale
+	var expected_run = (HotelConstants.SOUTH_STAIRS_LANDING_INNER_X - HotelConstants.SOUTH_STAIRS_RAMP_INNER_X) * f_scale
 	var actual_run = landing_range.x - sw_range.y
 	if abs(actual_run - expected_run) > 0.05:
 		print("❌ FAIL: Floor_SW <-> Landing_SouthStairs gap = ", actual_run, "m, expected ", expected_run, "m (ramp run)")
@@ -228,7 +228,7 @@ func _check_south_stairs_ramp_surfaces(floor_node: Node, f_scale: float) -> void
 	var ramp_b_low = _ramp_surface_at_local_x(ramp_b, 1.0)
 	var ramp_b_high = _ramp_surface_at_local_x(ramp_b, -1.0)
 	_assert_surface_match(ramp_b_low.y, landing_surface_y, "RampB bottom <-> Landing surface")
-	var expected_top = HotelLevelGenerator.BASE_FLOOR_TO_FLOOR_HEIGHT * f_scale
+	var expected_top = HotelConstants.BASE_FLOOR_TO_FLOOR_HEIGHT * f_scale
 	_assert_surface_match(ramp_b_high.y, expected_top, "RampB top <-> next floor's surface")
 
 # --- Shared assertion ---

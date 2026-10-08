@@ -79,7 +79,7 @@ func _ready() -> void:
 	spawner.enemy_scene = load("res://entities/enemies/cerberus/cerberus.tscn")
 	spawner.spawn_position = Vector3(1.05, 1.0, -25.0)
 	add_child(spawner)
-	var y_step: float = HotelLevelGenerator.BASE_FLOOR_TO_FLOOR_HEIGHT * GlobalConfig.get_floor_scale()
+	var y_step: float = HotelConstants.BASE_FLOOR_TO_FLOOR_HEIGHT * GlobalConfig.get_floor_scale()
 
 	# --- Floor 4 done -> secret door -> floor 3 ---
 	for id in range(3):
@@ -97,7 +97,7 @@ func _ready() -> void:
 	_check(portal != null and portal.target_floor == 3 and portal.target_position != Vector3.ZERO,
 		"its portal leads to a real spot on floor 3")
 	if secret_door and portal:
-		var half_x: float = HotelLevelGenerator.BUILDING_WIDTH_X / 2.0 * GlobalConfig.get_floor_scale()
+		var half_x: float = HotelConstants.BUILDING_WIDTH_X / 2.0 * GlobalConfig.get_floor_scale()
 		_check(absf(absf(secret_door.position.x) - half_x) < 0.2, "the secret door is in the building's outer wall")
 		_check(absf(portal.position.x) > absf(secret_door.position.x),
 			"the portal starts beyond the wall, not inside the room")
@@ -243,7 +243,7 @@ func _ready() -> void:
 	listener.global_position = robot6.global_position + Vector3(0.6, 0.0, 0.0)
 	robot6._physics_process(0.016)
 	_check(listener.global_position.distance_to(robot6.return_position) < 0.01, "an awake sleeper that reaches the player returns him to the elevator")
-	_check(absf(robot6.return_position.x - HotelLevelGenerator.ELEVATOR_CENTER_X) < 0.01 and absf(robot6.return_position.y - floor6.global_position.y) < 0.5, "that spot is in front of floor 6's own elevator")
+	_check(absf(robot6.return_position.x - HotelConstants.ELEVATOR_CENTER_X) < 0.01 and absf(robot6.return_position.y - floor6.global_position.y) < 0.5, "that spot is in front of floor 6's own elevator")
 	cassettes[1].interact(listener)
 	cassettes[2].interact(listener)
 	var floor6_ids: Array = []
@@ -392,7 +392,7 @@ func _ready() -> void:
 	_check(edge.edge_z < start_z and is_equal_approx(start_z - edge.edge_z, 10.0 * edge.speed_for(0)), "the edge creeps north at a steady pace")
 	_check(edge.speed_for(0) < edge.speed_for(1) and edge.speed_for(1) < edge.speed_for(2), "each tape found makes it faster")
 	edge._process(1000.0)
-	_check(is_equal_approx(edge.edge_z, edge.NORTH_LIMIT_Z) and edge.NORTH_LIMIT_Z > HotelLevelGenerator.ELEVATOR_CENTER_Z + 3.0, "it stops short of the elevator")
+	_check(is_equal_approx(edge.edge_z, edge.NORTH_LIMIT_Z) and edge.NORTH_LIMIT_Z > HotelConstants.ELEVATOR_CENTER_Z + 3.0, "it stops short of the elevator")
 	_collect(10, 0)
 	edge._process(0.0)
 	_check(is_equal_approx(edge.edge_z, edge.SOUTH_Z), "a tape found throws it back to the south end")
@@ -436,7 +436,7 @@ func _ready() -> void:
 	var tank: Node3D = lobby.get_node("Aquarium")
 	var lift2: Node3D = lobby.get_node("LowerLiftPanel")
 	var zone: Node3D = lobby.get_node("TurretKillZone")
-	_check(absf(desk.position.z) < 0.1 and absf(zone.position.z) < 0.1 and zone.position.x < HotelLevelGenerator.CORRIDOR_WEST_EDGE_X and desk.position.x > 0.0,
+	_check(absf(desk.position.z) < 0.1 and absf(zone.position.z) < 0.1 and zone.position.x < HotelConstants.CORRIDOR_WEST_EDGE_X and desk.position.x > 0.0,
 		"the corridor to the entrance runs west, straight across the hall from the reception")
 	_check(tank.position.x > desk.position.x and tank.position.z > 2.6 and tank.position.z < 8.0 and tank.get_node_or_null("Creature") != null,
 		"the aquarium stands against the east wall right next to the reception, with something in it")
@@ -450,7 +450,7 @@ func _ready() -> void:
 	listener.global_position = zone.global_position
 	zone._on_turret_zone_entered(listener)
 	_check(listener.global_position.distance_to(zone.return_position) < 0.01
-		and absf(zone.return_position.x - HotelLevelGenerator.ELEVATOR_CENTER_X) < 0.01,
+		and absf(zone.return_position.x - HotelConstants.ELEVATOR_CENTER_X) < 0.01,
 		"the entrance turrets put the player back by the lobby's elevator")
 
 	# --- The laboratory: two levels under the lobby, three consoles, the way out ---
