@@ -2,7 +2,7 @@
 # Floor 5's nightmare, "the room that won't let you go": walk in through one room's door and
 # you are standing in a different room - the number on the door you leave by is never the one
 # you came in by. One instance per room, sitting just inside that room's doorway (see
-# hotel_level_generator.gd::_add_room_shuffle_trap()).
+# hotel_level_generator.gd::HotelTrapBuilder.add_room_shuffle_trap()).
 #
 # The rule is fixed, so it can be worked out by watching the door plates rather than by trial
 # and error: with the floor's rooms taken in room-number order, entering room i puts you in room

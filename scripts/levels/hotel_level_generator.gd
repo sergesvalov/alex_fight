@@ -277,7 +277,7 @@ func _move_player(f_scale: float) -> void:
 		var p_spawn = Vector3(0, 2.0, 0) * f_scale
 		# Spawn inside the same room as Cassette #1, not the corridor - no room/corridor
 		# coordinates change, this just picks where inside the level the player starts.
-		# Uses the exact same "closest wardrobe to world origin" pick _spawn_cassettes()
+		# Uses the exact same "closest wardrobe to world origin" pick HotelPropSpawner.spawn_cassettes()
 		# uses for Cassette #1, so it's always the room that cassette actually ends up in.
 		var main_floor = find_child("GeneratedFloor_Main", true, false)
 		if main_floor:
@@ -325,150 +325,10 @@ func _move_player(f_scale: float) -> void:
 			player.rotation.y = PI # facing out of the lift lobby, down the corridor
 			print("[generator] continued game: player placed by the elevator of floor ", resume_floor, " at ", player.global_position)
 
-func _generate_maintenance_room(parent: Node, f_scale: float, height: float, thickness: float, wall_mat: Material) -> void:
-	HotelBlockBuilder.generate_maintenance_room(self, parent, f_scale, height, thickness, wall_mat)
 
-func _generate_elevator(parent: Node, f_scale: float) -> void:
-	HotelBlockBuilder.generate_elevator(self, parent, f_scale)
-
-		# Floor buttons are NOT created here. elevator_shaft.tscn already ships a real,
-		# wired-up "ButtonFloor4" template under ElevatorPanel, and elevator_controller.gd's
-		# _setup_buttons() duplicates it for floors 1-10 and connects button_pressed itself.
-		# This function used to *also* spawn a second, disconnected AnimatableBody3D button
-		# almost exactly on top of the real one (off by 1cm) - it never fired
-		# _on_button_pressed (nothing connected to it) and was the reason a "phantom" button
-		# hitbox could be interacted with near the panel without doing anything.
-
-func _generate_north_stairs(parent: Node, f_scale: float, f_num: int) -> void:
-	HotelBlockBuilder.generate_north_stairs(self, parent, f_scale, f_num)
-
-func _generate_south_stairs_wall(parent: Node, f_scale: float, height: float, thickness: float, wall_mat: Material) -> void:
-	var z_pos = HotelConstants.SOUTH_STAIRS_ZONE_Z_START * f_scale + (thickness / 2.0)
-	var door_w = 1.2 * f_scale
-	var door_h = 2.2 * f_scale
-
-	var x_left = HotelConstants.CORRIDOR_WEST_EDGE_X * f_scale
-	var x_right = HotelConstants.CORRIDOR_EAST_EDGE_X * f_scale
-	var x_center = HotelConstants.SOUTH_STAIRS_DOOR_CENTER_X * f_scale
-	
-	var left_w = (x_center - door_w / 2.0) - x_left
-	var left_cx = x_left + (left_w / 2.0)
-	
-	var right_w = x_right - (x_center + door_w / 2.0)
-	var right_cx = x_right - (right_w / 2.0)
-	
-	_create_static_box(parent, "SouthStairsWall_Left", Vector3(left_cx, height / 2.0, z_pos), Vector3(left_w, height, thickness), wall_mat)
-	_create_static_box(parent, "SouthStairsWall_Right", Vector3(right_cx, height / 2.0, z_pos), Vector3(right_w, height, thickness), wall_mat)
-	
-	if height > door_h:
-		var lintel_h = height - door_h
-		var lintel_y = door_h + (lintel_h / 2.0)
-		_create_static_box(parent, "SouthStairsWall_Lintel", Vector3(x_center, lintel_y, z_pos), Vector3(door_w, lintel_h, thickness), wall_mat)
-
-	# Corridor is north of this wall (smaller Z), so the door's basis.z (its "outward"
-	# reference direction per door.gd) needs to point -Z: rotation.y = PI.
-	# door.tscn's native panel is 1.0 wide x 2.2 tall x 0.1 thick - scale.x stretches it
-	# to this doorway's width (door_w), scale.y/z match the same f_scale as everything
-	# else this function builds (door_h is already 2.2*f_scale).
-	var door_scene = load("res://entities/props/door.tscn")
-	if door_scene:
-		var door_inst = door_scene.instantiate()
-		door_inst.name = "SouthStairsDoor"
-		# See _generate_maintenance_room() for why this must happen before add_child().
-		door_inst.position = Vector3(x_center, 0, z_pos)
-		door_inst.rotation.y = PI
-		door_inst.scale = Vector3(door_w, f_scale, f_scale)
-		parent.add_child(door_inst)
-
-func _generate_south_stairs_ramp(parent: Node, f_scale: float, height: float, floor_thick: float, floor_mat: Material) -> void:
-	HotelBlockBuilder.generate_south_stairs_ramp(self, parent, f_scale, height, floor_thick, floor_mat)
-
-# Locks South Stairs floor-hopping at floor f_num's own doorway - see stairs_gate.gd for
-# the actual check/teleport. Sized to span the full doorway so the player can't sidestep it.
-func _add_south_stairs_gate(parent: Node, f_num: int, f_scale: float) -> void:
-	var z_pos = HotelConstants.SOUTH_STAIRS_ZONE_Z_START * f_scale
-	var x_center = HotelConstants.SOUTH_STAIRS_DOOR_CENTER_X * f_scale
-	var door_w = 1.2 * f_scale
-	var door_h = 2.2 * f_scale
-
-	var gate = Area3D.new()
-	gate.name = "SouthStairsGate"
-	gate.collision_layer = 0
-	gate.collision_mask = 1 # Player layer
-	gate.set_script(load("res://scripts/levels/blocks/stairs_gate.gd"))
-	gate.floor_num = f_num
-	gate.y_step = HotelConstants.BASE_FLOOR_TO_FLOOR_HEIGHT * f_scale
-	gate.position = Vector3(x_center, door_h / 2.0, z_pos)
-
-	var coll = CollisionShape3D.new()
-	var shape = BoxShape3D.new()
-	shape.size = Vector3(door_w, door_h, 1.0 * f_scale)
-	coll.shape = shape
-	gate.add_child(coll)
-
-	parent.add_child(gate)
-
-# Floor 3's own "endless corridor" nightmare: until its 3 tapes are collected, this splits the
-# main corridor in half at its own center (z_main_pos in _build_floor_geometry - reused here as
-# a plain constant since that local var isn't in scope, but it's the same for every floor - just
-# the corridor's own layout, not floor-4-specific) and bounces the player back whenever they cross
-# it, keeping the elevator and North Stairs (the north end) permanently just out of reach - the
-# corridor never actually gets you there, no matter how far you walk. Percentages per the original
-# request: South Stairs' own Z (HotelConstants.SOUTH_STAIRS_ZONE_Z_START) is 0%, this barrier's own position is
-# 100%, and crossing it always sends the player back to the 50% mark - halfway back toward the
-# South Stairs end, comfortably clear of the barrier so it doesn't immediately re-trigger.
-# Deliberately floor 3, not floor 4 (moved 2026-08-23, corrected per user report) - floor 4 is the
-# starting floor and is meant to be fully open with no corridor gating; this nightmare belongs to
-# the floor reached through the secret exit door (_create_exit_portal(), always floor 3 today),
-# pairing with that door's own "leads to an unknown room, wherever the dice landed" nightmare -
-# the South Stairs door on floor 3 stays reachable from the south side regardless of where that
-# door ended up.
-func _add_floor3_corridor_barrier(parent: Node, f_scale: float) -> void:
-	HotelTrapBuilder.add_floor3_corridor_barrier(self, parent, f_scale)
-
-# One CRT computer terminal per floor (every floor except 1 - empty_box_mode returns out of
-# _build_floor_geometry before this ever runs - and the roof, generated by a wholly separate
-# function). Reads out one of the log entries from LORE.md's "Текстовые логи в CRT-терминалах"
-# on interact (crt_terminal.gd) - a real, if simple, payoff for content that existed in the lore
-# doc but was never actually reachable in-game.
-#
-# Anchored to DoubleRoom orig_num 406 (z=10.0, never mirrored - see HotelConstants.DOUBLE_ROOM_LAYOUT), which
-# exists identically on every floor, mounted flush against the OUTSIDE (corridor-facing) surface
-# of that room's own RoomEastWall (local X=4.8, size.x=0.2 -> outer face at local X=4.9) so it
-# stands in the corridor without touching the wall's own geometry at all - no CSG, no risk of the
-# "whole combined shape vanishes" fragility that's bitten this project before. Placed at local
-# Z=2.0 (room spans Z 0..10), well clear of that room's own RoomDoorHole at Z=8.5.
-func _add_floor_terminal(parent: Node, f_scale: float, at: Vector3 = Vector3.INF, rot_y: float = 0.0) -> void:
-	HotelPropSpawner.add_floor_terminal(parent, f_scale, at, rot_y)
-
-func _generate_double_room(parent: Node, f_scale: float, f_num: int, orig_num: int) -> void:
-	HotelRoomBuilder.generate_double_room(self, parent, f_scale, f_num, orig_num)
-
-func _generate_single_room(parent: Node, f_scale: float, f_num: int, orig_num: int) -> void:
-	HotelRoomBuilder.generate_single_room(self, parent, f_scale, f_num, orig_num)
-
-
-# Floor 8's nightmare - see name_door_trap.gd for the rule. Every room door gets a surname
-# instead of its number and a trigger behind it; one random room is the hero's own, and
-# _spawn_cassettes_other_floor() puts two of the floor's tapes in it (the third is always in
-# the maintenance room, which has neither a plate nor a trigger). The surnames themselves are
-# in ui_strings.json (floor8_own_name / floor8_other_names).
-func _add_name_doors(parent: Node3D, f_num: int, f_scale: float) -> void:
-	HotelTrapBuilder.add_name_doors(self, parent, f_num, f_scale)
-
-# Floor 5's nightmare - see room_shuffle_trap.gd for the rule. Gives every room on the floor a
-# trap just inside its doorway, and seals one random room's door from the corridor side so that
-# room can only be reached through the trap; _spawn_cassettes_other_floor() puts a tape in it.
-# Coordinates are each room's own local ones (double_room.tscn / single_room.tscn), mapped
-# through the room's transform so mirrored rooms come out right; the triggers themselves hang
-# off the floor node, not the room, to keep physics shapes out from under a mirrored scale.
+# Floor 5's sealed room door (HotelTrapBuilder.add_room_shuffle_trap()); opened again by
+# HotelProgression once that floor's tapes are in.
 var _sealed_room_door: Node = null
-
-func _add_room_shuffle_trap(parent: Node3D, f_num: int) -> void:
-	HotelTrapBuilder.add_room_shuffle_trap(self, parent, f_num)
-
-func _create_static_box(parent: Node, node_name: String, pos: Vector3, size: Vector3, mat: Material, rot: Vector3 = Vector3.ZERO) -> void:
-	HotelSpecialFloorBuilder.create_static_box(parent, node_name, pos, size, mat, rot)
 
 func _find_props(node: Node, prop_name: String, arr: Array) -> void:
 	HotelPropSpawner.find_props(node, prop_name, arr)
@@ -481,17 +341,8 @@ func _find_props(node: Node, prop_name: String, arr: Array) -> void:
 func _closest_to_spawn(props: Array) -> Node:
 	return HotelPropSpawner.closest_to_spawn(props)
 
-# Used for cassette placement on every floor except 4 (see _spawn_cassettes_other_floor()) -
-# those floors have no "closest to spawn" relationship to preserve, so a genuinely random pick
-# keeps their layout from being predictable across floors.
-func _random_from(props: Array) -> Node:
-	return HotelPropSpawner.random_from(props)
-
-func _spawn_cassettes(parent: Node, f_scale: float, f_num: int) -> void:
-	HotelPropSpawner.spawn_cassettes(parent, f_scale, f_num)
-
 # The game's tutorial - see wake_up_room.gd. The room is the one the player starts in, i.e. the
-# one whose wardrobe holds Cassette #1 (same pick as _spawn_cassettes_start_floor() and
+# one whose wardrobe holds Cassette #1 (same pick as HotelPropSpawner.spawn_cassettes_start_floor() and
 # _move_player()), so it has to come after the cassettes. A new game only: a continued one puts
 # the hero by an elevator (_move_player()), and a room locked from the inside with the pistol in
 # it would then be a room he could never get into.
@@ -516,27 +367,6 @@ func _add_wake_up_room(parent: Node3D) -> void:
 	_wake_up_room.room = start_wardrobe.get_parent()
 	parent.add_child(_wake_up_room)
 
-func _spawn_cassettes_start_floor(parent: Node, f_scale: float, scene: PackedScene) -> void:
-	HotelPropSpawner.spawn_cassettes_start_floor(parent, f_scale, scene)
-
-# Every floor except 4 (see _spawn_cassettes()): one cassette on a table in a random room, one in
-# the maintenance room, one in a wardrobe in a random room - none of floor 4's "closest to spawn"
-# logic applies since the player doesn't start on these floors.
-func _spawn_cassettes_other_floor(parent: Node, f_scale: float, scene: PackedScene) -> void:
-	HotelPropSpawner.spawn_cassettes_other_floor(parent, f_scale, scene)
-
-func _spawn_cerberus(parent: Node, f_scale: float) -> void:
-	HotelPropSpawner.spawn_cerberus(parent, f_scale)
-
-# Floor 6's nightmare - see sleeper_cerberus.gd for the rule. Four of them stand along the main
-# corridor, alternating sides so none blocks the way. Corridor only, on purpose: a sleeper shut
-# inside a room could never be lured away from it (closed doors are solid to the navmesh), so
-# taking a tape there would be a guaranteed catch instead of a decision.
-const SLEEPER_POSTS: Array = [Vector2(-0.6, -16.0), Vector2(2.8, -5.0), Vector2(-0.6, 7.0), Vector2(2.8, 19.0)] # X, Z
-
-func _spawn_sleepers(parent: Node3D, f_scale: float, off_flag: StringName) -> void:
-	HotelPropSpawner.spawn_sleepers(parent, f_scale, off_flag)
-
 # Floor 7's nightmare - see blackout_trap.gd for the rule. It gets this floor's own lights (the
 # same list _set_lit_floor() switches) and the glowing ceiling panels that go with them, and the
 # same "back by the elevator" spot floor 6's sleepers use.
@@ -549,150 +379,13 @@ func _add_blackout_trap(parent: Node3D, f_num: int, lights: Array, f_scale: floa
 func _add_floor_wide_trap(parent: Node3D, f_num: int, f_scale: float) -> void:
 	HotelTrapBuilder.add_floor_wide_trap(self, parent, f_num, f_scale)
 
-# The ground-floor lobby (floor 1 only). Plan, north on the left as the owner drew it:
-#
-#     north stairs + lift | ......... main hall ......... | south stairs
-#                         |        [reception] [aquarium] |        <- east wall
-#                         |______      ______ ____________|
-#                                |    |                             <- west wall
-#                                |    |  corridor, straight across from the reception
-#                                |door|  main entrance at its end, under the turrets
-#
-# The hall runs along the same axis as every floor's corridor, between the lift at the north end
-# and the second staircase at the south end; in front of the lift it is as wide as the lift
-# lobby of the floors above. The rest of the floor's box is walled off. Coordinates are the
-# floor's own, unscaled meters, like the layout constants at the top of this file.
-
-func _build_lobby(parent: Node3D, f_scale: float, height: float, wall_mat: Material) -> void:
-	HotelSpecialFloorBuilder.build_lobby(parent, f_scale, height, wall_mat)
-# The laboratory: two levels under the lobby, reached only by the second lift. Both are one hall
-# across the whole footprint of the building.
-#   Level -1 - the open-plan office: rows of desks, the empty crates the Cerberus units came in,
-#              and a terminal with the lab's own documents (which say what the units are for).
-#   Level -2 - the plant: glowing tanks like the lobby's aquarium, instrument racks, and the
-#              installation in the middle with its three consoles. Switching them off in order
-#              ends the game's situation; the way out is then the lobby's main entrance.
-# No tapes down here - by now the hero's memory is whole; what is left is documents.
-# Built as children of floor 1's node, in its coordinates: level -1's floor is LAB_LEVEL_DROP
-# below the lobby's, level -2's twice that.
-const LAB_LEVEL_DROP: float = 4.5
-const LAB_LIFT_X: float = 4.85     # the second lift's doors are in the lobby's east hall wall, at Z=0
-const LAB_ARRIVE_X: float = 4.1    # where it lets the player out, on every level (behind the lobby desk)
-
-# A glowing tank with something in it - the same thing the lobby's aquarium is.
-func _add_lab_tank(parent: Node3D, tank_name: String, center: Vector3, size: Vector3, f_scale: float, parts_script: Script) -> void:
-	HotelSpecialFloorBuilder.add_lab_tank(parent, tank_name, center, size, f_scale, parts_script)
-func _build_lab(parent: Node3D, f_scale: float) -> void:
-	HotelSpecialFloorBuilder.build_lab(parent, f_scale)
-
 func _generate_roof(y_offset: float, f_scale: float) -> void:
 	HotelRoofBuilder.generate_roof(self, y_offset, f_scale)
-# What stands on the roof: a bulkhead over each stairwell (so the stairs come out through a
-# door instead of an open hole in the slab) and the elevator machine room over the lift shaft,
-# with the code plate inside. Coordinates are the roof node's own - Y=0 is the roof surface.
-const ROOF_ROOM_HEIGHT: float = 2.6
-const ROOF_FLOOR_INDEX: int = 11 # what stairs_gate.gd / GameStateManager call the roof
-
-func _build_roof_structures(parent: Node3D, f_scale: float, mat: Material) -> void:
-	HotelRoofBuilder.build_roof_structures(self, parent, f_scale, mat)
-# Fires every time ANY floor's 3 tapes are all collected (see GameStateManager.collect_tape()) -
-# two INDEPENDENT rewards, each with its own one-time guard, since they no longer happen on the
-# same floor (corrected 2026-08-23 per user report - floor 4, the starting floor, must stay fully
-# open with no corridor gating at all):
-#   1. The first time EVER any floor's tapes complete (in practice always floor 4, the only floor
-#      unlocked at game start) - punches a doorway through a random room's OUTER wall on that
-#      floor and connects it to a random room on floor 3 (_create_exit_portal()), an unmarked
-#      door to an unknown room, permanently widening the stairs-access range to include floor 3
-#      once actually walked through (secret_portal.gd calls GameStateManager.unlock_floor()).
-#      Gated by secret_portal_active so it only ever happens once.
-#   2. The first time floor 3's OWN tapes complete - floor 3's corridor-splitting barrier
-#      (_add_floor3_corridor_barrier(), corridor_barrier.gd) switches off outright, and floor 5
-#      unlocks immediately - no need to walk anywhere first, collecting the tapes is the whole
-#      trigger. Gated separately by floor3_corridor_unlocked, since by the time floor 3 is even
-#      reachable, secret_portal_active from event 1 is already true and would otherwise skip this.
 func _on_all_tapes_collected() -> void:
-	if not GameStateManager.secret_portal_active:
-		GameStateManager.secret_portal_active = true
-
-		var is_double = randi() % 2 == 0
-		var layout = HotelConstants.DOUBLE_ROOM_LAYOUT if is_double else HotelConstants.SINGLE_ROOM_LAYOUT
-		var keys = layout.keys()
-
-		GameStateManager.secret_portal_floor = GameStateManager.current_floor
-		GameStateManager.secret_portal_is_double = is_double
-		GameStateManager.secret_portal_room_num = keys[randi() % keys.size()]
-		GameStateManager.secret_portal_target = _pick_random_floor3_target()
-		GameStateManager.secret_portal_target_floor = 3
-
-		_create_exit_portal()
-		# What just happened, in Alex's own words - the tape's text no longer has to say it.
-		DialogSystem.trigger_alex_line("floor4_done")
-
-	if GameStateManager.current_floor == 3 and not GameStateManager.floor3_corridor_unlocked:
-		GameStateManager.floor3_corridor_unlocked = true
-		GameStateManager.unlock_floor(5)
-		DialogSystem.trigger_alex_line("floor3_done")
-
-	# 3. Floor 5's own tapes - its room-shuffling trap (room_shuffle_trap.gd) switches off, the
-	#    sealed room's door opens normally again, and floor 6 unlocks.
-	if GameStateManager.current_floor == 5 and not GameStateManager.floor5_rooms_unlocked:
-		GameStateManager.floor5_rooms_unlocked = true
-		if is_instance_valid(_sealed_room_door):
-			_sealed_room_door.locked_from_corridor = false
-		GameStateManager.unlock_floor(6)
-		DialogSystem.trigger_alex_line("floor5_done")
-
-	# 4. Floor 6's own tapes - its sleepers (sleeper_cerberus.gd) switch off for good, and
-	#    floor 7 unlocks.
-	if GameStateManager.current_floor == 6 and not GameStateManager.floor6_sleepers_off:
-		GameStateManager.floor6_sleepers_off = true
-		GameStateManager.unlock_floor(7)
-		DialogSystem.trigger_alex_line("floor6_done")
-
-	# 5. Floor 7's own tapes - its blackouts (blackout_trap.gd) stop for good, floor 8 unlocks.
-	if GameStateManager.current_floor == 7 and not GameStateManager.floor7_lights_steady:
-		GameStateManager.floor7_lights_steady = true
-		GameStateManager.unlock_floor(8)
-		DialogSystem.trigger_alex_line("floor7_done")
-
-	# 6. Floor 8's own tapes - its name doors (name_door_trap.gd) let anyone through, and the
-	#    elevator can go DOWN to floor 2. Floors are unlocked as one contiguous range, so this
-	#    is the one place the range grows downward - floor 2 sits right under the open floor 3.
-	if GameStateManager.current_floor == 8 and not GameStateManager.floor8_named:
-		GameStateManager.floor8_named = true
-		GameStateManager.unlock_floor(2)
-		DialogSystem.trigger_alex_line("floor8_done")
-
-	# 7. Floor 2's own tapes - "that night" stops repeating: its sleepers and blackouts (the
-	#    floor 6 and floor 7 traps together) switch off, and floor 9 unlocks.
-	if GameStateManager.current_floor == 2 and not GameStateManager.floor2_done:
-		GameStateManager.floor2_done = true
-		GameStateManager.unlock_floor(9)
-		DialogSystem.trigger_alex_line("floor2_done")
-
-	# 8. Floor 9's tapes stop its sweeping units (sweep_camera_trap.gd) and unlock floor 10;
-	#    floor 10's stop its advancing edge (edge_wall_trap.gd).
-	#    Floor 10 is the top of the route (4-3-5-6-7-8-2-9-10) and its tapes also open the roof,
-	#    where the lift machine room holds the code that sends the elevator to floor 1
-	#    (roof_code_plate.gd).
-	if GameStateManager.current_floor == 9 and not GameStateManager.floor9_cameras_off:
-		GameStateManager.floor9_cameras_off = true
-		GameStateManager.unlock_floor(10)
-		DialogSystem.trigger_alex_line("floor9_done")
-	if GameStateManager.current_floor == 10 and not GameStateManager.floor10_edge_stopped:
-		GameStateManager.floor10_edge_stopped = true
-		# The roof is "floor 11" to the stair gates (_build_roof_structures()) - this is what
-		# lets the player through the doors at the top of both stairwells.
-		GameStateManager.unlock_floor(ROOF_FLOOR_INDEX)
-		DialogSystem.trigger_alex_line("floor10_done")
+	HotelProgression.on_all_tapes_collected(self)
 
 # Rebuilds the same doorway from GameStateManager's persisted secret_portal_* fields - called
 # both right after _on_all_tapes_collected() rolls them, and from _ready() if this level scene
 # reloads after the door already exists (so it doesn't move to a new random spot on reload).
 func _create_exit_portal() -> void:
 	HotelPortalSpawner.create_exit_portal(self)
-# Picks a random room on floor 3 specifically (per the request this implements) and a safe
-# standing spot just inside it - same relative offsets already proven by the room-to-room secret
-# portal this replaces.
-func _pick_random_floor3_target() -> Vector3:
-	return HotelPortalSpawner.pick_random_floor3_target(self)

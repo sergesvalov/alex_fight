@@ -29,6 +29,11 @@ static func make_doorway_trigger(room: Node3D, is_double: bool, trigger_script: 
 	trigger.add_child(threshold)
 	return trigger
 
+# Floor 8's nightmare - see name_door_trap.gd for the rule. Every room door gets a surname
+# instead of its number and a trigger behind it; one random room is the hero's own, and
+# HotelPropSpawner.spawn_cassettes_other_floor() puts two of the floor's tapes in it (the third is always in
+# the maintenance room, which has neither a plate nor a trigger). The surnames themselves are
+# in ui_strings.json (floor8_own_name / floor8_other_names).
 static func add_name_doors(generator: HotelLevelGenerator, parent: Node3D, f_num: int, f_scale: float) -> void:
 	var trap_script = load("res://scripts/levels/blocks/name_door_trap.gd")
 	var nums: Array = HotelConstants.DOUBLE_ROOM_LAYOUT.keys() + HotelConstants.SINGLE_ROOM_LAYOUT.keys()
@@ -54,6 +59,12 @@ static func add_name_doors(generator: HotelLevelGenerator, parent: Node3D, f_num
 		if is_own:
 			parent.set_meta("own_room", room)
 
+# Floor 5's nightmare - see room_shuffle_trap.gd for the rule. Gives every room on the floor a
+# trap just inside its doorway, and seals one random room's door from the corridor side so that
+# room can only be reached through the trap; HotelPropSpawner.spawn_cassettes_other_floor() puts a tape in it.
+# Coordinates are each room's own local ones (double_room.tscn / single_room.tscn), mapped
+# through the room's transform so mirrored rooms come out right; the triggers themselves hang
+# off the floor node, not the room, to keep physics shapes out from under a mirrored scale.
 static func add_room_shuffle_trap(generator: HotelLevelGenerator, parent: Node3D, f_num: int) -> void:
 	var trap_script = load("res://scripts/levels/blocks/room_shuffle_trap.gd")
 	var traps: Array = []
@@ -110,6 +121,21 @@ static func add_floor_wide_trap(generator: HotelLevelGenerator, parent: Node3D, 
 	trap.return_position = parent.global_position + Vector3(HotelConstants.ELEVATOR_CENTER_X * f_scale, 0.1, (HotelConstants.ELEVATOR_CENTER_Z + 2.0) * f_scale)
 	parent.add_child(trap)
 
+# Floor 3's own "endless corridor" nightmare: until its 3 tapes are collected, this splits the
+# main corridor in half at its own center (z_main_pos in _build_floor_geometry - reused here as
+# a plain constant since that local var isn't in scope, but it's the same for every floor - just
+# the corridor's own layout, not floor-4-specific) and bounces the player back whenever they cross
+# it, keeping the elevator and North Stairs (the north end) permanently just out of reach - the
+# corridor never actually gets you there, no matter how far you walk. South Stairs' own Z
+# (HotelConstants.SOUTH_STAIRS_ZONE_Z_START) is 0%, this barrier's own position is
+# 100%, and crossing it always sends the player back to the 50% mark - halfway back toward the
+# South Stairs end, comfortably clear of the barrier so it doesn't immediately re-trigger.
+# Floor 3, not floor 4: floor 4 is the starting floor and is meant to be fully open with no
+# corridor gating; this nightmare belongs to
+# the floor reached through the secret exit door (_create_exit_portal(), always floor 3 today),
+# pairing with that door's own "leads to an unknown room, wherever the dice landed" nightmare -
+# the South Stairs door on floor 3 stays reachable from the south side regardless of where that
+# door ended up.
 static func add_floor3_corridor_barrier(generator: HotelLevelGenerator, parent: Node, f_scale: float) -> void:
 	var barrier = StaticBody3D.new()
 	barrier.name = "CorridorBarrier"

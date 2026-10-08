@@ -169,11 +169,11 @@ static func spawn_cassettes_start_floor(parent: Node, f_scale: float, scene: Pac
 			print("[generator] Cassette_", i, " global_position=", inst.global_position)
 
 
-# Every floor except 4 (see _spawn_cassettes()): one cassette on a table in a random room, one in
+# Every floor except 4 (see HotelPropSpawner.spawn_cassettes()): one cassette on a table in a random room, one in
 # the maintenance room, one in a wardrobe in a random room - none of floor 4's "closest to spawn"
 # logic applies since the player doesn't start on these floors.
 static func spawn_cassettes_other_floor(parent: Node, f_scale: float, scene: PackedScene) -> void:
-	# Floor 5 has one room sealed off from the corridor (_add_room_shuffle_trap()) - the wardrobe
+	# Floor 5 has one room sealed off from the corridor (HotelTrapBuilder.add_room_shuffle_trap()) - the wardrobe
 	# tape goes there, and the table tape anywhere else.
 	var sealed_room = parent.get_meta("sealed_room") if parent.has_meta("sealed_room") else null
 
@@ -195,7 +195,7 @@ static func spawn_cassettes_other_floor(parent: Node, f_scale: float, scene: Pac
 	if sealed_room != null:
 		chosen_wardrobe = sealed_room.get_node_or_null("Wardrobe")
 
-	# Floor 8 lets the hero into one room only, his own (_add_name_doors()) - both room tapes
+	# Floor 8 lets the hero into one room only, his own (HotelTrapBuilder.add_name_doors()) - both room tapes
 	# go there, on its table and in its wardrobe.
 	var own_room = parent.get_meta("own_room") if parent.has_meta("own_room") else null
 	if own_room != null:
@@ -205,7 +205,7 @@ static func spawn_cassettes_other_floor(parent: Node, f_scale: float, scene: Pac
 		chosen_wardrobe = own_room.get_node_or_null("Wardrobe")
 
 	# find_props() only matches nodes named "Wardrobe" - the maintenance room's own two
-	# ("MaintWardrobe1"/"MaintWardrobe2", see _generate_maintenance_room()) don't match that
+	# ("MaintWardrobe1"/"MaintWardrobe2", see HotelBlockBuilder.generate_maintenance_room()) don't match that
 	# prefix, so they're never candidates for chosen_wardrobe above; used here instead as the
 	# actual "in the maintenance room" spot.
 	var maint_wardrobe = parent.get_node_or_null("MaintWardrobe1")
@@ -243,17 +243,23 @@ static func spawn_cassettes_other_floor(parent: Node, f_scale: float, scene: Pac
 		parent.add_child(inst)
 
 
+# Floor 6's nightmare - see sleeper_cerberus.gd for the rule. Four of them stand along the main
+# corridor, alternating sides so none blocks the way. Corridor only, on purpose: a sleeper shut
+# inside a room could never be lured away from it (closed doors are solid to the navmesh), so
+# taking a tape there would be a guaranteed catch instead of a decision.
+const SLEEPER_POSTS: Array = [Vector2(-0.6, -16.0), Vector2(2.8, -5.0), Vector2(-0.6, 7.0), Vector2(2.8, 19.0)] # X, Z
+
 static func spawn_sleepers(parent: Node3D, f_scale: float, off_flag: StringName) -> void:
 	var scene = load("res://entities/enemies/cerberus/cerberus.tscn")
 	var sleeper_script = load("res://scripts/enemies/sleeper_cerberus.gd")
 	if not scene or not sleeper_script: return
-	for i in range(HotelLevelGenerator.SLEEPER_POSTS.size()):
-		var post: Vector2 = HotelLevelGenerator.SLEEPER_POSTS[i]
+	for i in range(HotelPropSpawner.SLEEPER_POSTS.size()):
+		var post: Vector2 = HotelPropSpawner.SLEEPER_POSTS[i]
 		var inst = scene.instantiate()
 		inst.set_script(sleeper_script)
 		inst.name = "Sleeper_" + str(i + 1)
 		inst.off_flag = off_flag
-		# position MUST be set before add_child() - see _generate_maintenance_room() for why.
+		# position MUST be set before add_child() - see HotelBlockBuilder.generate_maintenance_room() for why.
 		inst.position = Vector3(post.x * f_scale, 0, post.y * f_scale)
 		inst.rotation.y = PI / 2.0 if post.x < 1.0 else -PI / 2.0 # backs to the wall, facing across
 		# Where one of them puts a caught player: the open corridor in front of this floor's
@@ -271,7 +277,7 @@ static func spawn_cassettes(parent: Node, f_scale: float, f_num: int) -> void:
 	# room the player spawns in (see _move_player()), which relies on "closest wardrobe/table to
 	# world origin" specifically. Every other floor has no such spawn-point relationship, so it
 	# gets a simpler, fully-random layout instead (table/maintenance-room/wardrobe - see
-	# _spawn_cassettes_other_floor()).
+	# HotelPropSpawner.spawn_cassettes_other_floor()).
 	if f_num == 4:
 		spawn_cassettes_start_floor(parent, f_scale, scene)
 	else:
@@ -282,7 +288,7 @@ static func spawn_cerberus(parent: Node, f_scale: float) -> void:
 	if not scene: return
 	var inst = scene.instantiate()
 	inst.name = "Cerberus"
-	# position MUST be set before add_child() - see _generate_maintenance_room() for why.
+	# position MUST be set before add_child() - see HotelBlockBuilder.generate_maintenance_room() for why.
 	inst.position = Vector3(1.0 * f_scale, 0, 10.0 * f_scale)
 
 	# cerberus_ai.gd starts in State.IDLE and only ever leaves it for State.PATROL if

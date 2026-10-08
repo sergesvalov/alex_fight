@@ -156,9 +156,9 @@ static func build_floor_geometry(generator: HotelLevelGenerator, f_num: int, y_o
 		# Floor 1 has no rooms - it is the lobby. It still needs its own flight of the south
 		# stairs (the "second staircase" at the far end of the hall), which the furnished
 		# floors get further down.
-		generator._generate_south_stairs_wall(parent, f_scale, height, thickness, wall_mat)
+		HotelBlockBuilder.generate_south_stairs_wall(parent, f_scale, height, thickness, wall_mat)
 		HotelBlockBuilder.generate_south_stairs_ramp(generator, parent, f_scale, height, floor_thick, floor_mat)
-		generator._add_south_stairs_gate(parent, f_num, f_scale)
+		HotelBlockBuilder.add_south_stairs_gate(parent, f_num, f_scale)
 		HotelSpecialFloorBuilder.build_lobby(parent, f_scale, height, wall_mat)
 		HotelSpecialFloorBuilder.build_lab(parent, f_scale)
 		return parent
@@ -167,9 +167,9 @@ static func build_floor_geometry(generator: HotelLevelGenerator, f_num: int, y_o
 	HotelBlockBuilder.generate_maintenance_room(generator, parent, f_scale, height, thickness, wall_mat)
 	
 	# 3.7.5 South Stairs Wall
-	generator._generate_south_stairs_wall(parent, f_scale, height, thickness, wall_mat)
+	HotelBlockBuilder.generate_south_stairs_wall(parent, f_scale, height, thickness, wall_mat)
 	HotelBlockBuilder.generate_south_stairs_ramp(generator, parent, f_scale, height, floor_thick, floor_mat)
-	generator._add_south_stairs_gate(parent, f_num, f_scale)
+	HotelBlockBuilder.add_south_stairs_gate(parent, f_num, f_scale)
 
 
 	for room_num in HotelConstants.DOUBLE_ROOM_LAYOUT:
@@ -198,9 +198,8 @@ static func build_floor_geometry(generator: HotelLevelGenerator, f_num: int, y_o
 	if f_num == 3:
 		HotelTrapBuilder.add_floor3_corridor_barrier(generator, parent, f_scale)
 
-	# Every floor that reaches this line already excludes floor 1 (empty_box_mode returns out of
-	# this function before the room loop above) and the roof (a separate function entirely,
-	# never calls this one) - exactly "every floor except the roof and floor 1" per the request.
+	# One terminal on every floor that gets here: floor 1 returned above (empty_box_mode) and
+	# the roof is built by HotelRoofBuilder.
 	HotelPropSpawner.add_floor_terminal(parent, f_scale)
 
 	# 5. Floor Map - drawn from this file's own layout constants (see floor_map.gd), so it shows

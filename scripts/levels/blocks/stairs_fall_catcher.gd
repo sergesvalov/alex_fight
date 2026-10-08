@@ -1,5 +1,5 @@
 # scripts/levels/blocks/stairs_fall_catcher.gd
-# Spans North Stairs' own interior footprint on ONE floor (see _generate_north_stairs() in
+# Spans North Stairs' own interior footprint on ONE floor (see HotelBlockBuilder.generate_north_stairs() in
 # hotel_level_generator.gd, which creates one instance per floor) - stacked across all 10 floor
 # instances it forms one continuous column covering the whole stairwell shaft. A player
 # legitimately climbing the ramps/landings is on_floor() almost the entire time, so standing or

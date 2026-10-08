@@ -1,6 +1,6 @@
 # scripts/interactables/crt_terminal.gd
 # One of these stands in the corridor of every floor except 1 (empty_box_mode, no rooms at all)
-# and the roof (not a floor) - see hotel_level_generator.gd's _add_floor_terminal(). Interacting
+# and the roof (not a floor) - see hotel_level_generator.gd's HotelPropSpawner.add_floor_terminal(). Interacting
 # opens a Fallout-style 2D terminal screen (terminal_ui.gd) with a navigable list of Sector-7
 # archive entries - content that was written for LORE.md ("Текстовые логи в CRT-терминалах") but
 # never actually reachable in-game. crt_screen.gdshader (the shader a proper CRT screen-distortion

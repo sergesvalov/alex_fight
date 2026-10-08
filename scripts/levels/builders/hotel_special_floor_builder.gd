@@ -32,6 +32,19 @@ const LOBBY_CORRIDOR_HALF_WIDTH: float = 2.5   # the corridor to the entrance, c
 const LOBBY_NORTH_ZONE_Z: float = -20.0        # south edge of the wider zone in front of the lift
 const LOBBY_NORTH_ZONE_EAST_X: float = 9.65    # its east wall - where the maintenance room starts upstairs
 
+# The ground-floor lobby (floor 1 only). Plan, north on the left as the owner drew it:
+#
+#     north stairs + lift | ......... main hall ......... | south stairs
+#                         |        [reception] [aquarium] |        <- east wall
+#                         |______      ______ ____________|
+#                                |    |                             <- west wall
+#                                |    |  corridor, straight across from the reception
+#                                |door|  main entrance at its end, under the turrets
+#
+# The hall runs along the same axis as every floor's corridor, between the lift at the north end
+# and the second staircase at the south end; in front of the lift it is as wide as the lift
+# lobby of the floors above. The rest of the floor's box is walled off. Coordinates are the
+# floor's own, unscaled meters, like the layout constants at the top of this file.
 static func build_lobby(parent: Node3D, f_scale: float, height: float, wall_mat: Material) -> void:
 	var hh: float = height / f_scale
 	var west: float = HotelConstants.CORRIDOR_WEST_EDGE_X
@@ -199,10 +212,24 @@ static func build_lobby(parent: Node3D, f_scale: float, height: float, wall_mat:
 	parent.add_child(kill_zone)
 
 
+# The laboratory: two levels under the lobby, reached only by the second lift. Both are one hall
+# across the whole footprint of the building.
+#   Level -1 - the open-plan office: rows of desks, the empty crates the Cerberus units came in,
+#              and a terminal with the lab's own documents (which say what the units are for).
+#   Level -2 - the plant: glowing tanks like the lobby's aquarium, instrument racks, and the
+#              installation in the middle with its three consoles. Switching them off in order
+#              ends the game's situation; the way out is then the lobby's main entrance.
+# No tapes down here - by now the hero's memory is whole; what is left is documents.
+# Built as children of floor 1's node, in its coordinates: level -1's floor is LAB_LEVEL_DROP
+# below the lobby's, level -2's twice that.
+const LAB_LEVEL_DROP: float = 4.5
+const LAB_LIFT_X: float = 4.85     # the second lift's doors are in the lobby's east hall wall, at Z=0
+const LAB_ARRIVE_X: float = 4.1    # where it lets the player out, on every level (behind the lobby desk)
+
 static func build_lab(parent: Node3D, f_scale: float) -> void:
 	var half_x: float = HotelConstants.BUILDING_WIDTH_X / 2.0
 	var half_z: float = HotelConstants.BUILDING_LENGTH_Z / 2.0
-	var drop: float = HotelLevelGenerator.LAB_LEVEL_DROP
+	var drop: float = HotelSpecialFloorBuilder.LAB_LEVEL_DROP
 	var y1: float = -drop          # level -1 floor
 	var y2: float = -2.0 * drop    # level -2 floor
 	var parts_script = load("res://scripts/levels/blocks/lobby_parts.gd")
@@ -235,7 +262,7 @@ static func build_lab(parent: Node3D, f_scale: float) -> void:
 	# panel knows all three stops - it opens the same floor-select screen as the main lift.
 	var lift_stops: Dictionary = {}
 	for stop in [[1, 0.0], [-1, y1], [-2, y2]]:
-		lift_stops[stop[0]] = parent.global_position + Vector3(HotelLevelGenerator.LAB_ARRIVE_X, stop[1] + 0.1, 0.0) * f_scale
+		lift_stops[stop[0]] = parent.global_position + Vector3(HotelSpecialFloorBuilder.LAB_ARRIVE_X, stop[1] + 0.1, 0.0) * f_scale
 	var lift_panel = func(panel_name: String, at: Vector3, here: int, needs_code: bool) -> void:
 		var panel = Area3D.new()
 		panel.name = panel_name
@@ -276,12 +303,12 @@ static func build_lab(parent: Node3D, f_scale: float) -> void:
 
 	# --- The second lift: the lobby's panel (down, needs the code) and, on each level below, a
 	# shaft front with doors and its own panels. ---
-	lift_panel.call("LowerLiftPanel", Vector3(HotelLevelGenerator.LAB_LIFT_X - 0.1, 1.3, 1.05), 1, true)
+	lift_panel.call("LowerLiftPanel", Vector3(HotelSpecialFloorBuilder.LAB_LIFT_X - 0.1, 1.3, 1.05), 1, true)
 	for level in [[y1, "1"], [y2, "2"]]:
 		var ly: float = level[0]
-		box.call("Lab%s_LiftShaft" % level[1], steel, HotelLevelGenerator.LAB_LIFT_X, HotelLevelGenerator.LAB_LIFT_X + 1.6, ly, ly + 3.2, -2.2, 2.2)
-		box.call("Lab%s_LiftDoor" % level[1], concrete, HotelLevelGenerator.LAB_LIFT_X - 0.06, HotelLevelGenerator.LAB_LIFT_X, ly, ly + 2.5, -0.66, 0.66)
-		lift_panel.call("Lab%s_LiftPanel" % level[1], Vector3(HotelLevelGenerator.LAB_LIFT_X - 0.1, ly + 1.3, 1.05), -int(level[1]), false)
+		box.call("Lab%s_LiftShaft" % level[1], steel, HotelSpecialFloorBuilder.LAB_LIFT_X, HotelSpecialFloorBuilder.LAB_LIFT_X + 1.6, ly, ly + 3.2, -2.2, 2.2)
+		box.call("Lab%s_LiftDoor" % level[1], concrete, HotelSpecialFloorBuilder.LAB_LIFT_X - 0.06, HotelSpecialFloorBuilder.LAB_LIFT_X, ly, ly + 2.5, -0.66, 0.66)
+		lift_panel.call("Lab%s_LiftPanel" % level[1], Vector3(HotelSpecialFloorBuilder.LAB_LIFT_X - 0.1, ly + 1.3, 1.05), -int(level[1]), false)
 
 	# --- Level -1: the open-plan office. ---
 	for col in range(3):
@@ -302,7 +329,7 @@ static func build_lab(parent: Node3D, f_scale: float) -> void:
 	for i in range(9):
 		box.call("Lab1_Crate_%d" % i, wood, -half_x + 0.3, -half_x + 1.5, y1, y1 + 1.9, -21.0 + i * 2.3, -19.2 + i * 2.3)
 	# The lab's own terminal, by the lift: its documents open once the player has come down.
-	HotelPropSpawner.add_floor_terminal(parent, f_scale, Vector3(HotelLevelGenerator.LAB_LIFT_X - 0.15, y1 + 1.3, -1.9), PI)
+	HotelPropSpawner.add_floor_terminal(parent, f_scale, Vector3(HotelSpecialFloorBuilder.LAB_LIFT_X - 0.15, y1 + 1.3, -1.9), PI)
 
 	# --- Level -2: the plant. ---
 	for i in range(4):

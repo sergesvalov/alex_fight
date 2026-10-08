@@ -8,7 +8,7 @@
 #
 # One instance per room, just inside its doorway, with the same doorway-then-slab arming as
 # room_shuffle_trap.gd so it only fires on the way IN. Created only on floor 8 by
-# hotel_level_generator.gd::_add_name_doors(). Floor 8's own three tapes switch it off for good
+# hotel_level_generator.gd::HotelTrapBuilder.add_name_doors(). Floor 8's own three tapes switch it off for good
 # (GameStateManager.floor8_named) and unlock floor 9.
 extends Area3D
 

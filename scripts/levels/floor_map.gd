@@ -99,8 +99,8 @@ func _draw() -> void:
 		_door_in_z_wall(east, z0 + dir * 3.5, 1.0)
 		_text((east + half_x) / 2.0 + 1.2, z0 + dir * 2.5, str(floor_num * 100 + num % 100), 15)
 
-	# North end: stairs over the corridor, elevator, maintenance room (see _generate_elevator(),
-	# _generate_north_stairs(), _generate_maintenance_room()).
+	# North end: stairs over the corridor, elevator, maintenance room (see HotelBlockBuilder.generate_elevator(),
+	# HotelBlockBuilder.generate_north_stairs(), HotelBlockBuilder.generate_maintenance_room()).
 	var north_strip_z: float = -half_z + 5.0
 	_box(west, -half_z, east, north_strip_z)
 	_text((west + east) / 2.0, -half_z + 2.5, "STAIRS", 12)

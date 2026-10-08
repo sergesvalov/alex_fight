@@ -82,8 +82,8 @@ static func create_exit_portal(generator: HotelLevelGenerator) -> void:
 		var coll = CollisionShape3D.new()
 		var shape = BoxShape3D.new()
 		# Starts just PAST the wall's own center plane and extends outward from there, so it can
-		# only be reached by opening the door and stepping into the doorway. (It used to straddle
-		# the wall and reach 0.3m into the room - touching the still-closed door set it off.)
+		# only be reached by opening the door and stepping into the doorway. If it reached into
+		# the room, touching the still-closed door would set it off.
 		var portal_depth: float = 0.8 * f_scale
 		var outward: float = -1.0 if is_double else 1.0
 		shape.size = Vector3(portal_depth, door_h, door_w * 0.8)
@@ -97,9 +97,8 @@ static func create_exit_portal(generator: HotelLevelGenerator) -> void:
 		area.position = Vector3(wall_x + outward * (0.05 * f_scale + portal_depth / 2.0), door_h / 2.0, room_z)
 		floor_node.add_child(area)
 
-	# "Something heavy just fell/crashed somewhere in the hotel" cue, per the request that
-	# triggered this feature - reusing door_open.wav pitched way down instead of a new asset,
-	# the same trick this project's now-deleted legacy exit_door rumble sound used.
+	# The "something heavy just fell somewhere in the hotel" cue: door_open.wav pitched way
+	# down, so it needs no asset of its own.
 	var audio = AudioStreamPlayer3D.new()
 	audio.stream = load("res://assets/audio/sfx/door_open.wav")
 	audio.pitch_scale = 0.3
@@ -110,9 +109,7 @@ static func create_exit_portal(generator: HotelLevelGenerator) -> void:
 	audio.play()
 
 
-# Picks a random room on floor 3 specifically (per the request this implements) and a safe
-# standing spot just inside it - same relative offsets already proven by the room-to-room secret
-# portal this replaces.
+# Picks a random room on floor 3 and a safe standing spot just inside it.
 static func pick_random_floor3_target(generator: HotelLevelGenerator) -> Vector3:
 	var is_single = randi() % 2 == 1
 	var layout = HotelConstants.SINGLE_ROOM_LAYOUT if is_single else HotelConstants.DOUBLE_ROOM_LAYOUT
@@ -125,8 +122,8 @@ static func pick_random_floor3_target(generator: HotelLevelGenerator) -> Vector3
 		return Vector3.ZERO
 	var target_pos = room_node.global_position
 	if is_single:
-		# Open floor just inside RoomDoor, south of the WC. (Was Z=2.5 - dead center of
-		# WCSouthWall, which spans X -3.75..-1.35 there outside its own door hole.)
+		# Open floor just inside RoomDoor, south of the WC: Z=3.6 clears WCSouthWall, which
+		# spans X -3.75..-1.35 at Z=2.5.
 		target_pos += room_node.global_basis * Vector3(-1.5, 0.5, 3.6)
 	else:
 		target_pos += room_node.global_basis * Vector3(2.5, 0.5, 7.5)

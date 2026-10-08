@@ -179,16 +179,11 @@ static func generate_south_stairs_ramp(generator: HotelLevelGenerator, parent: N
 	var ramp_len = sqrt(run * run + mid_y * mid_y)
 	var angle_up = atan2(mid_y, run)
 
-	# _create_static_box positions the box by its geometric CENTER, but a player walks on
-	# its top face (local +Y), which - once the box is rotated to form the incline - sits
-	# slab_half_t away from the center, perpendicular to the slope, not straight up. Naively
-	# centering the box on the two floor-surface points (as an earlier version did) leaves
-	# the walkable surface short of both ends by about slab_half_t * cos(angle_up), which
-	# was enough of a ledge at the landing to block walking up (not down, since a ledge you
-	# step down off doesn't stop you, only one you'd have to step up onto does).
-	# Shifting the center by this same perpendicular offset (derived from where a box's top
-	# face corners land after rotating around Z) puts the actual walking surface exactly on
-	# the intended points instead of the box's centerline.
+	# create_static_box() places a box by its center, but the player walks on its top face,
+	# which on an inclined box sits slab_half_t from the center perpendicular to the slope,
+	# not straight up. Centering the box on the two floor-surface points would leave the
+	# walking surface short at both ends - a ledge at the landing that blocks the way up.
+	# Shifting the center by that perpendicular offset puts the surface on the points.
 	var slab_half_t = 0.1 * f_scale
 	var offset_x = slab_half_t * sin(angle_up)
 	var offset_y = slab_half_t * cos(angle_up)
@@ -220,7 +215,7 @@ static func generate_elevator(generator: HotelLevelGenerator, parent: Node, f_sc
 	if scene:
 		var inst = scene.instantiate()
 
-		# position/scale MUST be set before add_child() - see _generate_maintenance_room()
+		# position/scale MUST be set before add_child() - see HotelBlockBuilder.generate_maintenance_room()
 		# for why (add_child() fires _ready() synchronously on the whole subtree).
 		inst.position = Vector3(HotelConstants.ELEVATOR_CENTER_X * f_scale, 0, HotelConstants.ELEVATOR_CENTER_Z * f_scale)
 		inst.scale.z = -1.0
@@ -245,7 +240,70 @@ static func generate_elevator(generator: HotelLevelGenerator, parent: Node, f_sc
 		# Floor buttons are NOT created here. elevator_shaft.tscn already ships a real,
 		# wired-up "ButtonFloor4" template under ElevatorPanel, and elevator_controller.gd's
 		# _setup_buttons() duplicates it for floors 1-10 and connects button_pressed itself.
-		# This function used to *also* spawn a second, disconnected AnimatableBody3D button
-		# almost exactly on top of the real one (off by 1cm) - it never fired
-		# _on_button_pressed (nothing connected to it) and was the reason a "phantom" button
-		# hitbox could be interacted with near the panel without doing anything.
+		# A second button made here would sit on top of the real one, unconnected: a hitbox
+		# by the panel that does nothing.
+
+
+static func generate_south_stairs_wall(parent: Node, f_scale: float, height: float, thickness: float, wall_mat: Material) -> void:
+	var z_pos = HotelConstants.SOUTH_STAIRS_ZONE_Z_START * f_scale + (thickness / 2.0)
+	var door_w = 1.2 * f_scale
+	var door_h = 2.2 * f_scale
+
+	var x_left = HotelConstants.CORRIDOR_WEST_EDGE_X * f_scale
+	var x_right = HotelConstants.CORRIDOR_EAST_EDGE_X * f_scale
+	var x_center = HotelConstants.SOUTH_STAIRS_DOOR_CENTER_X * f_scale
+	
+	var left_w = (x_center - door_w / 2.0) - x_left
+	var left_cx = x_left + (left_w / 2.0)
+	
+	var right_w = x_right - (x_center + door_w / 2.0)
+	var right_cx = x_right - (right_w / 2.0)
+	
+	HotelSpecialFloorBuilder.create_static_box(parent, "SouthStairsWall_Left", Vector3(left_cx, height / 2.0, z_pos), Vector3(left_w, height, thickness), wall_mat)
+	HotelSpecialFloorBuilder.create_static_box(parent, "SouthStairsWall_Right", Vector3(right_cx, height / 2.0, z_pos), Vector3(right_w, height, thickness), wall_mat)
+	
+	if height > door_h:
+		var lintel_h = height - door_h
+		var lintel_y = door_h + (lintel_h / 2.0)
+		HotelSpecialFloorBuilder.create_static_box(parent, "SouthStairsWall_Lintel", Vector3(x_center, lintel_y, z_pos), Vector3(door_w, lintel_h, thickness), wall_mat)
+
+	# Corridor is north of this wall (smaller Z), so the door's basis.z (its "outward"
+	# reference direction per door.gd) needs to point -Z: rotation.y = PI.
+	# door.tscn's native panel is 1.0 wide x 2.2 tall x 0.1 thick - scale.x stretches it
+	# to this doorway's width (door_w), scale.y/z match the same f_scale as everything
+	# else this function builds (door_h is already 2.2*f_scale).
+	var door_scene = load("res://entities/props/door.tscn")
+	if door_scene:
+		var door_inst = door_scene.instantiate()
+		door_inst.name = "SouthStairsDoor"
+		# See generate_maintenance_room() for why this must happen before add_child().
+		door_inst.position = Vector3(x_center, 0, z_pos)
+		door_inst.rotation.y = PI
+		door_inst.scale = Vector3(door_w, f_scale, f_scale)
+		parent.add_child(door_inst)
+
+
+# Locks South Stairs floor-hopping at floor f_num's own doorway - see stairs_gate.gd for
+# the actual check/teleport. Sized to span the full doorway so the player can't sidestep it.
+static func add_south_stairs_gate(parent: Node, f_num: int, f_scale: float) -> void:
+	var z_pos = HotelConstants.SOUTH_STAIRS_ZONE_Z_START * f_scale
+	var x_center = HotelConstants.SOUTH_STAIRS_DOOR_CENTER_X * f_scale
+	var door_w = 1.2 * f_scale
+	var door_h = 2.2 * f_scale
+
+	var gate = Area3D.new()
+	gate.name = "SouthStairsGate"
+	gate.collision_layer = 0
+	gate.collision_mask = 1 # Player layer
+	gate.set_script(load("res://scripts/levels/blocks/stairs_gate.gd"))
+	gate.floor_num = f_num
+	gate.y_step = HotelConstants.BASE_FLOOR_TO_FLOOR_HEIGHT * f_scale
+	gate.position = Vector3(x_center, door_h / 2.0, z_pos)
+
+	var coll = CollisionShape3D.new()
+	var shape = BoxShape3D.new()
+	shape.size = Vector3(door_w, door_h, 1.0 * f_scale)
+	coll.shape = shape
+	gate.add_child(coll)
+
+	parent.add_child(gate)

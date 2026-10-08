@@ -11,8 +11,8 @@ var gravity: float = 9.8
 # (see enemy_ai_base.gd's _ready() comment about the bake-timing race) or something else entirely.
 var _was_finished: bool = true
 
-# Diagnostic only - catches "stuck in place, spinning wildly" reports (reported 2026-08-23 on
-# floor 4): look_at() snaps the facing instantly every physics tick, so if get_next_path_position()
+# Diagnostic only, for an enemy stuck in place and spinning: look_at() snaps the facing
+# instantly every physics tick, so if get_next_path_position()
 # jitters (e.g. the agent is wedged against geometry and the navmesh's nearest-valid-point keeps
 # flip-flopping, or the path keeps recalculating to a barely-different point), the enemy can spin
 # at up to 60 direction flips/sec while net displacement stays ~0 - not caught by the existing

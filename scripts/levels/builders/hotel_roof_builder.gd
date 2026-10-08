@@ -64,8 +64,14 @@ static func generate_roof(generator: HotelLevelGenerator, y_offset: float, f_sca
 	build_roof_structures(generator, parent, f_scale, roof_mat)
 
 
+# What stands on the roof: a bulkhead over each stairwell (so the stairs come out through a
+# door instead of an open hole in the slab) and the elevator machine room over the lift shaft,
+# with the code plate inside. Coordinates are the roof node's own - Y=0 is the roof surface.
+const ROOF_ROOM_HEIGHT: float = 2.6
+const ROOF_FLOOR_INDEX: int = 11 # what stairs_gate.gd / GameStateManager call the roof
+
 static func build_roof_structures(_generator: HotelLevelGenerator, parent: Node3D, f_scale: float, mat: Material) -> void:
-	var hh: float = HotelLevelGenerator.ROOF_ROOM_HEIGHT
+	var hh: float = HotelRoofBuilder.ROOF_ROOM_HEIGHT
 	var door_w: float = 1.2 * f_scale
 	var door_h: float = 2.2 * f_scale
 	var door_scene = load("res://entities/props/door.tscn")
@@ -92,7 +98,7 @@ static func build_roof_structures(_generator: HotelLevelGenerator, parent: Node3
 		gate.collision_layer = 0
 		gate.collision_mask = 1 # Player layer
 		gate.set_script(gate_script)
-		gate.floor_num = HotelLevelGenerator.ROOF_FLOOR_INDEX
+		gate.floor_num = HotelRoofBuilder.ROOF_FLOOR_INDEX
 		gate.y_step = HotelConstants.BASE_FLOOR_TO_FLOOR_HEIGHT * f_scale
 		gate.position = (pos + Vector3(0, 1.1, 0)) * f_scale
 		gate.rotation.y = rot_y

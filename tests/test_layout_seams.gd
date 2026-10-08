@@ -117,7 +117,7 @@ func _csgbox_x_range(box: CSGBox3D) -> Vector2:
 	var cx = box.global_transform.origin.x
 	return Vector2(cx - half, cx + half)
 
-# _create_static_box() never sets an explicit name on the CollisionShape3D it creates,
+# HotelSpecialFloorBuilder.create_static_box() never sets an explicit name on the CollisionShape3D it creates,
 # so it gets whatever default Godot assigns - looking it up by the literal path
 # "CollisionShape3D" is not reliable. Finding it by type is.
 func _find_collision_shape(body: Node) -> CollisionShape3D:
@@ -147,7 +147,7 @@ func _check_elevator_vs_maintenance(floor_node: Node) -> void:
 	_assert_seam(maint_range.x - elevator_range.y, "Elevator east wall <-> Maintenance west wall")
 
 func _check_south_stairs_floor_slabs(floor_node: Node, f_scale: float) -> void:
-	# The dog-leg ramps (SouthStairsRampA/B, see _generate_south_stairs_ramp) bridge
+	# The dog-leg ramps (SouthStairsRampA/B, see HotelBlockBuilder.generate_south_stairs_ramp) bridge
 	# the gap between these two floor slabs, so the gap here should be the ramps'
 	# designed run - not zero. This just confirms the slabs are where that ramp
 	# math assumes they are, in case the two ever drift apart.
@@ -169,7 +169,7 @@ func _check_south_stairs_floor_slabs(floor_node: Node, f_scale: float) -> void:
 		print("✅ PASS: Floor_SW <-> Landing_SouthStairs gap = ", actual_run, "m (matches ramp run)")
 
 # --- South stairs ramp WALKING SURFACE alignment ---
-# _create_static_box positions a box by its geometric center, not its top (walkable) face -
+# HotelSpecialFloorBuilder.create_static_box positions a box by its geometric center, not its top (walkable) face -
 # once a box is rotated to form a ramp, the top face sits away from the center perpendicular
 # to the slope, not straight up. A version of the ramp that only matched centerlines to the
 # floor/landing heights left a real, in-game-tested unwalkable step (~0.15m) where the ramp

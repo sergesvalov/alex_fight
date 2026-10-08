@@ -1,6 +1,6 @@
 # scripts/interactables/roof_code_plate.gd
 # The plate in the elevator machine room on the roof (hotel_level_generator.gd::
-# _build_roof_structures()): the lift's service code. Reading it is what lets the elevator go to
+# HotelRoofBuilder.build_roof_structures()): the lift's service code. Reading it is what lets the elevator go to
 # the first floor - GameStateManager.lobby_unlocked; elevator_controller.gd routes by
 # is_floor_unlocked(), which answers for floor 1 from that flag alone. The code itself is
 # rolled once per game (GameStateManager.lift_code) and shown on the plate.

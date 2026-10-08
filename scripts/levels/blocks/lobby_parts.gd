@@ -1,6 +1,6 @@
 # scripts/levels/blocks/lobby_parts.gd
 # The live pieces of the ground-floor lobby and of the two laboratory levels under it
-# (hotel_level_generator.gd::_build_lobby() / _build_lab()). One script, several roles picked
+# (hotel_level_generator.gd::HotelSpecialFloorBuilder.build_lobby() / HotelSpecialFloorBuilder.build_lab()). One script, several roles picked
 # by `role`, because each is a handful of lines:
 #
 #   "turrets"      - Area3D filling the corridor to the main entrance. While the turrets are
