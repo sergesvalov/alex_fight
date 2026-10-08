@@ -99,7 +99,7 @@ pipeline {
 
                         // --- Import Assets ---
                         echo "Подготовка дефолтного конфига для импорта и тестов (PC)..."
-                        sh "cp configs/project.pc.godot project.godot"
+                        sh "sh tools/apply_config.sh pc"
                         echo "Импорт ассетов Godot (создание кэша .godot/)..."
                         sh "if [ -f project.godot ]; then godot --headless --editor --quit || true; fi"
 
@@ -206,7 +206,7 @@ pipeline {
 
                                 if grep -q 'name="Android"' export_presets.cfg 2>/dev/null; then
                                     echo "Копируем конфиг телефона..."
-                                    cp configs/project.phone.godot project.godot
+                                    sh tools/apply_config.sh phone
                                     run_export "Android" build/alex_fight.apk build/android_export.log
                                     echo "Подписываем build/alex_fight.apk..."
                                     sign_apk "build/alex_fight.apk"
@@ -216,7 +216,7 @@ pipeline {
 
                                 if grep -q 'name="Android Quest 2"' export_presets.cfg 2>/dev/null; then
                                     echo "Копируем конфиг VR..."
-                                    cp configs/project.vr.godot project.godot
+                                    sh tools/apply_config.sh vr
                                     echo "Запуск автотеста конфигурации VR..."
                                     godot --headless -s tests/verify_vr_config.gd || { echo 'VR CONFIG TEST FAILED!'; exit 1; }
                                     # OpenXR в Godot 4.7 экспортируется только gradle-сборкой
@@ -285,7 +285,7 @@ EOF
 
                                 if grep -q 'name="Windows Desktop"' export_presets.cfg 2>/dev/null; then
                                     echo "Копируем конфиг ПК..."
-                                    cp configs/project.pc.godot project.godot
+                                    sh tools/apply_config.sh pc
 
                                     # Полная чистка перед экспортом - без этого файл от ПРЕДЫДУЩЕЙ
                                     # сборки мог бы остаться в build/windows и пройти проверку
@@ -348,7 +348,7 @@ EOF
                                 sh '''
                                 if grep -q 'name="macOS"' export_presets.cfg 2>/dev/null; then
                                     echo "Копируем конфиг ПК..."
-                                    cp configs/project.pc.godot project.godot
+                                    sh tools/apply_config.sh pc
                                     # См. комментарий у Windows-сборки выше ("Build PC (Windows)") -
                                     # тот же риск устаревшего zip от предыдущего прогона Jenkins.
                                     rm -rf build/mac

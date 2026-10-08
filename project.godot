@@ -13,7 +13,12 @@ config_version=5
 config/name="Случай в гостинице «Сибирь»"
 run/main_scene="res://scenes/ui/start_screen.tscn"
 config/features=PackedStringArray("4.7", "Mobile")
-config/icon="res://icon.jpg"
+config/icon="res://icon.svg"
+
+[debug]
+
+file_logging/enable_file_logging=true
+file_logging/log_path="user://logs/alex_fight.log"
 
 [autoload]
 
@@ -39,7 +44,6 @@ window/vsync/vsync_mode=1
 [xr]
 
 openxr/enabled=false
-openxr/enabled.vr=true
 shaders/enabled=true
 openxr/startup_alert=false
 openxr/default_action_map="res://openxr_action_map.tres"
@@ -52,7 +56,7 @@ openxr/default_action_map="res://openxr_action_map.tres"
 [rendering]
 
 renderer/rendering_method="mobile"
-renderer/rendering_method.mobile="mobile"
+renderer/rendering_method.mobile="gl_compatibility"
 vrs/mode=1
 environment/defaults/default_environment="res://default_env.tres"
 limits/global_shader_variables/buffer_size=65536

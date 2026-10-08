@@ -46,7 +46,7 @@ func _ready() -> void:
 	GameStateManager.tape_collected.connect(func(_id): save_game.call_deferred())
 	GameStateManager.state_changed.connect(_on_state_changed)
 	# The headset build has no start screen (a flat menu cannot be seen or clicked in VR, and
-	# its main scene is the level itself - see configs/project.vr.godot): the choice the
+	# its main scene is the level itself - see configs/vr.cfg): the choice the
 	# screen offers is made here instead, before the level loads. Continue if there is
 	# something to continue, otherwise a new game.
 	if ProjectSettings.get_setting("xr/openxr/enabled", false) and DisplayServer.get_name() != "headless":
