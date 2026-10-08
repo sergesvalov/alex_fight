@@ -1,6 +1,19 @@
 {
     "inventory_replay_hint": "Прослушать ещё раз",
     "inventory_tape_fallback": "Кассета %d",
+    "inventory_slot_format": "Эт.%d\n№ %d",
     "elevator_floor_locked": "Этаж ещё не разблокирован",
-    "tapes_counter_format": "Кассеты: %d/%d"
+    "tapes_counter_format": "Кассеты: %d/%d",
+    "interact_prompt_desktop": "[E]",
+    "terminal_tapes_title": "ОПИСЬ НОСИТЕЛЕЙ — ЭТ. %d",
+    "terminal_tapes_intro": "АВТОМАТИЧЕСКАЯ ОПИСЬ МАГНИТНЫХ НОСИТЕЛЕЙ\nНе сданы в архив:",
+    "terminal_tapes_none": "АВТОМАТИЧЕСКАЯ ОПИСЬ МАГНИТНЫХ НОСИТЕЛЕЙ\nВсе носители этажа сданы в архив.",
+    "terminal_tapes_line": "  — плёнка № %d: %s",
+    "tape_hint_start_wardrobe": "шкаф, номер рядом с местом пробуждения",
+    "tape_hint_table": "стол в одном из номеров",
+    "tape_hint_lift": "на полу у лифта",
+    "tape_hint_maintenance": "шкаф технического помещения",
+    "tape_hint_wardrobe": "шкаф в одном из номеров",
+    "tape_hint_sealed": "шкаф в номере, запертом снаружи",
+    "tape_hint_unknown": "местонахождение не установлено"
 }

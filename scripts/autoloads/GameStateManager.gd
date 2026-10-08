@@ -21,7 +21,6 @@ var tapes_found: Array[int] = []         # [0, 1, 2] — ID найденных �
                                           # при переходе на новый этаж/виток
 var collected_tapes: Array[Dictionary] = []  # [{"floor": 4, "id": 0}, ...] — постоянный инвентарь
                                               # всех когда-либо найденных кассет, НЕ сбрасывается
-var exit_code_known: bool = false
 var cerberus_spawned: bool = false
 
 # Cached by hotel_level_generator.gd's _move_player() the one time it computes floor 4's own
@@ -48,7 +47,6 @@ var current_floor: int = 4:
                 if entry["floor"] == value:
                     tapes_found.append(entry["id"])
             cerberus_spawned = false
-            exit_code_known = 2 in tapes_found
             _emit_tape_count()
             # Reactive line for the first time floor 3 is actually reached, regardless of how
             # (secret door, stairs, elevator once unlocked) - distinct from "secret_portal"
@@ -107,6 +105,10 @@ var secret_portal_target_floor: int = 3
 # "endless corridor" nightmare belongs to floor 3 (reached via the secret door), not the start.
 var floor3_corridor_unlocked: bool = false
 
+# Floor 5's own nightmare (room_shuffle_trap.gd - walk into one room, end up in another). Set
+# true, never reset, the moment floor 5's 3 tapes are collected - which also unlocks floor 6.
+var floor5_rooms_unlocked: bool = false
+
 func change_state(new_state: GameState) -> void:
     current_state = new_state
     state_changed.emit(new_state)
@@ -130,9 +132,6 @@ func collect_tape(tape_id: int) -> void:
         tapes_found.append(tape_id)
         tape_collected.emit(tape_id)
         _emit_tape_count()
-        # Кассета #3 даёт код выхода
-        if tape_id == 2:
-            exit_code_known = true
         # После сбора 3 кассет
         if tapes_found.size() == TAPES_PER_FLOOR:
             all_tapes_collected.emit()

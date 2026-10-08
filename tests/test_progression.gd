@@ -52,9 +52,40 @@ func _ready() -> void:
 		ids.sort()
 		_check(ids == [0, 1, 2], "floor %d has three distinct tapes: %s" % [f, str(ids)])
 
+	# --- Tape narration: every reachable floor has real text, the rest fall back gracefully ---
+	for f in [3, 4, 5, 6]:
+		var ok := true
+		for id in range(3):
+			var tape: Dictionary = DialogSystem.get_tape(f, id)
+			if tape.get("text", "") == "" or "ЗАГЛУШКА" in tape.get("title", "") or tape == DialogSystem.tape_data.get("damaged"):
+				ok = false
+		_check(ok, "floor %d has written narration for all three tapes" % f)
+	_check(DialogSystem.get_tape(9, 0).get("title", "") != "",
+		"a floor with no narration yet plays the 'damaged tape' fallback instead of nothing")
+
+	# --- Tape location hints (what the CRT terminal lists) ---
+	var hints5: Array = []
+	for child in generator.get_floor_node(5).get_children():
+		if child.name.begins_with("Cassette_"):
+			hints5.append(child.location_hint)
+	hints5.sort()
+	_check(hints5 == ["tape_hint_maintenance", "tape_hint_sealed", "tape_hint_table"],
+		"floor 5's tapes carry their location hints: " + str(hints5))
+	_check(hints5.all(func(h): return UIStrings.get_string(h) != ""), "every hint has its text in ui_strings.json")
+
+	# --- The extra robot of a finished floor appears on THAT floor ---
+	var spawner := Node3D.new()
+	spawner.set_script(load("res://scripts/levels/enemy_spawner.gd"))
+	spawner.enemy_scene = load("res://entities/enemies/cerberus/cerberus.tscn")
+	spawner.spawn_position = Vector3(1.05, 1.0, -25.0)
+	add_child(spawner)
+	var y_step: float = HotelLevelGenerator.BASE_FLOOR_TO_FLOOR_HEIGHT * GlobalConfig.get_floor_scale()
+
 	# --- Floor 4 done -> secret door -> floor 3 ---
 	for id in range(3):
 		_collect(4, id)
+	_check(spawner.get_child_count() == 1 and absf(spawner.get_child(0).global_position.y - 1.0) < 0.01,
+		"floor 4's third tape brings one extra robot, on floor 4")
 	_check(GameStateManager.secret_portal_active, "floor 4's three tapes roll the secret door")
 	var floor4 = generator.get_node("GeneratedFloor_Main")
 	var secret_door: Node3D = floor4.get_node_or_null("SecretExitDoor")
@@ -97,9 +128,71 @@ func _ready() -> void:
 	_check(not GameStateManager.floor3_corridor_unlocked, "floor 3's corridor barrier is still up")
 	_collect(3, 2)
 	_check(GameStateManager.floor3_corridor_unlocked, "floor 3's third tape switches the corridor barrier off")
+	_check(spawner.get_child_count() == 2 and absf(spawner.get_child(1).global_position.y - (1.0 - y_step)) < 0.01,
+		"floor 3's third tape brings its extra robot on floor 3, not floor 4 (y=%.2f)" % spawner.get_child(spawner.get_child_count() - 1).global_position.y)
+
+	# --- A tape picked up while another is still narrating is queued, not dropped ---
+	DialogSystem.play_tape_for_floor(3, 0, Vector3.ZERO)
+	DialogSystem.play_tape_for_floor(3, 1, Vector3.ZERO)
+	_check(DialogSystem.is_playing and DialogSystem._tape_queue.size() == 1,
+		"a second tape started mid-narration waits in the queue (%d queued)" % DialogSystem._tape_queue.size())
+	DialogSystem._tape_queue.clear()
 	_check(GameStateManager.is_floor_unlocked(5), "floor 3's third tape unlocks floor 5")
 	_check(_routes() == [4, 4, 3, 4, 5, 4, 4, 4, 4, 4],
 		"the elevator now reaches 3, 4 and 5, everything else leads to 4: " + str(_routes()))
+
+	# --- Floor 5: the room-shuffling trap ---
+	var trap_script = load("res://scripts/levels/blocks/room_shuffle_trap.gd")
+	var floor5: Node3D = generator.get_node("GeneratedFloor_5")
+	var traps: Array = []
+	for child in floor5.get_children():
+		if child.name.begins_with("RoomShuffleTrap_"):
+			traps.append(child)
+	_check(traps.size() == 15, "floor 5 has a trap in each of its 15 rooms (%d)" % traps.size())
+	_check(generator.get_node("GeneratedFloor_6").get_children().filter(
+		func(c): return c.name.begins_with("RoomShuffleTrap_")).is_empty(), "no other floor has the trap")
+
+	var always_moves := true
+	var all_reachable := true
+	for tapes in range(3):
+		var reached: Dictionary = {}
+		for i in range(15):
+			var dest: int = trap_script.destination_index(i, tapes, 15)
+			if dest == i:
+				always_moves = false
+			reached[dest] = true
+		if reached.size() != 15:
+			all_reachable = false
+	_check(always_moves, "entering a room never leaves you in that same room")
+	_check(all_reachable, "every room, the sealed one included, is the destination of some door")
+
+	var sealed_room: Node3D = floor5.get_meta("sealed_room") if floor5.has_meta("sealed_room") else null
+	_check(sealed_room != null, "floor 5 has a sealed room")
+	if sealed_room:
+		var sealed_door = sealed_room.get_node("RoomDoor/AnimatableBody3D")
+		_check(sealed_door.locked_from_corridor, "the sealed room's door is locked from the corridor")
+		var tapes_inside: int = 0
+		var tapes_on_floor: int = 0
+		for child in floor5.get_children():
+			if child.name.begins_with("Cassette_"):
+				tapes_on_floor += 1
+				var local: Vector3 = sealed_room.global_transform.affine_inverse() * child.global_position
+				# Rooms are at most 10m deep and ~10m wide around their own origin.
+				if absf(local.x) < 5.0 and local.z > 0.0 and local.z < (10.0 if sealed_room.name.begins_with("Double") else 5.0):
+					tapes_inside += 1
+		_check(tapes_inside == 1 and tapes_on_floor == 3,
+			"exactly one of floor 5's three tapes is in the sealed room (%d of %d)" % [tapes_inside, tapes_on_floor])
+
+		# --- Floor 5 done -> trap off, sealed door opens, floor 6 unlocked ---
+		GameStateManager.current_floor = 5
+		_check(not GameStateManager.is_floor_unlocked(6), "floor 6 is locked before floor 5 is done")
+		for id in range(3):
+			_collect(5, id)
+		_check(GameStateManager.floor5_rooms_unlocked, "floor 5's three tapes switch the room trap off")
+		_check(not sealed_door.locked_from_corridor, "the sealed room's door opens normally afterwards")
+		_check(GameStateManager.is_floor_unlocked(6), "floor 5's three tapes unlock floor 6")
+		_check(_routes() == [4, 4, 3, 4, 5, 6, 4, 4, 4, 4],
+			"the elevator now reaches 3-6, everything else leads to 4: " + str(_routes()))
 
 	print("==================================================")
 	if errors > 0:

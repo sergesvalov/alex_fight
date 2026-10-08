@@ -21,10 +21,19 @@ func set_door_number(number: String) -> void:
 	if label:
 		label.text = number
 
+# Set on one room door of floor 5 (see room_shuffle_trap.gd): it opens from inside the room
+# but not from the corridor - basis.z is every door's corridor-facing side.
+var locked_from_corridor: bool = false
+
 func interact(player: Node) -> void:
 	if is_moving:
 		return
-		
+
+	if locked_from_corridor and not is_open and player != null \
+			and (player.global_position - global_position).dot(global_transform.basis.z) > 0:
+		DialogSystem.trigger_alex_line("floor5_locked_door")
+		return
+
 	is_moving = true
 	
 	if not is_open:

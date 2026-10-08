@@ -98,6 +98,10 @@ func _ready() -> void:
         if interact_btn:
             interaction.interact_btn = interact_btn
             interact_btn.pressed.connect(interaction.try_interact)
+            # The same button doubles as the "you can interact with this" prompt on desktop,
+            # where it's the E key that does it, not a tap.
+            if camera_comp.is_desktop:
+                interact_btn.text = UIStrings.get_string("interact_prompt_desktop", "[E]")
             if is_vr: interact_btn.hide()
 
 func _input(event: InputEvent) -> void:

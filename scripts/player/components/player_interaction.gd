@@ -19,7 +19,6 @@ const PROXIMITY_FORWARD_DOT: float = 0.5
 
 func _ready() -> void:
     is_android = OS.get_name() == "Android"
-    GameStateManager._emit_tape_count() # so the HUD counter starts at "0/3" instead of blank
 
 var interact_btn: Control = null
 

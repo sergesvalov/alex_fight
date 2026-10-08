@@ -1,6 +1,8 @@
 extends Panel
 
-const SLOT_COUNT = 25
+# 9 furnished floors x 3 tapes = 27, rounded up to whole rows of the 6-column grid. (Was 25,
+# which would have left the last two tapes with nowhere to go.)
+const SLOT_COUNT = 30
 
 @onready var grid = $ScrollContainer/GridContainer
 @onready var close_btn = $CloseButton
@@ -52,18 +54,14 @@ func _make_tape_slot(tape: Dictionary) -> Control:
     btn.autowrap_mode = TextServer.AUTOWRAP_OFF
     # Full title never fits a 90x90 cell, so the button itself only shows a short slot label -
     # the full title (plus the replay hint) shows on hover via the tooltip instead.
-    btn.text = "№ " + str(tape["id"] + 1)
+    # Floor and number, e.g. "5-2" - every floor has its own tapes 1..3.
+    btn.text = UIStrings.get_string("inventory_slot_format", "%d-%d") % [tape["floor"], tape["id"] + 1]
     btn.tooltip_text = _tape_title(tape["floor"], tape["id"]) + "\n\n" + UIStrings.get_string("inventory_replay_hint")
     btn.pressed.connect(func(): _replay_tape(tape["floor"], tape["id"]))
     return btn
 
 func _tape_title(floor_num: int, tape_id: int) -> String:
-    var floor_str = str(floor_num)
-    if DialogSystem.tape_data.has(floor_str):
-        var floor_tapes = DialogSystem.tape_data[floor_str]
-        if tape_id >= 0 and tape_id < floor_tapes.size():
-            return floor_tapes[tape_id].get("title", UIStrings.get_string("inventory_tape_fallback") % (tape_id + 1))
-    return UIStrings.get_string("inventory_tape_fallback") % (tape_id + 1)
+    return DialogSystem.get_tape(floor_num, tape_id).get("title", UIStrings.get_string("inventory_tape_fallback") % (tape_id + 1))
 
 func _replay_tape(floor_num: int, tape_id: int) -> void:
     var player = get_tree().current_scene.get_node_or_null("Player")

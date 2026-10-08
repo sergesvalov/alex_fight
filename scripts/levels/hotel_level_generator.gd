@@ -165,6 +165,7 @@ var _perf_log_timer: float = PERF_LOG_INTERVAL
 func _ready() -> void:
 	if GameStateManager.has_signal("all_tapes_collected"):
 		GameStateManager.connect("all_tapes_collected", _on_all_tapes_collected)
+	add_to_group("level_generator")
 	var build_start_ms: int = Time.get_ticks_msec()
 	_generate_level()
 	print("[perf] level built in ", Time.get_ticks_msec() - build_start_ms, " ms (started at ",
@@ -272,6 +273,12 @@ func _generate_level() -> void:
 	_set_lit_floor(floor_number)
 
 	call_deferred("_move_player", f_scale)
+
+# The generated node of one floor (1..10), or null. For code outside this script that needs to
+# look at what is on a floor - terminal_ui.gd lists the tapes still lying around on it.
+func get_floor_node(floor_num: int) -> Node3D:
+	var floor_node = _floor_nodes_by_index.get(floor_num)
+	return floor_node if is_instance_valid(floor_node) else null
 
 func _find_lights(node: Node, out: Array) -> void:
 	if node is Light3D:
@@ -495,6 +502,10 @@ func _build_floor_geometry(f_num: int, y_offset: float, suffix: String, c_color:
 	for room_num in SINGLE_ROOM_LAYOUT:
 		_generate_single_room(parent, f_scale, f_num, room_num)
 	
+	# Floor 5 only - must come before the cassettes, which need to know the sealed room.
+	if f_num == 5:
+		_add_room_shuffle_trap(parent, f_num)
+
 	_spawn_cassettes(parent, f_scale, f_num)
 	# The level scene's own floor already has its hand-placed robot (base_hotel_level.tscn's
 	# Enemies/Cerberus) - a generated one on top of it would double it up.
@@ -1106,6 +1117,68 @@ func _generate_single_room(parent: Node, f_scale: float, f_num: int, orig_num: i
 	_bake_csg(inst)
 	parent.add_child(inst)
 
+# Floor 5's nightmare - see room_shuffle_trap.gd for the rule. Gives every room on the floor a
+# trap just inside its doorway, and seals one random room's door from the corridor side so that
+# room can only be reached through the trap; _spawn_cassettes_other_floor() puts a tape in it.
+# Coordinates are each room's own local ones (double_room.tscn / single_room.tscn), mapped
+# through the room's transform so mirrored rooms come out right; the triggers themselves hang
+# off the floor node, not the room, to keep physics shapes out from under a mirrored scale.
+var _sealed_room_door: Node = null
+
+func _add_room_shuffle_trap(parent: Node3D, f_num: int) -> void:
+	var trap_script = load("res://scripts/levels/blocks/room_shuffle_trap.gd")
+	var traps: Array = []
+	var nums: Array = DOUBLE_ROOM_LAYOUT.keys() + SINGLE_ROOM_LAYOUT.keys()
+	nums.sort()
+	for num in nums:
+		var is_double: bool = DOUBLE_ROOM_LAYOUT.has(num)
+		var room: Node3D = parent.get_node_or_null(("DoubleRoom_" if is_double else "SingleRoom_") + str(f_num * 100 + num % 100))
+		if not room:
+			continue
+		# Doorway center, a slab 0.35..0.95m inside it, and open floor further in.
+		var doorway: Vector3 = Vector3(4.8, 1.1, 8.5) if is_double else Vector3(-3.75, 1.1, 3.5)
+		var inward_x: float = -1.0 if is_double else 1.0
+
+		var trap = Area3D.new()
+		trap.name = "RoomShuffleTrap_" + str(num)
+		trap.collision_layer = 0
+		trap.collision_mask = 1 # Player layer
+		trap.set_script(trap_script)
+		trap.room = room
+		trap.traps = traps
+		trap.index = traps.size()
+		trap.inside_local = Vector3(2.5, 0.1, 7.5) if is_double else Vector3(-1.5, 0.1, 3.6)
+		trap.facing_yaw = PI / 2.0 if is_double else -PI / 2.0
+		trap.position = room.transform * (doorway + Vector3(inward_x * 0.65, 0, 0))
+		var inner_shape = BoxShape3D.new()
+		inner_shape.size = Vector3(0.6, 2.2, 1.2)
+		var inner_coll = CollisionShape3D.new()
+		inner_coll.shape = inner_shape
+		trap.add_child(inner_coll)
+
+		var threshold = Area3D.new()
+		threshold.name = "Threshold"
+		threshold.collision_layer = 0
+		threshold.collision_mask = 1
+		threshold.position = Vector3(-inward_x * 0.65, 0, 0) # back at the doorway itself
+		var threshold_shape = BoxShape3D.new()
+		threshold_shape.size = Vector3(0.5, 2.2, 1.0)
+		var threshold_coll = CollisionShape3D.new()
+		threshold_coll.shape = threshold_shape
+		threshold.add_child(threshold_coll)
+		trap.add_child(threshold)
+
+		traps.append(trap)
+		parent.add_child(trap)
+
+	if traps.is_empty():
+		return
+	var sealed_room: Node3D = traps[randi() % traps.size()].room
+	parent.set_meta("sealed_room", sealed_room)
+	_sealed_room_door = sealed_room.get_node_or_null("RoomDoor/AnimatableBody3D")
+	if _sealed_room_door:
+		_sealed_room_door.locked_from_corridor = true
+
 func _create_static_box(parent: Node, node_name: String, pos: Vector3, size: Vector3, mat: Material, rot: Vector3 = Vector3.ZERO) -> void:
 	var static_body = StaticBody3D.new()
 	static_body.name = node_name
@@ -1204,7 +1277,7 @@ func _spawn_cassettes_start_floor(parent: Node, f_scale: float, scene: PackedSce
 		inst.name = "Cassette_" + str(i)
 		# Without this, every cassette keeps vhs_tape.gd's @export default (tape_id=0) - all 3
 		# would collect as the same id, so GameStateManager.tapes_found (a Set keyed by id) never
-		# grows past size 1, all_tapes_collected/exit_code_known never fire,
+		# grows past size 1, all_tapes_collected never fires,
 		# and every cassette narrates tape #1's text regardless of which one was picked up.
 		inst.tape_id = i
 
@@ -1218,16 +1291,19 @@ func _spawn_cassettes_start_floor(parent: Node, f_scale: float, scene: PackedSce
 		# (not inst.global_transform) before add_child(), the same pattern used everywhere
 		# else in this generator.
 		if i == 0 and chosen_wardrobe != null:
+			inst.location_hint = "tape_hint_start_wardrobe"
 			var target = chosen_wardrobe.global_transform
 			# X=-0.28 matches the shelf zone's center in wardrobe.tscn (the other half of the
 			# interior is now an open hanging compartment with a rod, not a shelf).
 			target.origin += chosen_wardrobe.global_basis * Vector3(-0.28, 1.15, 0.05)
 			inst.transform = parent.global_transform.affine_inverse() * target
 		elif i == 1 and chosen_table != null:
+			inst.location_hint = "tape_hint_table"
 			var target = chosen_table.global_transform
 			target.origin += chosen_table.global_basis * Vector3(0.0, 0.8, 0.0)
 			inst.transform = parent.global_transform.affine_inverse() * target
 		elif i == 2:
+			inst.location_hint = "tape_hint_lift"
 			inst.position = Vector3(7.2 * f_scale, 0.05 * f_scale, -23.5 * f_scale)
 			inst.rotation.y = randf_range(0, PI * 2)
 		else:
@@ -1244,8 +1320,14 @@ func _spawn_cassettes_start_floor(parent: Node, f_scale: float, scene: PackedSce
 # the maintenance room, one in a wardrobe in a random room - none of floor 4's "closest to spawn"
 # logic applies since the player doesn't start on these floors.
 func _spawn_cassettes_other_floor(parent: Node, f_scale: float, scene: PackedScene) -> void:
+	# Floor 5 has one room sealed off from the corridor (_add_room_shuffle_trap()) - the wardrobe
+	# tape goes there, and the table tape anywhere else.
+	var sealed_room = parent.get_meta("sealed_room") if parent.has_meta("sealed_room") else null
+
 	var tables = []
 	_find_props(parent, "Table", tables)
+	if sealed_room != null:
+		tables = tables.filter(func(t): return t.get_parent() != sealed_room)
 	var chosen_table = _random_from(tables)
 
 	# Excludes the table's own room before picking the wardrobe - same reasoning as
@@ -1257,6 +1339,8 @@ func _spawn_cassettes_other_floor(parent: Node, f_scale: float, scene: PackedSce
 		var table_room = chosen_table.get_parent()
 		wardrobes = wardrobes.filter(func(w): return w.get_parent() != table_room)
 	var chosen_wardrobe = _random_from(wardrobes)
+	if sealed_room != null:
+		chosen_wardrobe = sealed_room.get_node_or_null("Wardrobe")
 
 	# _find_props() only matches nodes named "Wardrobe" - the maintenance room's own two
 	# ("MaintWardrobe1"/"MaintWardrobe2", see _generate_maintenance_room()) don't match that
@@ -1272,14 +1356,17 @@ func _spawn_cassettes_other_floor(parent: Node, f_scale: float, scene: PackedSce
 		# See _spawn_cassettes_start_floor() for why position must be set via a parent-relative
 		# LOCAL transform (converted from the target's global_transform) before add_child().
 		if i == 0 and chosen_table != null:
+			inst.location_hint = "tape_hint_table"
 			var target = chosen_table.global_transform
 			target.origin += chosen_table.global_basis * Vector3(0.0, 0.8, 0.0)
 			inst.transform = parent.global_transform.affine_inverse() * target
 		elif i == 1 and maint_wardrobe != null:
+			inst.location_hint = "tape_hint_maintenance"
 			var target = maint_wardrobe.global_transform
 			target.origin += maint_wardrobe.global_basis * Vector3(-0.28, 1.15, 0.05)
 			inst.transform = parent.global_transform.affine_inverse() * target
 		elif i == 2 and chosen_wardrobe != null:
+			inst.location_hint = "tape_hint_sealed" if sealed_room != null else "tape_hint_wardrobe"
 			var target = chosen_wardrobe.global_transform
 			target.origin += chosen_wardrobe.global_basis * Vector3(-0.28, 1.15, 0.05)
 			inst.transform = parent.global_transform.affine_inverse() * target
@@ -1406,6 +1493,14 @@ func _on_all_tapes_collected() -> void:
 	if GameStateManager.current_floor == 3 and not GameStateManager.floor3_corridor_unlocked:
 		GameStateManager.floor3_corridor_unlocked = true
 		GameStateManager.unlock_floor(5)
+
+	# 3. Floor 5's own tapes - its room-shuffling trap (room_shuffle_trap.gd) switches off, the
+	#    sealed room's door opens normally again, and floor 6 unlocks.
+	if GameStateManager.current_floor == 5 and not GameStateManager.floor5_rooms_unlocked:
+		GameStateManager.floor5_rooms_unlocked = true
+		if is_instance_valid(_sealed_room_door):
+			_sealed_room_door.locked_from_corridor = false
+		GameStateManager.unlock_floor(6)
 
 # Rebuilds the same doorway from GameStateManager's persisted secret_portal_* fields - called
 # both right after _on_all_tapes_collected() rolls them, and from _ready() if this level scene

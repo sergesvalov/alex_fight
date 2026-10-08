@@ -34,6 +34,17 @@ func load_tape_data() -> void:
     else:
         push_error("Could not open tapes.json")
 
+# [floor_num, tape_id, spawn_position] of tapes waiting for the current one to finish.
+var _tape_queue: Array = []
+
+# The title/text/duration of one tape. A floor with no text written for it yet gets
+# tapes.json's "damaged" entry rather than nothing at all; empty only if even that is missing.
+func get_tape(floor_num: int, tape_id: int) -> Dictionary:
+    var floor_tapes = tape_data.get(str(floor_num), [])
+    if floor_tapes is Array and tape_id >= 0 and tape_id < floor_tapes.size():
+        return floor_tapes[tape_id]
+    return tape_data.get("damaged", {})
+
 func play_tape(tape_id: int, spawn_position: Vector3) -> void:
     play_tape_for_floor(GameStateManager.current_floor, tape_id, spawn_position)
 
@@ -44,20 +55,15 @@ func play_tape_for_floor(floor_num: int, tape_id: int, spawn_position: Vector3) 
     print("[DialogSystem] play_tape_for_floor floor=", floor_num, " tape_id=", tape_id,
         " spawn_position=", spawn_position, " is_playing=", is_playing)
     if is_playing:
-        push_warning("[DialogSystem] play_tape_for_floor ignored - already playing (stuck is_playing?)")
+        # Picked up (or replayed) while another tape is still narrating - it plays right after,
+        # instead of being dropped and leaving the player with a tape they never got to hear.
+        _tape_queue.append([floor_num, tape_id, spawn_position])
         return
 
-    var floor_str = str(floor_num)
-    if not tape_data.has(floor_str):
-        push_error("No tape data for floor " + floor_str)
+    var current_tape: Dictionary = get_tape(floor_num, tape_id)
+    if current_tape.is_empty():
+        push_error("No tape data for floor %d tape %d, and no \"damaged\" fallback in tapes.json" % [floor_num, tape_id])
         return
-
-    var floor_tapes = tape_data[floor_str]
-    if tape_id < 0 or tape_id >= floor_tapes.size():
-        push_error("Invalid tape_id for floor " + floor_str)
-        return
-
-    var current_tape = floor_tapes[tape_id]
     print("[DialogSystem] current_tape=", current_tape)
 
     is_playing = true
@@ -103,6 +109,9 @@ func end_narrative() -> void:
     if GameStateManager.current_state == GameStateManager.GameState.READING:
         GameStateManager.change_state(GameStateManager.GameState.EXPLORING)
     narrative_ended.emit()
+    if not _tape_queue.is_empty():
+        var next: Array = _tape_queue.pop_front()
+        play_tape_for_floor(next[0], next[1], next[2])
 
 func show_thought(text: String, duration: float = 5.0) -> void:
     if EventBus.has_signal("narrative_thought_requested"):

@@ -2,6 +2,23 @@
 extends Area3D
 
 @export var tape_id: int = 0
+# ui_strings.json key describing roughly where this tape was put ("tape_hint_table", ...), set
+# by hotel_level_generator.gd - the floor's CRT terminal lists it (terminal_ui.gd).
+var location_hint: String = ""
+
+# One texture per tape_id, shared by every floor's copy of that tape - the image is seeded by
+# tape_id alone, so generating it again for each of the 27 tapes produced identical pixels.
+static var _texture_cache: Dictionary = {}
+
+# A dark cassette on a dark shelf is close to invisible, so the paper label breathes a faint
+# warm glow. Kept low on purpose: the old flat neon emission swamped the texture under bloom.
+const GLOW_COLOR := Color(1.0, 0.75, 0.4)
+const GLOW_MIN: float = 0.05
+const GLOW_MAX: float = 0.45
+const GLOW_PERIOD: float = 2.4
+
+var _material: StandardMaterial3D
+var _glow_time: float = 0.0
 
 # Procedurally generated in Godot (Image/ImageTexture) instead of an external asset - the
 # previous vhs_retro.jpg was a glossy neon "SYNTHWAVE DREAMS" stock photo that had nothing to
@@ -12,15 +29,25 @@ func _ready() -> void:
     if not mesh_inst:
         push_error("[vhs_tape] tape_id=" + str(tape_id) + " has no MeshInstance3D child - material never applied")
         return
-    var tex := _generate_tape_texture()
-    var mat := StandardMaterial3D.new()
-    mat.albedo_texture = tex
-    mat.uv1_scale = Vector3(2, 1, 2)
-    # No emission: the old neon-magenta glow (Color(0.8, 0.2, 0.8)) was carried over from the
-    # replaced vhs_retro.jpg material by mistake - it swamped this texture's actual detail
-    # (worn plastic + label noise) under a flat glowing purple, especially with bloom/glow
-    # enabled, which is exactly what the screenshot that flagged this showed.
-    mesh_inst.material_override = mat
+    if not _texture_cache.has(tape_id):
+        _texture_cache[tape_id] = _generate_tape_texture()
+    var tex: ImageTexture = _texture_cache[tape_id]
+    _material = StandardMaterial3D.new()
+    _material.albedo_texture = tex
+    _material.uv1_scale = Vector3(2, 1, 2)
+    _material.emission_enabled = true
+    _material.emission = GLOW_COLOR
+    _material.emission_texture = tex # the pale label glows, the black shell barely does
+    _material.emission_energy_multiplier = GLOW_MIN
+    mesh_inst.material_override = _material
+    _glow_time = randf() * GLOW_PERIOD # so three tapes in one view don't pulse in lockstep
+
+func _process(delta: float) -> void:
+    if not _material or not is_visible_in_tree():
+        return
+    _glow_time += delta
+    var wave: float = 0.5 - 0.5 * cos(_glow_time * TAU / GLOW_PERIOD)
+    _material.emission_energy_multiplier = lerpf(GLOW_MIN, GLOW_MAX, wave)
 
 func _generate_tape_texture() -> ImageTexture:
     var size = 64
@@ -55,7 +82,7 @@ func _generate_tape_texture() -> ImageTexture:
 
     return ImageTexture.create_from_image(img)
 
-func interact(player):
+func interact(_player):
     print("[vhs_tape] interact tape_id=", tape_id, " global_position=", global_position,
         " is_playing_before=", DialogSystem.is_playing, " current_floor=", GameStateManager.current_floor)
     GameStateManager.collect_tape(tape_id)
