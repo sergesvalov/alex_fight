@@ -223,7 +223,11 @@ func _state_return(_delta: float) -> void:
 	nav_target.y = global_position.y
 	movement.nav_agent.target_position = nav_target
 	movement.move_along_nav(patrol_speed)
-	if _flat_distance(spawn_position) < 0.5:
+	# 1.2m, not 0.5m: NavigationAgent3D considers itself arrived within its
+	# target_desired_distance (1.0m by default) and stops there, so an enemy that happened to
+	# stop 0.6-1.0m short stayed in RETURN forever - seen on floor 6's sleepers, which never
+	# went back to sleep.
+	if _flat_distance(spawn_position) < 1.2:
 		player = null
 		_set_state(State.IDLE)
 
@@ -280,6 +284,9 @@ const INVESTIGATE_MAX_TIME: float = 14.0
 const INVESTIGATE_TURN_SPEED: float = 1.6   # rad/s while looking around
 const SIGHT_RANGE: float = 12.0             # same as DetectionArea's radius in cerberus.tscn
 @export var investigate_speed: float = 4.5  # between patrol_speed and chase_speed
+# False for an enemy that only hears (sleeper_cerberus.gd): going to a sound never turns into
+# a chase for it, however close the player stands.
+var can_see: bool = true
 
 var _noise_position: Vector3 = Vector3.ZERO
 var _investigate_look_left: float = 0.0
@@ -311,7 +318,7 @@ func _state_investigate(delta: float) -> void:
 	_investigate_time_left -= delta
 
 	# Seeing the player at any point turns this into the real thing.
-	if _los_check_timer <= 0.0:
+	if can_see and _los_check_timer <= 0.0:
 		_los_check_timer = LOS_CHECK_INTERVAL
 		var target = get_tree().get_first_node_in_group("player")
 		if target and GameStateManager.current_state != GameStateManager.GameState.SPECTATOR \

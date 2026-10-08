@@ -109,6 +109,24 @@ var floor3_corridor_unlocked: bool = false
 # true, never reset, the moment floor 5's 3 tapes are collected - which also unlocks floor 6.
 var floor5_rooms_unlocked: bool = false
 
+# Floor 6's own nightmare (sleeper_cerberus.gd - blind robots that wake to sound and put a caught
+# player back by the elevator). Set true, never reset, the moment floor 6's 3 tapes are
+# collected - which also unlocks floor 7.
+var floor6_sleepers_off: bool = false
+
+# Floor 7's own nightmare (blackout_trap.gd - the lights go out and whoever moves in the dark is
+# put back by the elevator). Set true, never reset, the moment floor 7's 3 tapes are collected -
+# which also unlocks floor 8.
+var floor7_lights_steady: bool = false
+
+# Floor 8's own nightmare (name_door_trap.gd - only the room with the hero's name lets him in).
+# Set true the moment floor 8's 3 tapes are collected - which also unlocks floor 9.
+var floor8_named: bool = false
+
+# Floor 2 - the last floor of the story's route - replays "that night": floor 7's blackouts and
+# floor 6's sleepers together. Set true the moment floor 2's 3 tapes are collected.
+var floor2_done: bool = false
+
 func change_state(new_state: GameState) -> void:
     current_state = new_state
     state_changed.emit(new_state)

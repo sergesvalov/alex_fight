@@ -17,5 +17,6 @@
     "tape_hint_maintenance": "шкаф технического помещения",
     "tape_hint_wardrobe": "шкаф в одном из номеров",
     "tape_hint_sealed": "шкаф в номере, запертом снаружи",
+    "tape_hint_own_room": "номер, записанный на ваше имя",
     "tape_hint_unknown": "местонахождение не установлено"
 }

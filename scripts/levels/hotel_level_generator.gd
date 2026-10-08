@@ -255,6 +255,9 @@ func _generate_level() -> void:
 			light.distance_fade_shadow = LIGHT_SHADOW_FADE_DISTANCE
 		_floor_lights_by_index[i] = lights
 		_floor_nodes_by_index[i] = floor_node
+		# Floor 2 replays "that night": the blackouts of floor 7 and the sleepers of floor 6 at once.
+		if i == 7 or i == 2:
+			_add_blackout_trap(floor_node, i, lights, f_scale)
 
 	# Generate roof above the 10th floor
 	var roof_y_offset = (11 - floor_number) * y_step
@@ -306,9 +309,9 @@ func _apply_floor_visibility() -> void:
 			floor_node.visible = shown
 			# A robot on a floor nobody can see has nobody to hunt - no point running its
 			# physics, navigation and sensors.
-			var robot = floor_node.get_node_or_null("Cerberus")
-			if robot:
-				robot.process_mode = Node.PROCESS_MODE_INHERIT if shown else Node.PROCESS_MODE_DISABLED
+			for child in floor_node.get_children():
+				if child.is_in_group("enemies"):
+					child.process_mode = Node.PROCESS_MODE_INHERIT if shown else Node.PROCESS_MODE_DISABLED
 
 var _first_frame_logged: bool = false
 
@@ -503,13 +506,18 @@ func _build_floor_geometry(f_num: int, y_offset: float, suffix: String, c_color:
 		_generate_single_room(parent, f_scale, f_num, room_num)
 	
 	# Floor 5 only - must come before the cassettes, which need to know the sealed room.
+	if f_num == 8:
+		_add_name_doors(parent, f_num, f_scale)
 	if f_num == 5:
 		_add_room_shuffle_trap(parent, f_num)
 
 	_spawn_cassettes(parent, f_scale, f_num)
 	# The level scene's own floor already has its hand-placed robot (base_hotel_level.tscn's
 	# Enemies/Cerberus) - a generated one on top of it would double it up.
-	if suffix != "Main":
+	# Floor 6 has no patrol at all - its robots are the sleepers (see sleeper_cerberus.gd).
+	if f_num == 6 or f_num == 2:
+		_spawn_sleepers(parent, f_scale, &"floor6_sleepers_off" if f_num == 6 else &"floor2_done")
+	elif suffix != "Main":
 		_spawn_cerberus(parent, f_scale)
 
 	# Floor 3 only - see _add_floor3_corridor_barrier()'s own comment for why.
@@ -1117,6 +1125,73 @@ func _generate_single_room(parent: Node, f_scale: float, f_num: int, orig_num: i
 	_bake_csg(inst)
 	parent.add_child(inst)
 
+# A two-part trigger for a room's doorway, shared by the floor traps that act on ENTERING a room
+# (room_shuffle_trap.gd, name_door_trap.gd): the returned Area3D is a slab 0.35..0.95m inside
+# the door, and its "Threshold" child sits in the doorway itself. The scripts arm on the
+# threshold and fire on the slab, so walking out (slab first) never triggers them. Positions are
+# the room's own local ones mapped through its transform, so mirrored rooms come out right; the
+# trigger is meant to be parented to the FLOOR, keeping its shapes out from under a mirrored scale.
+func _make_doorway_trigger(room: Node3D, is_double: bool, trigger_script: Script) -> Area3D:
+	var doorway: Vector3 = Vector3(4.8, 1.1, 8.5) if is_double else Vector3(-3.75, 1.1, 3.5)
+	var inward_x: float = -1.0 if is_double else 1.0
+
+	var trigger = Area3D.new()
+	trigger.collision_layer = 0
+	trigger.collision_mask = 1 # Player layer
+	trigger.set_script(trigger_script)
+	trigger.position = room.transform * (doorway + Vector3(inward_x * 0.65, 0, 0))
+	var inner_shape = BoxShape3D.new()
+	inner_shape.size = Vector3(0.6, 2.2, 1.2)
+	var inner_coll = CollisionShape3D.new()
+	inner_coll.shape = inner_shape
+	trigger.add_child(inner_coll)
+
+	var threshold = Area3D.new()
+	threshold.name = "Threshold"
+	threshold.collision_layer = 0
+	threshold.collision_mask = 1
+	threshold.position = Vector3(-inward_x * 0.65, 0, 0) # back at the doorway itself
+	var threshold_shape = BoxShape3D.new()
+	threshold_shape.size = Vector3(0.5, 2.2, 1.0)
+	var threshold_coll = CollisionShape3D.new()
+	threshold_coll.shape = threshold_shape
+	threshold.add_child(threshold_coll)
+	trigger.add_child(threshold)
+	return trigger
+
+# Floor 8's nightmare - see name_door_trap.gd for the rule. Every room door gets a surname
+# instead of its number and a trigger behind it; one random room is the hero's own, and
+# _spawn_cassettes_other_floor() puts two of the floor's tapes in it (the third is always in
+# the maintenance room, which has neither a plate nor a trigger).
+const FLOOR8_OTHER_NAMES: Array = ["КРЫЛОВА", "СОКОЛОВ", "ЛЕБЕДЕВ", "ВОЛКОВ", "ЗАЙЦЕВА", "МОРОЗОВ", "ПАВЛОВ",
+	"ОРЛОВА", "ГУСЕВ", "ТИТОВ", "БЕЛОВА", "КОМАРОВ", "ЖУКОВ", "НЕЧАЕВА"]
+const FLOOR8_OWN_NAME: String = "НЕЧАЕВ"
+
+func _add_name_doors(parent: Node3D, f_num: int, f_scale: float) -> void:
+	var trap_script = load("res://scripts/levels/blocks/name_door_trap.gd")
+	var nums: Array = DOUBLE_ROOM_LAYOUT.keys() + SINGLE_ROOM_LAYOUT.keys()
+	nums.sort()
+	var own_num: int = nums[randi() % nums.size()]
+	var other_names: Array = FLOOR8_OTHER_NAMES.duplicate()
+	other_names.shuffle()
+	for num in nums:
+		var is_double: bool = DOUBLE_ROOM_LAYOUT.has(num)
+		var room: Node3D = parent.get_node_or_null(("DoubleRoom_" if is_double else "SingleRoom_") + str(f_num * 100 + num % 100))
+		if not room:
+			continue
+		var is_own: bool = num == own_num
+		var label: Label3D = room.get_node_or_null("RoomDoor/AnimatableBody3D/RoomNumberLabel")
+		if label:
+			label.text = FLOOR8_OWN_NAME if is_own else other_names.pop_back()
+			label.font_size = 36 # a surname is longer than a three-digit number
+		var trap: Area3D = _make_doorway_trigger(room, is_double, trap_script)
+		trap.name = "NameDoorTrap_" + str(num)
+		trap.is_own_room = is_own
+		trap.return_position = parent.global_position + Vector3(ELEVATOR_CENTER_X * f_scale, 0.1, (ELEVATOR_CENTER_Z + 2.0) * f_scale)
+		parent.add_child(trap)
+		if is_own:
+			parent.set_meta("own_room", room)
+
 # Floor 5's nightmare - see room_shuffle_trap.gd for the rule. Gives every room on the floor a
 # trap just inside its doorway, and seals one random room's door from the corridor side so that
 # room can only be reached through the trap; _spawn_cassettes_other_floor() puts a tape in it.
@@ -1135,38 +1210,13 @@ func _add_room_shuffle_trap(parent: Node3D, f_num: int) -> void:
 		var room: Node3D = parent.get_node_or_null(("DoubleRoom_" if is_double else "SingleRoom_") + str(f_num * 100 + num % 100))
 		if not room:
 			continue
-		# Doorway center, a slab 0.35..0.95m inside it, and open floor further in.
-		var doorway: Vector3 = Vector3(4.8, 1.1, 8.5) if is_double else Vector3(-3.75, 1.1, 3.5)
-		var inward_x: float = -1.0 if is_double else 1.0
-
-		var trap = Area3D.new()
+		var trap: Area3D = _make_doorway_trigger(room, is_double, trap_script)
 		trap.name = "RoomShuffleTrap_" + str(num)
-		trap.collision_layer = 0
-		trap.collision_mask = 1 # Player layer
-		trap.set_script(trap_script)
 		trap.room = room
 		trap.traps = traps
 		trap.index = traps.size()
 		trap.inside_local = Vector3(2.5, 0.1, 7.5) if is_double else Vector3(-1.5, 0.1, 3.6)
 		trap.facing_yaw = PI / 2.0 if is_double else -PI / 2.0
-		trap.position = room.transform * (doorway + Vector3(inward_x * 0.65, 0, 0))
-		var inner_shape = BoxShape3D.new()
-		inner_shape.size = Vector3(0.6, 2.2, 1.2)
-		var inner_coll = CollisionShape3D.new()
-		inner_coll.shape = inner_shape
-		trap.add_child(inner_coll)
-
-		var threshold = Area3D.new()
-		threshold.name = "Threshold"
-		threshold.collision_layer = 0
-		threshold.collision_mask = 1
-		threshold.position = Vector3(-inward_x * 0.65, 0, 0) # back at the doorway itself
-		var threshold_shape = BoxShape3D.new()
-		threshold_shape.size = Vector3(0.5, 2.2, 1.0)
-		var threshold_coll = CollisionShape3D.new()
-		threshold_coll.shape = threshold_shape
-		threshold.add_child(threshold_coll)
-		trap.add_child(threshold)
 
 		traps.append(trap)
 		parent.add_child(trap)
@@ -1342,6 +1392,15 @@ func _spawn_cassettes_other_floor(parent: Node, f_scale: float, scene: PackedSce
 	if sealed_room != null:
 		chosen_wardrobe = sealed_room.get_node_or_null("Wardrobe")
 
+	# Floor 8 lets the hero into one room only, his own (_add_name_doors()) - both room tapes
+	# go there, on its table and in its wardrobe.
+	var own_room = parent.get_meta("own_room") if parent.has_meta("own_room") else null
+	if own_room != null:
+		var own_tables = []
+		_find_props(own_room, "Table", own_tables)
+		chosen_table = own_tables[0] if not own_tables.is_empty() else chosen_table
+		chosen_wardrobe = own_room.get_node_or_null("Wardrobe")
+
 	# _find_props() only matches nodes named "Wardrobe" - the maintenance room's own two
 	# ("MaintWardrobe1"/"MaintWardrobe2", see _generate_maintenance_room()) don't match that
 	# prefix, so they're never candidates for chosen_wardrobe above; used here instead as the
@@ -1356,7 +1415,7 @@ func _spawn_cassettes_other_floor(parent: Node, f_scale: float, scene: PackedSce
 		# See _spawn_cassettes_start_floor() for why position must be set via a parent-relative
 		# LOCAL transform (converted from the target's global_transform) before add_child().
 		if i == 0 and chosen_table != null:
-			inst.location_hint = "tape_hint_table"
+			inst.location_hint = "tape_hint_own_room" if own_room != null else "tape_hint_table"
 			var target = chosen_table.global_transform
 			target.origin += chosen_table.global_basis * Vector3(0.0, 0.8, 0.0)
 			inst.transform = parent.global_transform.affine_inverse() * target
@@ -1366,7 +1425,7 @@ func _spawn_cassettes_other_floor(parent: Node, f_scale: float, scene: PackedSce
 			target.origin += maint_wardrobe.global_basis * Vector3(-0.28, 1.15, 0.05)
 			inst.transform = parent.global_transform.affine_inverse() * target
 		elif i == 2 and chosen_wardrobe != null:
-			inst.location_hint = "tape_hint_sealed" if sealed_room != null else "tape_hint_wardrobe"
+			inst.location_hint = "tape_hint_sealed" if sealed_room != null else ("tape_hint_own_room" if own_room != null else "tape_hint_wardrobe")
 			var target = chosen_wardrobe.global_transform
 			target.origin += chosen_wardrobe.global_basis * Vector3(-0.28, 1.15, 0.05)
 			inst.transform = parent.global_transform.affine_inverse() * target
@@ -1410,6 +1469,44 @@ func _spawn_cerberus(parent: Node, f_scale: float) -> void:
 	inst.patrol_points = patrol_points
 
 	parent.add_child(inst)
+
+# Floor 6's nightmare - see sleeper_cerberus.gd for the rule. Four of them stand along the main
+# corridor, alternating sides so none blocks the way. Corridor only, on purpose: a sleeper shut
+# inside a room could never be lured away from it (closed doors are solid to the navmesh), so
+# taking a tape there would be a guaranteed catch instead of a decision.
+const SLEEPER_POSTS: Array = [Vector2(-0.6, -16.0), Vector2(2.8, -5.0), Vector2(-0.6, 7.0), Vector2(2.8, 19.0)] # X, Z
+
+func _spawn_sleepers(parent: Node3D, f_scale: float, off_flag: StringName) -> void:
+	var scene = load("res://entities/enemies/cerberus/cerberus.tscn")
+	var sleeper_script = load("res://scripts/enemies/sleeper_cerberus.gd")
+	if not scene or not sleeper_script: return
+	for i in range(SLEEPER_POSTS.size()):
+		var post: Vector2 = SLEEPER_POSTS[i]
+		var inst = scene.instantiate()
+		inst.set_script(sleeper_script)
+		inst.name = "Sleeper_" + str(i + 1)
+		inst.off_flag = off_flag
+		# position MUST be set before add_child() - see _generate_maintenance_room() for why.
+		inst.position = Vector3(post.x * f_scale, 0, post.y * f_scale)
+		inst.rotation.y = PI / 2.0 if post.x < 1.0 else -PI / 2.0 # backs to the wall, facing across
+		# Where one of them puts a caught player: the open corridor in front of this floor's
+		# elevator door (elevator at ELEVATOR_CENTER_X, its door on the Z=-25 face).
+		inst.return_position = parent.global_position + Vector3(ELEVATOR_CENTER_X * f_scale, 0.1, (ELEVATOR_CENTER_Z + 2.0) * f_scale)
+		parent.add_child(inst)
+
+# Floor 7's nightmare - see blackout_trap.gd for the rule. It gets this floor's own lights (the
+# same list _set_lit_floor() switches) and the glowing ceiling panels that go with them, and the
+# same "back by the elevator" spot floor 6's sleepers use.
+func _add_blackout_trap(parent: Node3D, f_num: int, lights: Array, f_scale: float) -> void:
+	var trap = Node3D.new()
+	trap.name = "BlackoutTrap"
+	trap.set_script(load("res://scripts/levels/blocks/blackout_trap.gd"))
+	trap.floor_num = f_num
+	trap.off_flag = &"floor7_lights_steady" if f_num == 7 else &"floor2_done"
+	trap.lights = lights
+	trap.lamp_meshes = parent.find_children("*LightMesh", "MeshInstance3D", true, false)
+	trap.return_position = parent.global_position + Vector3(ELEVATOR_CENTER_X * f_scale, 0.1, (ELEVATOR_CENTER_Z + 2.0) * f_scale)
+	parent.add_child(trap)
 
 func _generate_roof(y_offset: float, f_scale: float) -> void:
 	var parent = Node3D.new()
@@ -1505,6 +1602,44 @@ func _on_all_tapes_collected() -> void:
 			_sealed_room_door.locked_from_corridor = false
 		GameStateManager.unlock_floor(6)
 		DialogSystem.trigger_alex_line("floor5_done")
+
+	# 4. Floor 6's own tapes - its sleepers (sleeper_cerberus.gd) switch off for good, and
+	#    floor 7 unlocks.
+	if GameStateManager.current_floor == 6 and not GameStateManager.floor6_sleepers_off:
+		GameStateManager.floor6_sleepers_off = true
+		GameStateManager.unlock_floor(7)
+		DialogSystem.trigger_alex_line("floor6_done")
+
+	# 5. Floor 7's own tapes - its blackouts (blackout_trap.gd) stop for good, floor 8 unlocks.
+	if GameStateManager.current_floor == 7 and not GameStateManager.floor7_lights_steady:
+		GameStateManager.floor7_lights_steady = true
+		GameStateManager.unlock_floor(8)
+		DialogSystem.trigger_alex_line("floor7_done")
+
+	# 6. Floor 8's own tapes - its name doors (name_door_trap.gd) let anyone through, floor 9
+	#    unlocks.
+	if GameStateManager.current_floor == 8 and not GameStateManager.floor8_named:
+		GameStateManager.floor8_named = true
+		GameStateManager.unlock_floor(9)
+		DialogSystem.trigger_alex_line("floor8_done")
+
+	# 7. Floors 9 and 10 have no nightmare of their own (yet): their tapes just open the next
+	#    stop of the story's route, 9 -> 10 -> 2 (see LORE.md - floor 2 comes last).
+	if GameStateManager.current_floor == 9 and not GameStateManager.is_floor_unlocked(10):
+		GameStateManager.unlock_floor(10)
+		DialogSystem.trigger_alex_line("floor9_done")
+	if GameStateManager.current_floor == 10 and not GameStateManager.is_floor_unlocked(2):
+		# Floors are unlocked as one contiguous range, so this is the one place the range
+		# grows downward - floor 2 sits right under the already-open floor 3.
+		GameStateManager.unlock_floor(2)
+		DialogSystem.trigger_alex_line("floor10_done")
+
+	# 8. Floor 2's own tapes - "that night" stops repeating: its sleepers and blackouts (the
+	#    floor 6 and floor 7 traps together) switch off. There is nowhere further to go yet:
+	#    the way down to the lab does not exist in the game.
+	if GameStateManager.current_floor == 2 and not GameStateManager.floor2_done:
+		GameStateManager.floor2_done = true
+		DialogSystem.trigger_alex_line("floor2_done")
 
 # Rebuilds the same doorway from GameStateManager's persisted secret_portal_* fields - called
 # both right after _on_all_tapes_collected() rolls them, and from _ready() if this level scene

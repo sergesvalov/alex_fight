@@ -66,6 +66,12 @@ func shoot() -> void:
         # Spawn Hit Marker с лимитом на количество в сцене
         _spawn_hit_marker(hit_point, raycast.get_collision_normal())
 
+    # A shot is loud: robots on this floor within earshot come to where it was fired (see
+    # enemy_ai_base.gd::hear_noise()). Reported AFTER the hit above was applied - a sleeping
+    # floor-6 robot (sleeper_cerberus.gd) ignores a hit while asleep, so the very shot that
+    # wakes it must not also be the one that destroys it.
+    get_tree().call_group("enemies", "hear_noise", global_position)
+
     # Visual beam
     beam_mesh.mesh.height = distance
     beam_mesh.position.z = -distance / 2.0

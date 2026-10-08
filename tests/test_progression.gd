@@ -222,13 +222,28 @@ func _ready() -> void:
 		if child.name.begins_with("Cassette_"):
 			cassettes.append(child)
 	cassettes.sort_custom(func(a, b): return a.tape_id > b.tape_id) # take them in REVERSE: 2, 1, 0
-	var robot6 = floor6.get_node_or_null("Cerberus")
+	# The sleeper nearest to the first cassette: where the tapes lie is random, and one further
+	# than hearing range from a particular sleeper would make this check a coin toss.
+	var robot6: Node = null
+	for candidate in floor6.get_children():
+		if candidate.name.begins_with("Sleeper_") and (robot6 == null or candidate.global_position.distance_to(cassettes[0].global_position) < robot6.global_position.distance_to(cassettes[0].global_position)):
+			robot6 = candidate
+	var sleepers: Array = floor6.get_children().filter(func(c): return c.name.begins_with("Sleeper_"))
+	_check(sleepers.size() == 4 and floor6.get_node_or_null("Cerberus") == null, "floor 6 has four sleepers and no patrolling robot")
+	if robot6:
+		robot6.take_damage(1)
+	_check(is_instance_valid(robot6) and not robot6.is_queued_for_deletion(), "a shot does nothing to a sleeper while it is asleep")
 	var robot5 = generator.get_floor_node(5).get_node_or_null("Cerberus")
 	_check(robot6 != null and robot6.current_state != robot6.State.INVESTIGATE, "floor 6's robot is not on its way anywhere before any tape plays")
 
 	cassettes[0].interact(listener)
 	_check(robot6 != null and robot6.current_state == robot6.State.INVESTIGATE and robot6._noise_position.distance_to(cassettes[0].global_position) < 0.01, "a tape playing on floor 6 sends floor 6's robot to the spot it was played at")
 	_check(robot5 != null and robot5.current_state != robot5.State.INVESTIGATE, "floor 5's robot does not hear a tape played on floor 6")
+	# Caught: an awake sleeper within arm's reach puts the player back by the elevator.
+	listener.global_position = robot6.global_position + Vector3(0.6, 0.0, 0.0)
+	robot6._physics_process(0.016)
+	_check(listener.global_position.distance_to(robot6.return_position) < 0.01, "an awake sleeper that reaches the player returns him to the elevator")
+	_check(absf(robot6.return_position.x - HotelLevelGenerator.ELEVATOR_CENTER_X) < 0.01 and absf(robot6.return_position.y - floor6.global_position.y) < 0.5, "that spot is in front of floor 6's own elevator")
 	cassettes[1].interact(listener)
 	cassettes[2].interact(listener)
 	var floor6_ids: Array = []
@@ -238,6 +253,117 @@ func _ready() -> void:
 	_check(floor6_ids == [0, 1, 2] and GameStateManager.tapes_found == [0, 1, 2],
 		"tapes taken as cassettes 2,1,0 still play recordings 1,2,3 in that order: " + str(floor6_ids))
 	_check(cassettes.all(func(c): return c.is_queued_for_deletion()), "taken cassettes leave the level")
+	_check(GameStateManager.is_floor_unlocked(7) and not GameStateManager.is_floor_unlocked(8), "floor 6's three tapes unlock floor 7, and only floor 7")
+	_check(GameStateManager.floor6_sleepers_off, "floor 6's three tapes switch the sleepers off")
+	var still_asleep: Node = sleepers[3]
+	still_asleep._physics_process(0.016) # one tick: a sleeper already on its way turns back
+	still_asleep.hear_noise(still_asleep.global_position + Vector3(2, 0, 0))
+	_check(still_asleep.current_state != still_asleep.State.INVESTIGATE, "a switched-off sleeper no longer wakes to sound")
+
+	# --- Floor 7: the blackouts ---
+	GameStateManager.current_floor = 7
+	var floor7: Node3D = generator.get_floor_node(7)
+	var blackout = floor7.get_node_or_null("BlackoutTrap")
+	_check(blackout != null and blackout.lights.size() > 40 and blackout.lamp_meshes.size() > 40 and generator.get_floor_node(6).get_node_or_null("BlackoutTrap") == null,
+		"floor 7, and only floor 7, has the blackout trap wired to its lights")
+	_check(blackout.period_for(0) > blackout.period_for(1) and blackout.period_for(1) > blackout.period_for(2), "each tape found makes the blackouts come sooner")
+	var a_light: Light3D = blackout.lights[0]
+	var lit_energy: float = a_light.light_energy
+	listener.global_position = floor7.global_position + Vector3(1.0, 0.1, 5.0)
+	var stood_at: Vector3 = listener.global_position
+	blackout._enter(blackout.Phase.DARK)
+	_check(is_zero_approx(a_light.light_energy) and not blackout.lamp_meshes[0].visible, "in a blackout the floor's lights and lamp panels go dark")
+	listener.velocity = Vector3.ZERO
+	blackout._process(1.0)
+	_check(listener.global_position == stood_at, "standing still through the dark is safe")
+	listener.velocity = Vector3(3.0, 0.0, 0.0)
+	blackout._process(0.1)
+	_check(listener.global_position.distance_to(blackout.return_position) < 0.01, "moving in the dark puts the player back by the elevator")
+	_check(is_equal_approx(a_light.light_energy, lit_energy) and blackout.lamp_meshes[0].visible, "the lights come back afterwards")
+	listener.velocity = Vector3.ZERO
+	for id in range(3):
+		_collect(7, id)
+	_check(GameStateManager.floor7_lights_steady and GameStateManager.is_floor_unlocked(8) and not GameStateManager.is_floor_unlocked(9),
+		"floor 7's three tapes stop the blackouts and unlock floor 8")
+	blackout._enter(blackout.Phase.DARK)
+	blackout._process(0.1)
+	_check(blackout.phase == blackout.Phase.LIT and is_equal_approx(a_light.light_energy, lit_energy), "after that the trap keeps the lights on")
+
+	# --- Floor 8: name yourself ---
+	GameStateManager.current_floor = 8
+	listener.name = "Player" # the doorway triggers go by the player node's name
+	var floor8: Node3D = generator.get_floor_node(8)
+	var name_traps: Array = floor8.get_children().filter(func(c): return c.name.begins_with("NameDoorTrap_"))
+	var own_traps: Array = name_traps.filter(func(c): return c.is_own_room)
+	_check(name_traps.size() == 15 and own_traps.size() == 1, "floor 8 has a name trigger in each of its 15 rooms, exactly one of them the hero's own")
+	var own_room: Node3D = floor8.get_meta("own_room") if floor8.has_meta("own_room") else null
+	var plates: Array = []
+	for child in floor8.get_children():
+		if child.name.begins_with("DoubleRoom_") or child.name.begins_with("SingleRoom_"):
+			plates.append(child.get_node("RoomDoor/AnimatableBody3D/RoomNumberLabel").text)
+	var unique_plates: Dictionary = {}
+	for plate in plates:
+		unique_plates[plate] = true
+	_check(plates.size() == 15 and unique_plates.size() == 15 and plates.count("НЕЧАЕВ") == 1
+		and own_room != null and own_room.get_node("RoomDoor/AnimatableBody3D/RoomNumberLabel").text == "НЕЧАЕВ",
+		"its door plates are 15 different surnames, the hero's on his own room")
+	var hints8: Array = []
+	for child in floor8.get_children():
+		if child.name.begins_with("Cassette_"):
+			hints8.append(child.location_hint)
+	hints8.sort()
+	_check(hints8 == ["tape_hint_maintenance", "tape_hint_own_room", "tape_hint_own_room"],
+		"one of floor 8's tapes is in the maintenance room, the other two in the hero's room: " + str(hints8))
+	var wrong_trap = name_traps.filter(func(c): return not c.is_own_room)[0]
+	listener.global_position = wrong_trap.global_position
+	wrong_trap._on_body_entered(listener)
+	_check(listener.global_position == wrong_trap.global_position, "walking out of a room (no doorway crossed first) does nothing")
+	wrong_trap._on_threshold_entered(listener)
+	wrong_trap._on_body_entered(listener)
+	_check(listener.global_position.distance_to(wrong_trap.return_position) < 0.01, "entering somebody else's room puts the player back by the elevator")
+	listener.global_position = own_traps[0].global_position
+	own_traps[0]._on_threshold_entered(listener)
+	own_traps[0]._on_body_entered(listener)
+	_check(listener.global_position == own_traps[0].global_position, "entering his own room does not")
+	for id in range(3):
+		_collect(8, id)
+	_check(GameStateManager.floor8_named and GameStateManager.is_floor_unlocked(9) and not GameStateManager.is_floor_unlocked(10),
+		"floor 8's three tapes open every door and unlock floor 9")
+	listener.global_position = wrong_trap.global_position
+	wrong_trap._on_threshold_entered(listener)
+	wrong_trap._on_body_entered(listener)
+	_check(listener.global_position == wrong_trap.global_position, "after that any room can be entered")
+
+	# --- 9 -> 10 -> 2: the rest of the story's route ---
+	GameStateManager.current_floor = 9
+	for id in range(3):
+		_collect(9, id)
+	_check(GameStateManager.is_floor_unlocked(10) and not GameStateManager.is_floor_unlocked(2), "floor 9's three tapes unlock floor 10")
+	GameStateManager.current_floor = 10
+	for id in range(3):
+		_collect(10, id)
+	_check(GameStateManager.is_floor_unlocked(2) and not GameStateManager.is_floor_unlocked(1), "floor 10's three tapes unlock floor 2 - and never floor 1")
+	_check(_routes() == [4, 2, 3, 4, 5, 6, 7, 8, 9, 10], "the elevator now reaches every furnished floor: " + str(_routes()))
+
+	# --- Floor 2: "that night" - sleepers and blackouts together ---
+	var floor2: Node3D = generator.get_floor_node(2)
+	var sleepers2: Array = floor2.get_children().filter(func(c): return c.name.begins_with("Sleeper_"))
+	var blackout2 = floor2.get_node_or_null("BlackoutTrap")
+	_check(sleepers2.size() == 4 and blackout2 != null and blackout2.floor_num == 2, "floor 2 has both the sleepers and the blackouts")
+	GameStateManager.current_floor = 2
+	generator._set_lit_floor(2)
+	sleepers2[0].hear_noise(sleepers2[0].global_position + Vector3(3, 0, 0))
+	_check(sleepers2[0].current_state == sleepers2[0].State.INVESTIGATE, "floor 2's sleepers are live even though floor 6's were switched off")
+	blackout2._enter(blackout2.Phase.DARK)
+	blackout2._process(0.1)
+	_check(blackout2.phase == blackout2.Phase.DARK, "floor 2's blackouts run even though floor 7's were stopped")
+	for id in range(3):
+		_collect(2, id)
+	blackout2._process(0.1)
+	_check(GameStateManager.floor2_done and blackout2.phase == blackout2.Phase.LIT, "floor 2's three tapes end that night: the lights stay on")
+	sleepers2[1].hear_noise(sleepers2[1].global_position + Vector3(3, 0, 0))
+	_check(sleepers2[1].current_state != sleepers2[1].State.INVESTIGATE, "...and its sleepers no longer wake")
+
 
 	print("==================================================")
 	if errors > 0:
