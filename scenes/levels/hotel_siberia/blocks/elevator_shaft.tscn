@@ -119,7 +119,9 @@ material = SubResource("StandardMaterial3D_car")
 use_collision = true
 collision_layer = 2
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.0, 4.9)
-size = Vector3(4.7, 4.0, 0.2)
+; 4.3 wide: fits between the side walls (inner faces at X +-2.15) instead of running through
+; them - at 4.7 its ends shared planes with their outer faces and flickered there.
+size = Vector3(4.3, 4.0, 0.2)
 material = SubResource("StandardMaterial3D_car")
 
 ; Doorway frame trim (2026-08-24) - a flat dark door sitting flush against the wallpaper with no

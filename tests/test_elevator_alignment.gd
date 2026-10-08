@@ -76,7 +76,20 @@ func _ready() -> void:
 	print("OPEN PANELS STAY CLEAR OF CAR SIDE WALLS: ", clears_when_open,
 		" (west_inner=", west_inner, ", east_inner=", east_inner, ")")
 
-	if not covers_hole or not clears_when_open:
+	# An open panel sits inside the door wall. It has to be strictly thinner than that wall and
+	# strictly inside it: with faces in the same planes as the wall's own, the metal flickers
+	# through the wallpaper beside the doorway.
+	var north_wall = shaft.get_node("ElevatorGeometry/ElevatorNorthWall")
+	var wall_z0: float = north_wall.position.z - north_wall.size.z / 2
+	var wall_z1: float = north_wall.position.z + north_wall.size.z / 2
+	var panel_depth: float = panels["LEFT"].get_node("MeshInstance3D").mesh.size.z
+	var panel_z0: float = door.position.z - panel_depth / 2
+	var panel_z1: float = door.position.z + panel_depth / 2
+	var hidden_in_wall: bool = panel_z0 > wall_z0 + 0.01 and panel_z1 < wall_z1 - 0.01
+	print("OPEN PANELS HIDDEN INSIDE THE DOOR WALL: ", hidden_in_wall,
+		" (panel Z ", panel_z0, "..", panel_z1, ", wall Z ", wall_z0, "..", wall_z1, ")")
+
+	if not covers_hole or not clears_when_open or not hidden_in_wall:
 		print("❌ ELEVATOR DOOR ALIGNMENT TEST FAILED")
 		get_tree().quit(1)
 		return

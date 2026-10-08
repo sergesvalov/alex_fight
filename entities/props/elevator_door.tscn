@@ -12,10 +12,10 @@ roughness = 0.2
 
 [sub_resource type="BoxMesh" id="BoxMesh_panel"]
 material = SubResource("StandardMaterial3D_door")
-size = Vector3(0.65, 2.5, 0.2)
+size = Vector3(0.65, 2.5, 0.12)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_panel"]
-size = Vector3(0.65, 2.5, 0.2)
+size = Vector3(0.65, 2.5, 0.12)
 
 [node name="ElevatorDoorRoot" type="Node3D"]
 
@@ -30,6 +30,10 @@ script = ExtResource("1_pair")
 ; punches through into the hotel wall beyond, the exact failure this replaces fixed for good.
 ; Panel mesh/collision is also sized (2.5) and offset (y=1.15) to match the hole's own height and
 ; vertical center exactly, closing the ~0.1m gap the old single door left at floor level.
+; Panels are 0.12 thick, thinner than the 0.2 wall they slide into (ElevatorNorthWall, local
+; Z 0..0.2, with this door at Z 0.1): at 0.2 their faces lay exactly in the planes of both wall
+; faces, and an open panel flickered through the wallpaper beside the doorway, inside the car
+; and out.
 open_offset = Vector3(1.3, 0, 0)
 move_time = 1.5
 
