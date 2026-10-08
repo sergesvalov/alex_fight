@@ -3,6 +3,9 @@ pipeline {
     
     options {
         timeout(time: 1, unit: 'HOURS')
+        // Checkout делается вручную в 'Source Checkout' - перед ним нужно успеть вернуть себе
+        // права на файлы рабочей директории (см. комментарий там).
+        skipDefaultCheckout()
     }
 
     parameters {
@@ -24,6 +27,14 @@ pipeline {
     stages {
         stage('Source Checkout') {
             steps {
+                // Сборка идёт в контейнере под root (inside('-u root') ниже), поэтому всё, что
+                // она создаёт в рабочей директории (.godot/, build/, *.import, *.uid), принадлежит
+                // root. Стоит git-плагину решить пересоздать директорию (свежий clone) - он падает
+                // с "Failed to clean the workspace: Unable to delete", потому что пользователь
+                // jenkins не может удалить чужие файлы. Возвращаем владельца тем же способом,
+                // каким он был потерян - через контейнер под root. '|| true': на самой первой
+                // сборке директории ещё может не быть.
+                sh 'docker run --rm -v "$WORKSPACE":/ws alpine chown -R "$(id -u):$(id -g)" /ws || true'
                 checkout scm
             }
         }
@@ -317,6 +328,11 @@ pipeline {
     }
 
     post {
+        always {
+            // См. 'Source Checkout': после сборки под root возвращаем файлы пользователю jenkins,
+            // чтобы рабочую директорию можно было очистить и из самого Jenkins, и следующим checkout.
+            sh 'docker run --rm -v "$WORKSPACE":/ws alpine chown -R "$(id -u):$(id -g)" /ws || true'
+        }
         success {
             archiveArtifacts artifacts: 'build/*.apk, build/*.zip, build/windows_build_report.txt', fingerprint: true, allowEmptyArchive: true
             echo "Successfully built Alex Fight via Godot Docker Builder! 🎉"
