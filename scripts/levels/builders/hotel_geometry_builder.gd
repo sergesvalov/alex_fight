@@ -4,7 +4,7 @@ extends RefCounted
 const FloorMap = preload("res://scripts/levels/floor_map.gd")
 
 
-static func build_floor_geometry(generator, f_num: int, y_offset: float, suffix: String, c_color: Color, is_empty: bool, f_scale: float) -> Node3D:
+static func build_floor_geometry(generator: HotelLevelGenerator, f_num: int, y_offset: float, suffix: String, c_color: Color, is_empty: bool, f_scale: float) -> Node3D:
 	var parent = Node3D.new()
 	parent.name = "GeneratedFloor_" + suffix
 	parent.position.y = y_offset

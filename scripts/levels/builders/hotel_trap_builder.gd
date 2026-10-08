@@ -29,7 +29,7 @@ static func make_doorway_trigger(room: Node3D, is_double: bool, trigger_script: 
 	trigger.add_child(threshold)
 	return trigger
 
-static func add_name_doors(generator, parent: Node3D, f_num: int, f_scale: float) -> void:
+static func add_name_doors(generator: HotelLevelGenerator, parent: Node3D, f_num: int, f_scale: float) -> void:
 	var trap_script = load("res://scripts/levels/blocks/name_door_trap.gd")
 	var nums: Array = HotelConstants.DOUBLE_ROOM_LAYOUT.keys() + HotelConstants.SINGLE_ROOM_LAYOUT.keys()
 	nums.sort()
@@ -54,7 +54,7 @@ static func add_name_doors(generator, parent: Node3D, f_num: int, f_scale: float
 		if is_own:
 			parent.set_meta("own_room", room)
 
-static func add_room_shuffle_trap(generator, parent: Node3D, f_num: int) -> void:
+static func add_room_shuffle_trap(generator: HotelLevelGenerator, parent: Node3D, f_num: int) -> void:
 	var trap_script = load("res://scripts/levels/blocks/room_shuffle_trap.gd")
 	var traps: Array = []
 	var nums: Array = HotelConstants.DOUBLE_ROOM_LAYOUT.keys() + HotelConstants.SINGLE_ROOM_LAYOUT.keys()
@@ -94,7 +94,7 @@ static func add_blackout_trap(parent: Node3D, f_num: int, lights: Array, f_scale
 	trap.return_position = parent.global_position + Vector3(HotelConstants.ELEVATOR_CENTER_X * f_scale, 0.1, (HotelConstants.ELEVATOR_CENTER_Z + 2.0) * f_scale)
 	parent.add_child(trap)
 
-static func add_floor_wide_trap(generator, parent: Node3D, f_num: int, f_scale: float) -> void:
+static func add_floor_wide_trap(generator: HotelLevelGenerator, parent: Node3D, f_num: int, f_scale: float) -> void:
 	var trap = Node3D.new()
 	if f_num == 9:
 		trap.name = "SweepCameraTrap"
@@ -110,7 +110,7 @@ static func add_floor_wide_trap(generator, parent: Node3D, f_num: int, f_scale: 
 	trap.return_position = parent.global_position + Vector3(HotelConstants.ELEVATOR_CENTER_X * f_scale, 0.1, (HotelConstants.ELEVATOR_CENTER_Z + 2.0) * f_scale)
 	parent.add_child(trap)
 
-static func add_floor3_corridor_barrier(generator, parent: Node, f_scale: float) -> void:
+static func add_floor3_corridor_barrier(generator: HotelLevelGenerator, parent: Node, f_scale: float) -> void:
 	var barrier = StaticBody3D.new()
 	barrier.name = "CorridorBarrier"
 	barrier.set_script(load("res://scripts/levels/blocks/corridor_barrier.gd"))

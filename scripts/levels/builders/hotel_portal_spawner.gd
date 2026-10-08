@@ -5,7 +5,7 @@ extends RefCounted
 # Rebuilds the same doorway from GameStateManager's persisted secret_portal_* fields - called
 # both right after _on_all_tapes_collected() rolls them, and from _ready() if this level scene
 # reloads after the door already exists (so it doesn't move to a new random spot on reload).
-static func create_exit_portal(generator) -> void:
+static func create_exit_portal(generator: HotelLevelGenerator) -> void:
 	var f_scale = GlobalConfig.get_floor_scale()
 	var floor_num = GameStateManager.secret_portal_floor
 	var suffix = "Main" if floor_num == generator.floor_number else str(floor_num)
@@ -113,7 +113,7 @@ static func create_exit_portal(generator) -> void:
 # Picks a random room on floor 3 specifically (per the request this implements) and a safe
 # standing spot just inside it - same relative offsets already proven by the room-to-room secret
 # portal this replaces.
-static func pick_random_floor3_target(generator) -> Vector3:
+static func pick_random_floor3_target(generator: HotelLevelGenerator) -> Vector3:
 	var is_single = randi() % 2 == 1
 	var layout = HotelConstants.SINGLE_ROOM_LAYOUT if is_single else HotelConstants.DOUBLE_ROOM_LAYOUT
 	var keys = layout.keys()

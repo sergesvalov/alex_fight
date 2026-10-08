@@ -18,7 +18,7 @@ static func add_room_door(room_inst: Node3D, node_name: String, local_pos: Vecto
 
 	room_inst.add_child(door_inst)
 
-static func generate_double_room(generator, parent: Node, f_scale: float, f_num: int, orig_num: int) -> void:
+static func generate_double_room(generator: HotelLevelGenerator, parent: Node, f_scale: float, f_num: int, orig_num: int) -> void:
 	var layout = HotelConstants.DOUBLE_ROOM_LAYOUT.get(orig_num)
 	if not layout: return
 	var scene = load("res://scenes/levels/hotel_siberia/blocks/double_room.tscn")
@@ -38,7 +38,7 @@ static func generate_double_room(generator, parent: Node, f_scale: float, f_num:
 	generator._bake_csg(inst)
 	parent.add_child(inst)
 
-static func generate_single_room(generator, parent: Node, f_scale: float, f_num: int, orig_num: int) -> void:
+static func generate_single_room(generator: HotelLevelGenerator, parent: Node, f_scale: float, f_num: int, orig_num: int) -> void:
 	var layout = HotelConstants.SINGLE_ROOM_LAYOUT.get(orig_num)
 	if not layout: return
 	var scene = load("res://scenes/levels/hotel_siberia/blocks/single_room.tscn")

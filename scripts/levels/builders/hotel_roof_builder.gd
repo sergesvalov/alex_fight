@@ -2,7 +2,7 @@
 extends RefCounted
 
 
-static func generate_roof(generator, y_offset: float, f_scale: float) -> void:
+static func generate_roof(generator: HotelLevelGenerator, y_offset: float, f_scale: float) -> void:
 	var parent = Node3D.new()
 	parent.name = "GeneratedRoof"
 	parent.position.y = y_offset
@@ -64,7 +64,7 @@ static func generate_roof(generator, y_offset: float, f_scale: float) -> void:
 	build_roof_structures(generator, parent, f_scale, roof_mat)
 
 
-static func build_roof_structures(_generator, parent: Node3D, f_scale: float, mat: Material) -> void:
+static func build_roof_structures(_generator: HotelLevelGenerator, parent: Node3D, f_scale: float, mat: Material) -> void:
 	var hh: float = HotelLevelGenerator.ROOF_ROOM_HEIGHT
 	var door_w: float = 1.2 * f_scale
 	var door_h: float = 2.2 * f_scale

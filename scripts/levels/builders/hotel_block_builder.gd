@@ -2,7 +2,7 @@
 extends RefCounted
 
 
-static func generate_maintenance_room(generator, parent: Node, f_scale: float, height: float, thickness: float, wall_mat: Material) -> void:
+static func generate_maintenance_room(generator: HotelLevelGenerator, parent: Node, f_scale: float, height: float, thickness: float, wall_mat: Material) -> void:
 	var wall_y = height / 2.0
 	HotelSpecialFloorBuilder.create_static_box(parent, "Maint_Inner_South", Vector3(11.15 * f_scale, wall_y, -20.0 * f_scale), Vector3(3.0 * f_scale, height, thickness), wall_mat)
 
@@ -54,7 +54,7 @@ static func generate_maintenance_room(generator, parent: Node, f_scale: float, h
 			parent.add_child(wardrobe_inst)
 
 
-static func generate_north_stairs(generator, parent: Node, f_scale: float, f_num: int) -> void:
+static func generate_north_stairs(generator: HotelLevelGenerator, parent: Node, f_scale: float, f_num: int) -> void:
 	var scene = load("res://scenes/levels/hotel_siberia/blocks/north_stairs.tscn")
 	if scene:
 		var inst = scene.instantiate()
@@ -148,7 +148,7 @@ static func generate_north_stairs(generator, parent: Node, f_scale: float, f_num
 		parent.add_child(inst)
 
 
-static func generate_south_stairs_ramp(generator, parent: Node, f_scale: float, height: float, floor_thick: float, floor_mat: Material) -> void:
+static func generate_south_stairs_ramp(generator: HotelLevelGenerator, parent: Node, f_scale: float, height: float, floor_thick: float, floor_mat: Material) -> void:
 	# Dog-leg staircase, self-contained per floor (same philosophy as north_stairs.tscn's
 	# 3 flights: each floor climbs its own full 0 -> floor-to-floor-height run, and stacking
 	# floors is what makes it continuous - no geometry is shared with or duplicated by the
@@ -215,7 +215,7 @@ static func generate_south_stairs_ramp(generator, parent: Node, f_scale: float, 
 
 
 
-static func generate_elevator(generator, parent: Node, f_scale: float) -> void:
+static func generate_elevator(generator: HotelLevelGenerator, parent: Node, f_scale: float) -> void:
 	var scene = load("res://scenes/levels/hotel_siberia/blocks/elevator_shaft.tscn")
 	if scene:
 		var inst = scene.instantiate()

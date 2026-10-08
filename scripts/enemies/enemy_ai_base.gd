@@ -129,13 +129,3 @@ func take_damage(amount: int) -> void:
 
 func _die() -> void:
 	queue_free()
-
-# Backwards compatibility properties to avoid breaking subclasses like sleeper_cerberus.gd
-enum State { IDLE, PATROL, CHASE, ATTACK, RETURN, DEAD, INVESTIGATE }
-var current_state: int:
-	get:
-		if state_machine == null:
-			return State.IDLE
-		return State.get(state_machine.current_state_name, State.IDLE)
-func _set_state(s: int) -> void:
-	pass # Only here so subclasses overriding don't crash before we update them

@@ -234,11 +234,11 @@ func _ready() -> void:
 		robot6.take_damage(1)
 	_check(is_instance_valid(robot6) and not robot6.is_queued_for_deletion(), "a shot does nothing to a sleeper while it is asleep")
 	var robot5 = generator.get_floor_node(5).get_node_or_null("Cerberus")
-	_check(robot6 != null and robot6.current_state != robot6.State.INVESTIGATE, "floor 6's robot is not on its way anywhere before any tape plays")
+	_check(robot6 != null and robot6.state_machine.current_state_name != "INVESTIGATE", "floor 6's robot is not on its way anywhere before any tape plays")
 
 	cassettes[0].interact(listener)
-	_check(robot6 != null and robot6.current_state == robot6.State.INVESTIGATE and robot6._noise_position.distance_to(cassettes[0].global_position) < 0.01, "a tape playing on floor 6 sends floor 6's robot to the spot it was played at")
-	_check(robot5 != null and robot5.current_state != robot5.State.INVESTIGATE, "floor 5's robot does not hear a tape played on floor 6")
+	_check(robot6 != null and robot6.state_machine.current_state_name == "INVESTIGATE" and robot6._noise_position.distance_to(cassettes[0].global_position) < 0.01, "a tape playing on floor 6 sends floor 6's robot to the spot it was played at")
+	_check(robot5 != null and robot5.state_machine.current_state_name != "INVESTIGATE", "floor 5's robot does not hear a tape played on floor 6")
 	# Caught: an awake sleeper within arm's reach puts the player back by the elevator.
 	listener.global_position = robot6.global_position + Vector3(0.6, 0.0, 0.0)
 	robot6._physics_process(0.016)
@@ -258,7 +258,7 @@ func _ready() -> void:
 	var still_asleep: Node = sleepers[3]
 	still_asleep._physics_process(0.016) # one tick: a sleeper already on its way turns back
 	still_asleep.hear_noise(still_asleep.global_position + Vector3(2, 0, 0))
-	_check(still_asleep.current_state != still_asleep.State.INVESTIGATE, "a switched-off sleeper no longer wakes to sound")
+	_check(still_asleep.state_machine.current_state_name != "INVESTIGATE", "a switched-off sleeper no longer wakes to sound")
 
 	# --- Floor 7: the blackouts ---
 	GameStateManager.current_floor = 7
@@ -342,7 +342,7 @@ func _ready() -> void:
 	GameStateManager.current_floor = 2
 	generator._set_lit_floor(2)
 	sleepers2[0].hear_noise(sleepers2[0].global_position + Vector3(3, 0, 0))
-	_check(sleepers2[0].current_state == sleepers2[0].State.INVESTIGATE, "floor 2's sleepers are live even though floor 6's were switched off")
+	_check(sleepers2[0].state_machine.current_state_name == "INVESTIGATE", "floor 2's sleepers are live even though floor 6's were switched off")
 	blackout2._enter(blackout2.Phase.DARK)
 	blackout2._process(0.1)
 	_check(blackout2.phase == blackout2.Phase.DARK, "floor 2's blackouts run even though floor 7's were stopped")
@@ -351,7 +351,7 @@ func _ready() -> void:
 	blackout2._process(0.1)
 	_check(GameStateManager.floor2_done and blackout2.phase == blackout2.Phase.LIT, "floor 2's three tapes end that night: the lights stay on")
 	sleepers2[1].hear_noise(sleepers2[1].global_position + Vector3(3, 0, 0))
-	_check(sleepers2[1].current_state != sleepers2[1].State.INVESTIGATE, "...and its sleepers no longer wake")
+	_check(sleepers2[1].state_machine.current_state_name != "INVESTIGATE", "...and its sleepers no longer wake")
 	_check(GameStateManager.is_floor_unlocked(9) and not GameStateManager.is_floor_unlocked(10), "floor 2's three tapes unlock floor 9")
 
 	# --- Floor 9: the sweeping units ---
