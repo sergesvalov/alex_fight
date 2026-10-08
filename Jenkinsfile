@@ -241,9 +241,34 @@ pipeline {
                                     # сборки в res://android/build - его ставит
                                     # --install-android-build-template. Лог сохраняем: без него
                                     # упавший gradle выглядит просто как "apk не появился".
+                                    #
+                                    # Шаблон сборки Godot задаёт gradle-демону свою (большую) кучу в
+                                    # android/build/gradle.properties. Сборка от 2026-10-08 упала
+                                    # на dexBuilderStandardRelease с "Gradle build daemon
+                                    # disappeared unexpectedly" - демона убили извне, так обычно
+                                    # выглядит OOM-killer (не подтверждено: для этого ниже печать
+                                    # памяти и memory.events). gradle.properties из GRADLE_USER_HOME
+                                    # имеет приоритет над проектным, поэтому ужимаем кучу здесь, а
+                                    # не правим шаблон, который Godot перезаписывает при установке.
+                                    mkdir -p "$HOME/.gradle"
+                                    cat > "$HOME/.gradle/gradle.properties" <<'EOF'
+org.gradle.jvmargs=-Xmx2g -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError
+org.gradle.workers.max=2
+org.gradle.daemon=false
+EOF
+                                    echo "Память перед gradle-сборкой:"
+                                    grep -E 'MemTotal|MemAvailable|SwapTotal|SwapFree' /proc/meminfo || true
                                     godot --headless --install-android-build-template --export-release "Android Quest 2" build/alex_fight_vr.apk > build/vr_export.log 2>&1 || true
                                     tail -n 60 build/vr_export.log
-                                    if [ ! -f "build/alex_fight_vr.apk" ]; then echo 'VR APK build failed!'; exit 1; fi
+                                    if [ ! -f "build/alex_fight_vr.apk" ]; then
+                                        echo 'VR APK build failed!'
+                                        # Отличаем OOM-killer (oom_kill > 0) от падения самой JVM (hs_err).
+                                        echo "Память после падения:"
+                                        grep -E 'MemTotal|MemAvailable|SwapTotal|SwapFree' /proc/meminfo || true
+                                        echo "cgroup memory.events:"; cat /sys/fs/cgroup/memory.events 2>/dev/null || true
+                                        ls -la android/build/hs_err_pid*.log hs_err_pid*.log 2>/dev/null || true
+                                        exit 1
+                                    fi
                                     echo "Подписываем build/alex_fight_vr.apk..."
                                     sign_apk "build/alex_fight_vr.apk"
                                 else
