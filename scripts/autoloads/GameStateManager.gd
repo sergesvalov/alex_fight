@@ -92,6 +92,13 @@ var lobby_unlocked: bool = false
 # underground - has taken the code.
 var lower_lift_called: bool = false
 
+# The laboratory under the lobby (hotel_level_generator.gd::_build_lab()): whether the player
+# has been down there (opens the lab's documents on its terminal), and how many of the three
+# consoles around the installation are off - 1: lobby turrets, 2: outside line, 3: the
+# installation itself, after which the lobby's main entrance is the way out.
+var lab_reached: bool = false
+var lab_consoles_off: int = 0
+
 func is_floor_unlocked(floor_num: int) -> bool:
     if floor_num == 1:
         return lobby_unlocked

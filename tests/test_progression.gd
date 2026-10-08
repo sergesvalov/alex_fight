@@ -143,7 +143,7 @@ func _ready() -> void:
 		"the hologram is removed when the narration ends")
 
 	# --- The terminal archive opens up as tapes are recovered ---
-	var needs: Array = DialogSystem.terminal_entries.map(func(e): return int(e.get("requires_tapes", -1)))
+	var needs: Array = DialogSystem.terminal_entries.filter(func(e): return not e.get("lab", false)).map(func(e): return int(e.get("requires_tapes", -1)))
 	var sorted_needs: Array = needs.duplicate()
 	sorted_needs.sort()
 	_check(needs.size() > 0 and needs[0] == 0 and needs == sorted_needs and needs.max() <= 27,
@@ -452,6 +452,34 @@ func _ready() -> void:
 	_check(listener.global_position.distance_to(zone.return_position) < 0.01
 		and absf(zone.return_position.x - HotelLevelGenerator.ELEVATOR_CENTER_X) < 0.01,
 		"the entrance turrets put the player back by the lobby's elevator")
+
+	# --- The laboratory: two levels under the lobby, three consoles, the way out ---
+	var lab_docs: Array = DialogSystem.terminal_entries.filter(func(e): return e.get("lab", false))
+	_check(lab_docs.size() == 3 and lab_docs.any(func(e): return "якоря" in e["text"]), "the lab has three documents of its own, one of which says what the Cerberus units are for")
+	_check(["Lab_Floor1", "Lab_Floor2", "Lab1_Desk_0_0", "Lab1_Crate_8", "CrtTerminal", "Lab1_LiftDown", "Lab1_LiftUp", "Lab2_LiftUp",
+		"Lab2_Tank_0_N", "Lab2_Tank_3_S", "Lab2_Installation", "Lab2_Console_1", "Lab2_Console_3"].all(func(p): return lobby.get_node_or_null(p) != null),
+		"both lab levels are built: desks, crates and a terminal above; tanks, the installation and three consoles below")
+	lift2.interact(listener)
+	_check(absf(listener.global_position.y - (lobby.global_position.y - 4.5)) < 0.3 and GameStateManager.lab_reached, "the lobby's panel, given the code, takes the player down to level -1")
+	lobby.get_node("Lab1_LiftDown").interact(listener)
+	_check(absf(listener.global_position.y - (lobby.global_position.y - 9.0)) < 0.3, "level -1's panel takes him down to level -2")
+	lobby.get_node("Lab2_LiftUp").interact(listener)
+	lobby.get_node("Lab1_LiftUp").interact(listener)
+	_check(absf(listener.global_position.y - lobby.global_position.y) < 0.3, "and the panels marked up bring him back to the lobby")
+	lobby.get_node("Lab2_Console_2").interact(listener)
+	_check(GameStateManager.lab_consoles_off == 0, "the consoles do not work out of order")
+	lobby.get_node("Lab2_Console_1").interact(listener)
+	listener.global_position = zone.global_position
+	var at_door: Vector3 = listener.global_position
+	zone._on_turret_zone_entered(listener)
+	_check(GameStateManager.lab_consoles_off == 1 and listener.global_position == at_door and GameStateManager.current_state != GameStateManager.GameState.WIN,
+		"console 1 switches the lobby turrets off - but the door leads nowhere yet")
+	lobby.get_node("Lab2_Console_2").interact(listener)
+	lobby.get_node("Lab2_Console_3").interact(listener)
+	lobby.get_node("Lab2_Installation")._process(0.016)
+	_check(GameStateManager.lab_consoles_off == 3 and not lobby.get_node("Lab2_Installation/Column").visible, "console 3 stops the installation: the column goes dark")
+	zone._on_turret_zone_entered(listener)
+	_check(GameStateManager.current_state == GameStateManager.GameState.WIN, "after that, walking out through the main entrance ends the game")
 
 
 	print("==================================================")

@@ -498,6 +498,7 @@ func _build_floor_geometry(f_num: int, y_offset: float, suffix: String, c_color:
 		_generate_south_stairs_ramp(parent, f_scale, height, floor_thick, floor_mat)
 		_add_south_stairs_gate(parent, f_num, f_scale)
 		_build_lobby(parent, f_scale, height, wall_mat)
+		_build_lab(parent, f_scale)
 		return parent
 
 	# 3.5 Maintenance Room
@@ -1007,12 +1008,14 @@ func _add_floor3_corridor_barrier(parent: Node, f_scale: float) -> void:
 # stands in the corridor without touching the wall's own geometry at all - no CSG, no risk of the
 # "whole combined shape vanishes" fragility that's bitten this project before. Placed at local
 # Z=2.0 (room spans Z 0..10), well clear of that room's own RoomDoorHole at Z=8.5.
-func _add_floor_terminal(parent: Node, f_scale: float) -> void:
+func _add_floor_terminal(parent: Node, f_scale: float, at: Vector3 = Vector3.INF, rot_y: float = 0.0) -> void:
 	# X=5.05 = wall's own outer face (4.9) + half the casing's depth (0.14) - so the casing's
 	# BACK sits flush against the wall instead of embedded inside it or floating in mid-corridor.
 	var room_world = Vector3(DOUBLE_ROOM_BASE_X, 0, 10.0) * f_scale
 	var local_offset = Vector3(5.05, 1.3, 2.0) * f_scale
 	var terminal_pos = room_world + local_offset
+	if at != Vector3.INF:
+		terminal_pos = at * f_scale # the lab's terminal: an explicit spot instead of the corridor one
 
 	var terminal = Area3D.new()
 	terminal.name = "CrtTerminal"
@@ -1020,6 +1023,7 @@ func _add_floor_terminal(parent: Node, f_scale: float) -> void:
 	terminal.collision_mask = 0
 	terminal.set_script(load("res://scripts/interactables/crt_terminal.gd"))
 	terminal.position = terminal_pos
+	terminal.rotation.y = rot_y
 
 	var coll = CollisionShape3D.new()
 	var shape = BoxShape3D.new()
@@ -1601,30 +1605,7 @@ func _build_lobby(parent: Node3D, f_scale: float, height: float, wall_mat: Mater
 	box.call("LowerLift_DoorL", steel, east - 0.08, east, 0.0, 2.5, -0.66, 0.0)
 	box.call("LowerLift_DoorR", steel, east - 0.1, east, 0.0, 2.5, 0.0, 0.66)
 	box.call("LowerLift_Frame", steel, east - 0.14, east, 2.5, 2.7, -0.8, 0.8)
-	var lift_panel = Area3D.new()
-	lift_panel.name = "LowerLiftPanel"
-	lift_panel.collision_layer = 4 # the interact raycast's layer
-	lift_panel.collision_mask = 0
-	lift_panel.set_script(parts_script)
-	lift_panel.role = "lift"
-	lift_panel.position = Vector3(east - 0.1, 1.3, 1.05) * f_scale
-	var panel_coll = CollisionShape3D.new()
-	var panel_shape = BoxShape3D.new()
-	panel_shape.size = Vector3(0.2, 0.5, 0.35) * f_scale
-	panel_coll.shape = panel_shape
-	lift_panel.add_child(panel_coll)
-	var panel_mesh = MeshInstance3D.new()
-	var panel_box = BoxMesh.new()
-	panel_box.size = Vector3(0.05, 0.4, 0.25) * f_scale
-	var panel_mat = StandardMaterial3D.new()
-	panel_mat.albedo_color = Color(0.1, 0.1, 0.1)
-	panel_mat.emission_enabled = true
-	panel_mat.emission = Color(1.0, 0.6, 0.1)
-	panel_mat.emission_energy_multiplier = 1.5
-	panel_box.material = panel_mat
-	panel_mesh.mesh = panel_box
-	lift_panel.add_child(panel_mesh)
-	parent.add_child(lift_panel)
+	# Its panel is created in _build_lab(), together with the panels on the levels below.
 
 	# --- The aquarium: against the east wall, right next to the reception. Glowing, cloudy
 	# water you cannot quite see through, and something in it (lobby_parts.gd, "creature"). ---
@@ -1741,6 +1722,238 @@ func _build_lobby(parent: Node3D, f_scale: float, height: float, wall_mat: Mater
 	zone_coll.shape = zone_shape
 	kill_zone.add_child(zone_coll)
 	parent.add_child(kill_zone)
+
+# The laboratory: two levels under the lobby, reached only by the second lift. Both are one hall
+# across the whole footprint of the building.
+#   Level -1 - the open-plan office: rows of desks, the empty crates the Cerberus units came in,
+#              and a terminal with the lab's own documents (which say what the units are for).
+#   Level -2 - the plant: glowing tanks like the lobby's aquarium, instrument racks, and the
+#              installation in the middle with its three consoles. Switching them off in order
+#              ends the game's situation; the way out is then the lobby's main entrance.
+# No tapes down here - by now the hero's memory is whole; what is left is documents.
+# Built as children of floor 1's node, in its coordinates: level -1's floor is LAB_LEVEL_DROP
+# below the lobby's, level -2's twice that.
+const LAB_LEVEL_DROP: float = 4.5
+const LAB_LIFT_X: float = 4.85     # the second lift's doors are in the lobby's east hall wall, at Z=0
+const LAB_ARRIVE_X: float = 4.1    # where it lets the player out, on every level (behind the lobby desk)
+
+# A glowing tank with something in it - the same thing the lobby's aquarium is.
+func _add_lab_tank(parent: Node3D, tank_name: String, center: Vector3, size: Vector3, f_scale: float, parts_script: Script) -> void:
+	var body = StaticBody3D.new()
+	body.name = tank_name
+	body.collision_layer = 2
+	body.position = center * f_scale
+	var coll = CollisionShape3D.new()
+	var shape = BoxShape3D.new()
+	shape.size = size * f_scale
+	coll.shape = shape
+	body.add_child(coll)
+	var water = MeshInstance3D.new()
+	var water_box = BoxMesh.new()
+	water_box.size = size * f_scale
+	var water_mat = StandardMaterial3D.new()
+	water_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	water_mat.albedo_color = Color(0.1, 0.55, 0.45, 0.78)
+	water_mat.emission_enabled = true
+	water_mat.emission = Color(0.1, 0.9, 0.7)
+	water_mat.emission_energy_multiplier = 0.7
+	water_box.material = water_mat
+	water.mesh = water_box
+	body.add_child(water)
+	var creature = Node3D.new()
+	creature.name = "Creature"
+	creature.set_script(parts_script)
+	creature.role = "creature"
+	creature.swim_half_length = maxf(0.1, size.z / 2.0 - 0.9) * f_scale
+	var dark = StandardMaterial3D.new()
+	dark.albedo_color = Color(0.01, 0.02, 0.02)
+	dark.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	for part in [[Vector3(0.28, 0.5, 1.0), Vector3.ZERO], [Vector3(0.12, 0.2, 1.3), Vector3(0, -0.1, -1.0)]]:
+		var blob = MeshInstance3D.new()
+		var sphere = SphereMesh.new()
+		sphere.radius = 0.5
+		sphere.height = 1.0
+		sphere.material = dark
+		blob.mesh = sphere
+		blob.scale = part[0] * 1.6 * f_scale
+		blob.position = part[1] * 0.8 * f_scale
+		creature.add_child(blob)
+	body.add_child(creature)
+	parent.add_child(body)
+
+func _build_lab(parent: Node3D, f_scale: float) -> void:
+	var half_x: float = BUILDING_WIDTH_X / 2.0
+	var half_z: float = BUILDING_LENGTH_Z / 2.0
+	var drop: float = LAB_LEVEL_DROP
+	var y1: float = -drop          # level -1 floor
+	var y2: float = -2.0 * drop    # level -2 floor
+	var parts_script = load("res://scripts/levels/blocks/lobby_parts.gd")
+	var concrete = StandardMaterial3D.new()
+	concrete.albedo_color = Color(0.32, 0.33, 0.35)
+	concrete.roughness = 0.95
+	var steel = StandardMaterial3D.new()
+	steel.albedo_color = Color(0.4, 0.4, 0.45)
+	steel.metallic = 0.8
+	steel.roughness = 0.3
+	var wood = StandardMaterial3D.new()
+	wood.albedo_color = Color(0.3, 0.3, 0.32)
+	var lamp_mat = StandardMaterial3D.new()
+	lamp_mat.emission_enabled = true
+	lamp_mat.emission = Color(1.0, 0.95, 0.8)
+	lamp_mat.emission_energy_multiplier = 2.0
+	var box = func(box_name: String, mat: Material, x0: float, x1: float, y0: float, y1b: float, z0: float, z1: float) -> void:
+		_create_static_box(parent, box_name, Vector3((x0 + x1) / 2.0, (y0 + y1b) / 2.0, (z0 + z1) / 2.0) * f_scale,
+			Vector3(absf(x1 - x0), absf(y1b - y0), absf(z1 - z0)) * f_scale, mat)
+	var light = func(light_name: String, pos: Vector3, color: Color, energy: float, reach: float) -> OmniLight3D:
+		var omni = OmniLight3D.new()
+		omni.name = light_name
+		omni.light_color = color
+		omni.light_energy = energy
+		omni.omni_range = reach * f_scale
+		omni.position = pos * f_scale
+		parent.add_child(omni)
+		return omni
+	# A panel of the second lift: where it stands and where it takes the player.
+	var lift_panel = func(panel_name: String, at: Vector3, target_y: float, needs_code: bool, going_down: bool) -> void:
+		var panel = Area3D.new()
+		panel.name = panel_name
+		panel.collision_layer = 4 # the interact raycast's layer
+		panel.collision_mask = 0
+		panel.set_script(parts_script)
+		panel.role = "lift"
+		panel.needs_code = needs_code
+		panel.going_down = going_down
+		panel.target_position = parent.global_position + Vector3(LAB_ARRIVE_X, target_y + 0.1, 0.0) * f_scale
+		panel.position = at * f_scale
+		var coll = CollisionShape3D.new()
+		var shape = BoxShape3D.new()
+		shape.size = Vector3(0.2, 0.5, 0.35) * f_scale
+		coll.shape = shape
+		panel.add_child(coll)
+		var mesh = MeshInstance3D.new()
+		var mesh_box = BoxMesh.new()
+		mesh_box.size = Vector3(0.05, 0.4, 0.25) * f_scale
+		var mat = StandardMaterial3D.new()
+		mat.albedo_color = Color(0.1, 0.1, 0.1)
+		mat.emission_enabled = true
+		mat.emission = Color(1.0, 0.6, 0.1) if going_down else Color(0.3, 0.8, 1.0)
+		mat.emission_energy_multiplier = 1.5
+		mesh_box.material = mat
+		mesh.mesh = mesh_box
+		panel.add_child(mesh)
+		parent.add_child(panel)
+
+	# --- Shell: two floor slabs and four walls two levels tall. Level -1's ceiling is the
+	# lobby's own floor slab. ---
+	box.call("Lab_Floor1", concrete, -half_x, half_x, y1 - 0.5, y1, -half_z, half_z)
+	box.call("Lab_Floor2", concrete, -half_x, half_x, y2 - 0.5, y2, -half_z, half_z)
+	box.call("Lab_Wall_W", concrete, -half_x - 0.2, -half_x, y2 - 0.5, -0.5, -half_z, half_z)
+	box.call("Lab_Wall_E", concrete, half_x, half_x + 0.2, y2 - 0.5, -0.5, -half_z, half_z)
+	box.call("Lab_Wall_N", concrete, -half_x, half_x, y2 - 0.5, -0.5, -half_z - 0.2, -half_z)
+	box.call("Lab_Wall_S", concrete, -half_x, half_x, y2 - 0.5, -0.5, half_z, half_z + 0.2)
+
+	# --- The second lift: the lobby's panel (down, needs the code) and, on each level below, a
+	# shaft front with doors and its own panels. ---
+	lift_panel.call("LowerLiftPanel", Vector3(LAB_LIFT_X - 0.1, 1.3, 1.05), y1, true, true)
+	for level in [[y1, "1"], [y2, "2"]]:
+		var ly: float = level[0]
+		box.call("Lab%s_LiftShaft" % level[1], steel, LAB_LIFT_X, LAB_LIFT_X + 1.6, ly, ly + 3.2, -2.2, 2.2)
+		box.call("Lab%s_LiftDoor" % level[1], concrete, LAB_LIFT_X - 0.06, LAB_LIFT_X, ly, ly + 2.5, -0.66, 0.66)
+		lift_panel.call("Lab%s_LiftUp" % level[1], Vector3(LAB_LIFT_X - 0.1, ly + 1.3, 1.45), 0.0 if ly == y1 else y1, false, false)
+	lift_panel.call("Lab1_LiftDown", Vector3(LAB_LIFT_X - 0.1, y1 + 1.3, -1.45), y2, false, true)
+
+	# --- Level -1: the open-plan office. ---
+	for col in range(3):
+		for row in range(9):
+			var dx: float = -9.0 + col * 4.0
+			var dz: float = -24.0 + row * 6.0
+			box.call("Lab1_Desk_%d_%d" % [col, row], wood, dx - 0.8, dx + 0.8, y1, y1 + 0.75, dz - 0.4, dz + 0.4)
+			var lamp = MeshInstance3D.new()
+			var lamp_box = BoxMesh.new()
+			lamp_box.size = Vector3(0.18, 0.06, 0.3) * f_scale
+			lamp_box.material = lamp_mat
+			lamp.mesh = lamp_box
+			lamp.position = Vector3(dx + 0.5, y1 + 1.05, dz) * f_scale
+			parent.add_child(lamp)
+	for i in range(5):
+		light.call("Lab1_Light_%d" % i, Vector3(-5.0, y1 + 3.2, -22.0 + i * 11.0), Color(0.85, 0.92, 1.0), 1.6, 12.0)
+	# The crates the nine Cerberus units came in (the waybill in the terminal archive), empty.
+	for i in range(9):
+		box.call("Lab1_Crate_%d" % i, wood, -half_x + 0.3, -half_x + 1.5, y1, y1 + 1.9, -21.0 + i * 2.3, -19.2 + i * 2.3)
+	# The lab's own terminal, by the lift: its documents open once the player has come down.
+	_add_floor_terminal(parent, f_scale, Vector3(LAB_LIFT_X - 0.15, y1 + 1.3, -1.9), PI)
+
+	# --- Level -2: the plant. ---
+	for i in range(4):
+		for side in [-1.0, 1.0]:
+			_add_lab_tank(parent, "Lab2_Tank_%d_%s" % [i, "N" if side < 0.0 else "S"],
+				Vector3(-10.0 + i * 4.0, y2 + 1.75, side * 14.0), Vector3(2.4, 3.0, 3.6), f_scale, parts_script)
+			box.call("Lab2_Rack_%d_%s" % [i, "N" if side < 0.0 else "S"], steel, -10.5 + i * 4.0, -8.5 + i * 4.0, y2, y2 + 2.2, side * 28.6 - 0.4, side * 28.6 + 0.4)
+	light.call("Lab2_TankLight_N", Vector3(-4.0, y2 + 2.2, -10.5), Color(0.2, 1.0, 0.8), 2.0, 14.0)
+	light.call("Lab2_TankLight_S", Vector3(-4.0, y2 + 2.2, 10.5), Color(0.2, 1.0, 0.8), 2.0, 14.0)
+	# The installation: a column of light in a housing, in the middle of the hall.
+	var installation = Node3D.new()
+	installation.name = "Lab2_Installation"
+	installation.set_script(parts_script)
+	installation.role = "installation"
+	installation.position = Vector3(-4.0, y2, 0.0) * f_scale
+	var housing = MeshInstance3D.new()
+	housing.name = "Housing"
+	var torus = TorusMesh.new()
+	torus.inner_radius = 1.3 * f_scale
+	torus.outer_radius = 1.7 * f_scale
+	torus.material = steel
+	housing.mesh = torus
+	housing.position = Vector3(0, 1.2, 0) * f_scale
+	installation.add_child(housing)
+	var column = MeshInstance3D.new()
+	column.name = "Column"
+	var cylinder = CylinderMesh.new()
+	cylinder.top_radius = 0.5 * f_scale
+	cylinder.bottom_radius = 0.5 * f_scale
+	cylinder.height = 4.0 * f_scale
+	var column_mat = StandardMaterial3D.new()
+	column_mat.emission_enabled = true
+	column_mat.emission = Color(0.75, 0.85, 1.0)
+	column_mat.emission_energy_multiplier = 6.0
+	cylinder.material = column_mat
+	column.mesh = cylinder
+	column.position = Vector3(0, 2.0, 0) * f_scale
+	installation.add_child(column)
+	var core_light = OmniLight3D.new()
+	core_light.light_color = Color(0.75, 0.85, 1.0)
+	core_light.light_energy = 4.0
+	core_light.omni_range = 16.0 * f_scale
+	core_light.position = Vector3(0, 2.0, 0) * f_scale
+	installation.add_child(core_light)
+	parent.add_child(installation)
+	_create_static_box(parent, "Lab2_InstallationBody", Vector3(-4.0, y2 + 2.0, 0.0) * f_scale, Vector3(1.0, 4.0, 1.0) * f_scale, steel)
+	# The three consoles around it, numbered - they only work in order (lobby_parts.gd).
+	var console_spots: Array = [Vector3(-4.0, y2, -4.0), Vector3(-8.0, y2, 0.0), Vector3(-4.0, y2, 4.0)]
+	for i in range(3):
+		var spot: Vector3 = console_spots[i]
+		box.call("Lab2_ConsoleBody_%d" % (i + 1), steel, spot.x - 0.5, spot.x + 0.5, y2, y2 + 1.0, spot.z - 0.3, spot.z + 0.3)
+		var console = Area3D.new()
+		console.name = "Lab2_Console_%d" % (i + 1)
+		console.collision_layer = 4
+		console.collision_mask = 0
+		console.set_script(parts_script)
+		console.role = "console"
+		console.index = i + 1
+		console.position = (spot + Vector3(0, 1.15, 0)) * f_scale
+		var console_coll = CollisionShape3D.new()
+		var console_shape = BoxShape3D.new()
+		console_shape.size = Vector3(1.1, 0.5, 0.9) * f_scale
+		console_coll.shape = console_shape
+		console.add_child(console_coll)
+		var number = Label3D.new()
+		number.text = str(i + 1)
+		number.font_size = 96
+		number.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		number.modulate = Color(1.0, 0.7, 0.2)
+		number.position = Vector3(0, 0.35, 0) * f_scale
+		console.add_child(number)
+		parent.add_child(console)
 
 func _generate_roof(y_offset: float, f_scale: float) -> void:
 	var parent = Node3D.new()

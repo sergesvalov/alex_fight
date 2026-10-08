@@ -61,6 +61,8 @@ func _tape_inventory_entry() -> Dictionary:
 # in narrative_lines.json, counted over the whole game) - the terminal confirms what Alex has
 # remembered instead of telling him everything on the first floor.
 func _is_locked(i: int) -> bool:
+	if entries[i].get("lab", false):
+		return not GameStateManager.lab_reached # the lab's own documents: only from down there
 	return GameStateManager.collected_tapes.size() < int(entries[i].get("requires_tapes", 0))
 
 func open() -> void:
