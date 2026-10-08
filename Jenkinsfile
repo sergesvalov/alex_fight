@@ -51,7 +51,20 @@ pipeline {
                     sh "docker build --build-arg GODOT_VERSION=${env.GODOT_VERSION} -t ${BUILDER_IMAGE}:${env.GODOT_VERSION} -f Dockerfile.android ."
                     
                     echo "Пушим сборочный образ в локальный реестр..."
-                    sh "docker push ${BUILDER_IMAGE}:${env.GODOT_VERSION}"
+                    // Реестр - только кэш образа для других агентов: сама сборка ниже берёт образ,
+                    // который docker build только что положил локально. Поэтому отказ реестра
+                    // (например "blob upload unknown to registry" - реестр потерял сессию загрузки
+                    // слоя) не должен ронять сборку игры: три попытки, затем предупреждение.
+                    sh """
+                    for attempt in 1 2 3; do
+                        if docker push ${BUILDER_IMAGE}:${env.GODOT_VERSION}; then
+                            exit 0
+                        fi
+                        echo "docker push не удался (попытка \$attempt из 3)"
+                        sleep 5
+                    done
+                    echo 'ПРЕДУПРЕЖДЕНИЕ: образ не отправлен в реестр, сборка продолжается с локальным образом.'
+                    """
                 }
             }
         }
