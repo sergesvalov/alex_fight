@@ -132,6 +132,10 @@ pipeline {
                                     echo '❌ АВТОТЕСТ СООТВЕТСТВИЯ УРОВНЯ КАРТЕ ПРОВАЛЕН!'
                                     exit 1
                                 }
+                                godot --headless tests/test_save.tscn || {
+                                    echo '❌ АВТОТЕСТ СОХРАНЕНИЙ ПРОВАЛЕН!'
+                                    exit 1
+                                }
                                 godot --headless tests/test_progression.tscn || {
                                     echo '❌ АВТОТЕСТ ПРОГРЕССА (КАССЕТЫ/ЛИФТ/ЭТАЖИ) ПРОВАЛЕН!'
                                     exit 1

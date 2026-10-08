@@ -445,8 +445,8 @@ func _ready() -> void:
 	lift2.interact(listener)
 	_check(not GameStateManager.lower_lift_called, "without the roof code the second lift's panel does nothing")
 	GameStateManager.lobby_unlocked = true
-	lift2.interact(listener)
-	_check(GameStateManager.lower_lift_called, "with the code it accepts it")
+	lift2.go_to(-1, listener)
+	_check(GameStateManager.lower_lift_called, "with the code the lift goes")
 	listener.global_position = zone.global_position
 	zone._on_turret_zone_entered(listener)
 	_check(listener.global_position.distance_to(zone.return_position) < 0.01
@@ -456,16 +456,16 @@ func _ready() -> void:
 	# --- The laboratory: two levels under the lobby, three consoles, the way out ---
 	var lab_docs: Array = DialogSystem.terminal_entries.filter(func(e): return e.get("lab", false))
 	_check(lab_docs.size() == 3 and lab_docs.any(func(e): return "якоря" in e["text"]), "the lab has three documents of its own, one of which says what the Cerberus units are for")
-	_check(["Lab_Floor1", "Lab_Floor2", "Lab1_Desk_0_0", "Lab1_Crate_8", "CrtTerminal", "Lab1_LiftDown", "Lab1_LiftUp", "Lab2_LiftUp",
+	_check(["Lab_Floor1", "Lab_Floor2", "Lab1_Desk_0_0", "Lab1_Crate_8", "CrtTerminal", "Lab1_LiftPanel", "Lab2_LiftPanel",
 		"Lab2_Tank_0_N", "Lab2_Tank_3_S", "Lab2_Installation", "Lab2_Console_1", "Lab2_Console_3"].all(func(p): return lobby.get_node_or_null(p) != null),
 		"both lab levels are built: desks, crates and a terminal above; tanks, the installation and three consoles below")
-	lift2.interact(listener)
+	lift2.go_to(-1, listener)
 	_check(absf(listener.global_position.y - (lobby.global_position.y - 4.5)) < 0.3 and GameStateManager.lab_reached, "the lobby's panel, given the code, takes the player down to level -1")
-	lobby.get_node("Lab1_LiftDown").interact(listener)
+	lobby.get_node("Lab1_LiftPanel").go_to(-2, listener)
 	_check(absf(listener.global_position.y - (lobby.global_position.y - 9.0)) < 0.3, "level -1's panel takes him down to level -2")
-	lobby.get_node("Lab2_LiftUp").interact(listener)
-	lobby.get_node("Lab1_LiftUp").interact(listener)
-	_check(absf(listener.global_position.y - lobby.global_position.y) < 0.3, "and the panels marked up bring him back to the lobby")
+	_check(lobby.get_node("Lab2_LiftPanel").here == -2 and lobby.get_node("Lab1_LiftPanel").here == -1 and lift2.here == 1 and lift2.stops.size() == 3, "every stop has one panel that knows all three stops")
+	lobby.get_node("Lab2_LiftPanel").go_to(1, listener)
+	_check(absf(listener.global_position.y - lobby.global_position.y) < 0.3, "and level -2's panel brings him straight back to the lobby")
 	lobby.get_node("Lab2_Console_2").interact(listener)
 	_check(GameStateManager.lab_consoles_off == 0, "the consoles do not work out of order")
 	lobby.get_node("Lab2_Console_1").interact(listener)

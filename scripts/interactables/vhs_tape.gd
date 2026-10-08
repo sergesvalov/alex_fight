@@ -97,6 +97,7 @@ func interact(_player):
     # first await) by the time collect_tape() fires the floor's event and any trigger_alex_line()
     # that comes with it - those wait for the narration to finish instead of stepping on it.
     DialogSystem.play_tape(recording, global_position)
+    GameStateManager.taken_cassettes.append([floor_num, tape_id])
     GameStateManager.collect_tape(recording)
     GameStateManager.add_to_inventory(floor_num, recording)
     if recording == 0:

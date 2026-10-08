@@ -200,6 +200,9 @@ func _ready() -> void:
 		_apply_floor_visibility()
 
 func _generate_level() -> void:
+	# The whole build below draws from the global random generator - seeding it makes the hotel
+	# a function of the seed (see GameStateManager.world_seed).
+	seed(GameStateManager.world_seed)
 	for child in get_children():
 		child.free()
 	_floor_lights_by_index.clear()
@@ -213,7 +216,8 @@ func _generate_level() -> void:
 
 	# Stairs gates (stairs_gate.gd, South and North) compare against this to tell a floor-hop
 	# attempt apart from the player just visiting their own floor's stairwell.
-	GameStateManager.current_floor = floor_number
+	if not SaveManager.resuming: # a continued game keeps the floor it was saved on
+		GameStateManager.current_floor = floor_number
 	# Seeds the stairs-access range at the spawn floor only - a no-op if already initialized
 	# (e.g. this level scene reloading mid-playthrough), since the range is meant to persist.
 	GameStateManager.init_floor_access(floor_number)
@@ -265,6 +269,15 @@ func _generate_level() -> void:
 	var roof_y_offset = (11 - floor_number) * y_step
 	_generate_roof(roof_y_offset, f_scale)
 	_floor_nodes_by_index[11] = get_node_or_null("GeneratedRoof")
+
+	# A continued game (SaveManager): the build above always places every cassette, so that the
+	# same seed walks the random generator the same way - the ones already taken go now.
+	for taken in GameStateManager.taken_cassettes:
+		var taken_floor = _floor_nodes_by_index.get(taken[0])
+		var cassette = taken_floor.get_node_or_null("Cassette_" + str(taken[1])) if is_instance_valid(taken_floor) else null
+		if cassette:
+			cassette.free()
+	randomize() # everything from here on (which room the secret door picks, ...) is free again
 
 	_light_y_step = y_step
 	# Every light defaults to visible=true when created - explicitly turn all of them off
@@ -651,6 +664,20 @@ func _move_player(f_scale: float) -> void:
 		# first time - trigger_alex_line()'s own at-most-once guard keeps a level reload from
 		# repeating it.
 		DialogSystem.trigger_alex_line("floor4_start")
+
+		# A continued game (SaveManager): not the wake-up room but the elevator of the floor
+		# the save was made on - the spot every trap returns the hero to, so it is always
+		# safe, whatever the floor's trap is doing. The roof and the lab levels have no
+		# elevator stop of their own: from there it is floor 10's and the lobby's.
+		if SaveManager.resuming:
+			SaveManager.resuming = false
+			var resume_floor: int = clampi(GameStateManager.current_floor, 1, 10)
+			if resume_floor != GameStateManager.current_floor:
+				GameStateManager.current_floor = resume_floor
+			var resume_y: float = (resume_floor - floor_number) * (corridor_height + floor_thickness) * f_scale
+			player.global_position = Vector3(ELEVATOR_CENTER_X * f_scale, resume_y + 0.1, (ELEVATOR_CENTER_Z + 2.0) * f_scale)
+			player.rotation.y = PI # facing out of the lift lobby, down the corridor
+			print("[generator] continued game: player placed by the elevator of floor ", resume_floor, " at ", player.global_position)
 
 func _generate_maintenance_room(parent: Node, f_scale: float, height: float, thickness: float, wall_mat: Material) -> void:
 	var wall_y = height / 2.0
@@ -1240,7 +1267,7 @@ func _add_room_shuffle_trap(parent: Node3D, f_num: int) -> void:
 	parent.set_meta("sealed_room", sealed_room)
 	_sealed_room_door = sealed_room.get_node_or_null("RoomDoor/AnimatableBody3D")
 	if _sealed_room_door:
-		_sealed_room_door.locked_from_corridor = true
+		_sealed_room_door.locked_from_corridor = not GameStateManager.floor5_rooms_unlocked # false in a continued game past floor 5
 
 func _create_static_box(parent: Node, node_name: String, pos: Vector3, size: Vector3, mat: Material, rot: Vector3 = Vector3.ZERO) -> void:
 	var static_body = StaticBody3D.new()
@@ -1813,8 +1840,12 @@ func _build_lab(parent: Node3D, f_scale: float) -> void:
 		omni.position = pos * f_scale
 		parent.add_child(omni)
 		return omni
-	# A panel of the second lift: where it stands and where it takes the player.
-	var lift_panel = func(panel_name: String, at: Vector3, target_y: float, needs_code: bool, going_down: bool) -> void:
+	# A panel of the second lift, one per stop: where it stands and which stop it is. Every
+	# panel knows all three stops - it opens the same floor-select screen as the main lift.
+	var lift_stops: Dictionary = {}
+	for stop in [[1, 0.0], [-1, y1], [-2, y2]]:
+		lift_stops[stop[0]] = parent.global_position + Vector3(LAB_ARRIVE_X, stop[1] + 0.1, 0.0) * f_scale
+	var lift_panel = func(panel_name: String, at: Vector3, here: int, needs_code: bool) -> void:
 		var panel = Area3D.new()
 		panel.name = panel_name
 		panel.collision_layer = 4 # the interact raycast's layer
@@ -1822,8 +1853,8 @@ func _build_lab(parent: Node3D, f_scale: float) -> void:
 		panel.set_script(parts_script)
 		panel.role = "lift"
 		panel.needs_code = needs_code
-		panel.going_down = going_down
-		panel.target_position = parent.global_position + Vector3(LAB_ARRIVE_X, target_y + 0.1, 0.0) * f_scale
+		panel.here = here
+		panel.stops = lift_stops
 		panel.position = at * f_scale
 		var coll = CollisionShape3D.new()
 		var shape = BoxShape3D.new()
@@ -1836,7 +1867,7 @@ func _build_lab(parent: Node3D, f_scale: float) -> void:
 		var mat = StandardMaterial3D.new()
 		mat.albedo_color = Color(0.1, 0.1, 0.1)
 		mat.emission_enabled = true
-		mat.emission = Color(1.0, 0.6, 0.1) if going_down else Color(0.3, 0.8, 1.0)
+		mat.emission = Color(1.0, 0.6, 0.1)
 		mat.emission_energy_multiplier = 1.5
 		mesh_box.material = mat
 		mesh.mesh = mesh_box
@@ -1854,13 +1885,12 @@ func _build_lab(parent: Node3D, f_scale: float) -> void:
 
 	# --- The second lift: the lobby's panel (down, needs the code) and, on each level below, a
 	# shaft front with doors and its own panels. ---
-	lift_panel.call("LowerLiftPanel", Vector3(LAB_LIFT_X - 0.1, 1.3, 1.05), y1, true, true)
+	lift_panel.call("LowerLiftPanel", Vector3(LAB_LIFT_X - 0.1, 1.3, 1.05), 1, true)
 	for level in [[y1, "1"], [y2, "2"]]:
 		var ly: float = level[0]
 		box.call("Lab%s_LiftShaft" % level[1], steel, LAB_LIFT_X, LAB_LIFT_X + 1.6, ly, ly + 3.2, -2.2, 2.2)
 		box.call("Lab%s_LiftDoor" % level[1], concrete, LAB_LIFT_X - 0.06, LAB_LIFT_X, ly, ly + 2.5, -0.66, 0.66)
-		lift_panel.call("Lab%s_LiftUp" % level[1], Vector3(LAB_LIFT_X - 0.1, ly + 1.3, 1.45), 0.0 if ly == y1 else y1, false, false)
-	lift_panel.call("Lab1_LiftDown", Vector3(LAB_LIFT_X - 0.1, y1 + 1.3, -1.45), y2, false, true)
+		lift_panel.call("Lab%s_LiftPanel" % level[1], Vector3(LAB_LIFT_X - 0.1, ly + 1.3, 1.05), -int(level[1]), false)
 
 	# --- Level -1: the open-plan office. ---
 	for col in range(3):

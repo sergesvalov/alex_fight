@@ -86,6 +86,20 @@ func unlock_floor(floor_num: int) -> void:
 # it sets lobby_unlocked, which is the only thing that ever opens floor 1 - unlock_floor()
 # refuses anything below MIN_UNLOCKABLE_FLOOR, so floor 1 can never join the range by accident.
 var lift_code: String = "%04d" % (randi() % 10000)
+
+# What the level is built from: the generator seeds the random generator with this before
+# placing anything, so the same seed always gives the same hotel - where the tapes lie, which
+# rooms the floor 5 and floor 8 traps single out - and the same lift code. SaveManager stores it;
+# a new game rolls a new one.
+var world_seed: int = randi():
+    set(value):
+        world_seed = value
+        lift_code = "%04d" % (absi(hash(value)) % 10000)
+
+# Which physical cassettes have been taken, as [floor, tape_id] - the generator removes them
+# again after rebuilding a saved game's level. (collected_tapes cannot say: it records which
+# RECORDING each one turned out to be, and that depends on the order of finding.)
+var taken_cassettes: Array = []
 var lobby_unlocked: bool = false
 
 # The lobby (floor 1, lobby_parts.gd): whether the second lift - the one that goes

@@ -8,8 +8,9 @@
 #                    rule to learn and no way through. The first console downstairs switches
 #                    them off; once the installation is stopped, walking in here is walking
 #                    out of the hotel - the end of the game.
-#   "lift"         - Area3D on a panel of the second lift, the one that goes underground. Takes
-#                    the player to `target_position`. The lobby's panel needs the service code
+#   "lift"         - Area3D on a panel of the second lift, the one that goes underground. Opens
+#                    the same floor-select screen as the main lift, with this lift's three
+#                    stops on it (1, -1, -2). The lobby's panel needs the service code
 #                    from the roof (`needs_code`); the panels downstairs do not.
 #   "console"      - Area3D on one of the three consoles around the installation. They only
 #                    work in order (`index` 1, 2, 3): turrets off, outside line back, stop.
@@ -20,9 +21,9 @@ extends Node3D
 
 var role: String = ""
 var return_position: Vector3 = Vector3.ZERO   # "turrets": where the player is put back (global)
-var target_position: Vector3 = Vector3.ZERO   # "lift": where it takes the player (global)
+var stops: Dictionary = {}                    # "lift": stop (1, -1, -2) -> where it lets the player out (global)
+var here: int = 1                             # "lift": the stop this panel is at
 var needs_code: bool = false                  # "lift"
-var going_down: bool = true                   # "lift": only picks the line shown
 var index: int = 0                            # "console": 1..3
 var swim_half_length: float = 2.2             # "creature": how far it drifts either side
 
@@ -64,13 +65,11 @@ func interact(player: Node) -> void:
 		if needs_code and not GameStateManager.lobby_unlocked:
 			DialogSystem.show_thought(UIStrings.get_string("lobby_lift_no_code"), 5.0)
 			return
-		GameStateManager.lower_lift_called = true
-		GameStateManager.lab_reached = true
-		print("[Lobby] second lift takes the player from ", player.global_position, " to ", target_position)
-		player.global_position = target_position
-		if "velocity" in player:
-			player.velocity = Vector3.ZERO
-		DialogSystem.show_thought(UIStrings.get_string("lab_lift_down" if going_down else "lab_lift_up"), 4.0)
+		# The same floor-select screen as the main lift, with this lift's three stops on it.
+		var hud = get_tree().current_scene.find_child("HUD", true, false) if get_tree().current_scene else null
+		var panel_ui = hud.find_child("ElevatorPanelUI", true, false) if hud else null
+		if panel_ui and panel_ui.has_method("open_lower"):
+			panel_ui.open_lower(self, player)
 	elif role == "console":
 		if GameStateManager.lab_consoles_off >= index:
 			return # already off
@@ -96,3 +95,16 @@ func _process(delta: float) -> void:
 	var along: float = sin(_swim_time * 0.23) * 0.7 + sin(_swim_time * 0.071) * 0.3
 	position = _swim_origin + Vector3(0, sin(_swim_time * 0.31) * 0.35, along * swim_half_length)
 	rotation.y = 0.0 if cos(_swim_time * 0.23) >= 0.0 else PI
+
+# "lift": the stop picked on the floor-select screen (elevator_panel_ui.gd::open_lower()).
+func go_to(level: int, player: Node) -> void:
+	if level == here or not stops.has(level):
+		return
+	GameStateManager.lower_lift_called = true
+	if level < 1:
+		GameStateManager.lab_reached = true
+	print("[Lobby] second lift takes the player from stop ", here, " to stop ", level, " at ", stops[level])
+	player.global_position = stops[level]
+	if "velocity" in player:
+		player.velocity = Vector3.ZERO
+	DialogSystem.show_thought(UIStrings.get_string("lab_lift_down" if level < here else "lab_lift_up"), 4.0)

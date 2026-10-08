@@ -45,8 +45,13 @@ func _setup_buttons() -> void:
 			continue
 			
 		btn.floor_num = i
-		if not btn.button_pressed.is_connected(_on_button_pressed):
-			btn.button_pressed.connect(_on_button_pressed)
+		# The physical buttons are set dressing. Ten of them 15cm apart were fiddly to aim at
+		# (impossible on a phone, whose camera cannot tilt) and each press ran the whole lift
+		# sequence on its own. The floor is chosen on the pop-up screen instead - opened by
+		# ElevatorPanelDisplay, the one interact target that covers the whole panel. With no
+		# collision layer the buttons are invisible to the interact ray, which goes straight
+		# through them to that target.
+		btn.collision_layer = 0
 		
 		# Layout in 2 columns
 		var col = (i - 1) % 2
@@ -107,10 +112,7 @@ func _setup_interior_detection() -> void:
 # treats it as "the" base floor, so it's the natural fallback destination here too.
 const HUB_FLOOR: int = 4
 
-func _on_button_pressed(floor_num: int) -> void:
-	request_floor(floor_num)
-
-# Public entry point shared by the physical 3D buttons (via button_pressed above) and the 2D
+# Entry point of the 2D
 # on-screen floor display (elevator_panel_ui.gd, opened by elevator_panel_display.gd) - the
 # latter exists because mobile locks the camera to horizontal-only look (see
 # player_camera.gd::process_swipe()), which makes most of the physical buttons literally
