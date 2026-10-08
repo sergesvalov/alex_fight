@@ -37,25 +37,59 @@ func _ready() -> void:
 	# invisible to it before.
 	ray_sight.collision_mask = 1 | 2
 
+# Being inside the detection sphere only makes the player a CANDIDATE. They are detected the
+# moment the enemy actually has line of sight to them - checked a few times a second below.
+# (Detection used to fire on the sphere overlap alone, so a robot in the corridor "spotted" a
+# player sitting in a room behind a closed door and stood there attacking the wall; nothing
+# quiet was possible, and a robot walking to a sound had nothing left to find out.)
+const SIGHT_CHECK_INTERVAL: float = 0.2
+var _candidate: Node3D = null
+var _sees_candidate: bool = false
+var _sight_check_timer: float = 0.0
+
 func _on_body_entered(body: Node3D) -> void:
 	if not body.is_in_group("player"):
 		return
-	if absf(body.global_position.y - enemy.global_position.y) > SAME_FLOOR_Y_TOLERANCE:
-		return
-	current_player = body
-	player_detected.emit(body)
+	_candidate = body
+	_sees_candidate = false
 
 func _on_body_exited(body: Node3D) -> void:
+	if body == _candidate:
+		_candidate = null
+		_sees_candidate = false
 	if body == current_player:
 		player_lost.emit()
 		current_player = null
+
+func _physics_process(delta: float) -> void:
+	if not is_instance_valid(_candidate):
+		return
+	_sight_check_timer -= delta
+	if _sight_check_timer > 0.0:
+		return
+	_sight_check_timer = SIGHT_CHECK_INTERVAL
+	var sees: bool = absf(_candidate.global_position.y - enemy.global_position.y) <= SAME_FLOOR_Y_TOLERANCE \
+		and has_line_of_sight(_candidate)
+	# Only the moment sight is gained counts: an enemy that later loses the player and gives
+	# up is not re-alerted until it has lost sight and then catches it again.
+	if sees and not _sees_candidate:
+		current_player = _candidate
+		player_detected.emit(_candidate)
+	_sees_candidate = sees
+
+const AIM_HEIGHT: float = 0.9 # middle of the player's 1.8m capsule (player.tscn)
 
 func has_line_of_sight(target: Node3D) -> bool:
 	if not is_instance_valid(target):
 		return false
 	# Jolt Physics автоматически обновляет рейкаст в _physics_process,
 	# force_raycast_update() здесь лишнее (throttle делается в enemy_ai_base.gd)
-	ray_sight.target_position = ray_sight.to_local(target.global_position)
+	# Aimed at the body, not at target.global_position: that is the point between the feet, the
+	# very bottom tip of the player's capsule. From more than ~8m away a ray to it skims the
+	# floor and clips the capsule only in its last few centimetres, which the physics query
+	# does not reliably report - the enemy then could not see a player standing in plain view
+	# down the corridor.
+	ray_sight.target_position = ray_sight.to_local(target.global_position + Vector3.UP * AIM_HEIGHT)
 	if ray_sight.is_colliding():
 		return ray_sight.get_collider() == target
 	return false

@@ -53,15 +53,15 @@ func _ready() -> void:
 		_check(ids == [0, 1, 2], "floor %d has three distinct tapes: %s" % [f, str(ids)])
 
 	# --- Tape narration: every reachable floor has real text, the rest fall back gracefully ---
-	for f in [3, 4, 5, 6]:
+	for f in range(2, 11):
 		var ok := true
 		for id in range(3):
 			var tape: Dictionary = DialogSystem.get_tape(f, id)
 			if tape.get("text", "") == "" or "ЗАГЛУШКА" in tape.get("title", "") or tape == DialogSystem.tape_data.get("damaged"):
 				ok = false
 		_check(ok, "floor %d has written narration for all three tapes" % f)
-	_check(DialogSystem.get_tape(9, 0).get("title", "") != "",
-		"a floor with no narration yet plays the 'damaged tape' fallback instead of nothing")
+	_check(DialogSystem.get_tape(1, 0) == DialogSystem.tape_data.get("damaged"),
+		"a floor with no tapes written (the empty floor 1) plays the 'damaged tape' fallback")
 
 	# --- Tape location hints (what the CRT terminal lists) ---
 	var hints5: Array = []
@@ -224,11 +224,11 @@ func _ready() -> void:
 	cassettes.sort_custom(func(a, b): return a.tape_id > b.tape_id) # take them in REVERSE: 2, 1, 0
 	var robot6 = floor6.get_node_or_null("Cerberus")
 	var robot5 = generator.get_floor_node(5).get_node_or_null("Cerberus")
-	_check(robot6 != null and robot6.current_state != robot6.State.CHASE, "floor 6's robot is not hunting before any tape plays")
+	_check(robot6 != null and robot6.current_state != robot6.State.INVESTIGATE, "floor 6's robot is not on its way anywhere before any tape plays")
 
 	cassettes[0].interact(listener)
-	_check(robot6 != null and robot6.current_state == robot6.State.CHASE, "a tape playing on floor 6 brings floor 6's robot")
-	_check(robot5 != null and robot5.current_state != robot5.State.CHASE, "floor 5's robot does not hear a tape played on floor 6")
+	_check(robot6 != null and robot6.current_state == robot6.State.INVESTIGATE and robot6._noise_position.distance_to(cassettes[0].global_position) < 0.01, "a tape playing on floor 6 sends floor 6's robot to the spot it was played at")
+	_check(robot5 != null and robot5.current_state != robot5.State.INVESTIGATE, "floor 5's robot does not hear a tape played on floor 6")
 	cassettes[1].interact(listener)
 	cassettes[2].interact(listener)
 	var floor6_ids: Array = []

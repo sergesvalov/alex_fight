@@ -22,7 +22,7 @@ extends CharacterBody3D
 @onready var movement: EnemyMovement = $Movement
 @onready var sensors: EnemySensors = $Sensors
 
-enum State { IDLE, PATROL, CHASE, ATTACK, RETURN, DEAD }
+enum State { IDLE, PATROL, CHASE, ATTACK, RETURN, DEAD, INVESTIGATE }
 var current_state: State = State.IDLE
 var player: CharacterBody3D = null
 var spawn_position: Vector3
@@ -82,6 +82,7 @@ func _physics_process(delta: float) -> void:
 		State.CHASE:    _state_chase(delta)
 		State.ATTACK:   _state_attack(delta)
 		State.RETURN:   _state_return(delta)
+		State.INVESTIGATE: _state_investigate(delta)
 
 	move_and_slide()
 
@@ -151,17 +152,18 @@ func _state_chase(_delta: float) -> void:
 		_los_check_timer = LOS_CHECK_INTERVAL
 
 	if not _last_los:
-		# A robot that came for a sound (hear_noise()) gets extra time to actually arrive
-		# before the usual "3s without seeing them" gives up on it.
-		if attack_timer <= -3.0 - _search_time_left:
-			_search_time_left = 0.0
+		if attack_timer <= -3.0:
 			_set_state(State.RETURN)
 	else:
 		attack_timer = 0.0
-		_search_time_left = 0.0
 
-	if _flat_distance(player.global_position) <= attack_range:
+	# In range AND in sight - a ranged attack_range (Cerberus: 10m) easily reaches through a
+	# wall, and attacking a wall is not an attack.
+	if _last_los and _flat_distance(player.global_position) <= attack_range:
 		_set_state(State.ATTACK)
+
+const ATTACK_BLIND_LIMIT: float = 1.5
+var _attack_blind_time: float = 0.0
 
 func _state_attack(_delta: float) -> void:
 	if not is_instance_valid(player):
@@ -176,6 +178,17 @@ func _state_attack(_delta: float) -> void:
 		_log_attack_rotation_spike_if_any(prev_facing, to_player)
 
 	if _flat_distance(player.global_position) > attack_range * 1.5:
+		_set_state(State.CHASE)
+		return
+
+	# Lost sight of them (they stepped behind a wall or shut a door): stop standing there aiming
+	# at it and go after them - _state_chase() then gives up after its own 3s without sight.
+	if _los_check_timer <= 0.0:
+		_last_los = sensors.has_line_of_sight(player)
+		_los_check_timer = LOS_CHECK_INTERVAL
+	_attack_blind_time = 0.0 if _last_los else _attack_blind_time + _delta
+	if _attack_blind_time > ATTACK_BLIND_LIMIT:
+		_attack_blind_time = 0.0
 		_set_state(State.CHASE)
 		return
 
@@ -255,15 +268,28 @@ func _on_player_detected(p: Node3D) -> void:
 func _on_player_lost() -> void:
 	pass
 
-# How far a playing tape carries, and how much longer than usual a robot that came for the
-# sound keeps looking before giving up (on top of _state_chase()'s normal 3s without sight).
+# --- Going to a sound ---
+# How far a playing tape carries; how close the robot has to get to the spot to count as having
+# arrived; how long it stands there turning and looking; and the most it will spend on one sound
+# in total (the spot can be somewhere it cannot path to - a room behind a closed door - in which
+# case it ends up as close as it can get, i.e. right outside that door).
 const HEARING_RADIUS: float = 25.0
-const HEARING_PERSISTENCE: float = 8.0
-var _search_time_left: float = 0.0
+const INVESTIGATE_ARRIVE_DISTANCE: float = 1.0
+const INVESTIGATE_LOOK_TIME: float = 3.0
+const INVESTIGATE_MAX_TIME: float = 14.0
+const INVESTIGATE_TURN_SPEED: float = 1.6   # rad/s while looking around
+const SIGHT_RANGE: float = 12.0             # same as DetectionArea's radius in cerberus.tscn
+@export var investigate_speed: float = 4.5  # between patrol_speed and chase_speed
+
+var _noise_position: Vector3 = Vector3.ZERO
+var _investigate_look_left: float = 0.0
+var _investigate_time_left: float = 0.0
 
 # Called on every enemy (group "enemies") when a tape starts playing - see
-# DialogSystem.play_tape_for_floor(). A robot on the same floor and within earshot heads for
-# whoever is listening, exactly as if it had spotted them, but without needing to see them yet.
+# DialogSystem.play_tape_for_floor(). A robot on the same floor and within earshot walks to
+# where the sound came from - the SPOT, not the player: whoever has moved away by the time it
+# gets there is not found. It only turns into a chase if it actually sees the player on the way
+# or while looking around (_state_investigate()).
 func hear_noise(noise_position: Vector3) -> void:
 	if current_state == State.DEAD or current_state == State.CHASE or current_state == State.ATTACK:
 		return
@@ -275,13 +301,42 @@ func hear_noise(noise_position: Vector3) -> void:
 		return
 	if GameStateManager.current_state == GameStateManager.GameState.SPECTATOR:
 		return
-	var listener = get_tree().get_first_node_in_group("player")
-	if not listener:
+	print("[EnemyAI] ", name, " heard a tape at ", noise_position, " - going to look")
+	_noise_position = noise_position
+	_investigate_look_left = INVESTIGATE_LOOK_TIME
+	_investigate_time_left = INVESTIGATE_MAX_TIME
+	_set_state(State.INVESTIGATE)
+
+func _state_investigate(delta: float) -> void:
+	_investigate_time_left -= delta
+
+	# Seeing the player at any point turns this into the real thing.
+	if _los_check_timer <= 0.0:
+		_los_check_timer = LOS_CHECK_INTERVAL
+		var target = get_tree().get_first_node_in_group("player")
+		if target and GameStateManager.current_state != GameStateManager.GameState.SPECTATOR \
+				and absf(target.global_position.y - global_position.y) <= EnemySensors.SAME_FLOOR_Y_TOLERANCE \
+				and _flat_distance(target.global_position) <= SIGHT_RANGE \
+				and sensors.has_line_of_sight(target):
+			player = target
+			_set_state(State.CHASE)
+			return
+
+	if _flat_distance(_noise_position) > INVESTIGATE_ARRIVE_DISTANCE and _investigate_time_left > INVESTIGATE_LOOK_TIME:
+		var nav_target: Vector3 = _noise_position
+		nav_target.y = global_position.y
+		movement.nav_agent.target_position = nav_target
+		movement.move_along_nav(investigate_speed)
 		return
-	print("[EnemyAI] ", name, " heard a tape at ", noise_position, " - investigating")
-	player = listener
-	_set_state(State.CHASE)
-	_search_time_left = HEARING_PERSISTENCE
+
+	# At the spot (or as near as it could get, with the time for walking used up): stop,
+	# turn on the spot looking around, then give up and go back.
+	velocity.x = 0.0
+	velocity.z = 0.0
+	rotate_y(INVESTIGATE_TURN_SPEED * delta)
+	_investigate_look_left -= delta
+	if _investigate_look_left <= 0.0 or _investigate_time_left <= 0.0:
+		_set_state(State.RETURN)
 
 func take_damage(amount: int) -> void:
 	print(name, " took damage: ", amount)

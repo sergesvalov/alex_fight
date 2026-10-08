@@ -85,12 +85,14 @@ func play_tape_for_floor(floor_num: int, tape_id: int, spawn_position: Vector3) 
     else:
         push_error("[DialogSystem] holo_scene is null - no hologram will show")
 
-    # A tape playing is loud: every robot on this floor within earshot comes to look (see
-    # enemy_ai_base.gd::hear_noise()). That is the price of a memory - per LORE.md the hero
-    # stays vulnerable while one plays - and why WHERE and WHEN to take a tape is a decision.
-    # Replaying one from the inventory makes the same noise, so it also works as a lure.
-    var listener = get_tree().get_first_node_in_group("player")
-    get_tree().call_group("enemies", "hear_noise", listener.global_position if listener else spawn_position)
+    # A tape playing is loud: every robot on this floor within earshot walks to where the
+    # sound came from (see enemy_ai_base.gd::hear_noise()) - the spot the tape was played at,
+    # not wherever the player has gone since. That is the price of a memory (per LORE.md the
+    # hero stays vulnerable while one plays) and what makes WHERE and WHEN to take a tape a
+    # decision. Replaying one from the inventory makes the same noise at the player's own
+    # position (inventory_ui.gd passes it as spawn_position), so it also works as a lure:
+    # play it and walk away.
+    get_tree().call_group("enemies", "hear_noise", spawn_position)
 
     # No movement lock (there used to be a 2s one): per LORE.md narration never stops gameplay.
     # process_always=false - the timer must not run down while the inventory or a terminal has

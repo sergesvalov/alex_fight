@@ -82,8 +82,6 @@ func _generate_tape_texture() -> ImageTexture:
 
     return ImageTexture.create_from_image(img)
 
-const PICKUP_SOUND: AudioStream = preload("res://assets/audio/sfx/door_close.wav")
-
 func interact(_player):
     # WHICH recording this is depends on the order of finding, not on which shelf it lay on:
     # the first tape taken on a floor plays that floor's first recording, the third its last.
@@ -94,8 +92,7 @@ func interact(_player):
     var recording: int = GameStateManager.tapes_found.size()
     print("[vhs_tape] interact tape_id=", tape_id, " recording=", recording, " global_position=", global_position,
         " is_playing_before=", DialogSystem.is_playing, " current_floor=", floor_num)
-    # A cassette clunking into the player - door_close.wav pitched up until a proper sound exists.
-    AudioManager.play_sfx(PICKUP_SOUND, global_position, 2.4, -6.0)
+    AudioManager.play_sfx(AudioManager.tape_pickup_sound(), global_position)
     # Narration first, so is_playing is already true (play_tape() runs synchronously up to its
     # first await) by the time collect_tape() fires the floor's event and any trigger_alex_line()
     # that comes with it - those wait for the narration to finish instead of stepping on it.
