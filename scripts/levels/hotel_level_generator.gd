@@ -1,4 +1,4 @@
-@tool
+﻿@tool
 extends Node3D
 class_name HotelLevelGenerator
 
@@ -9,99 +9,9 @@ const FloorMap = preload("res://scripts/levels/floor_map.gd")
 # and the floor slab of the floor above on Android (gl_compatibility / 16-bit depth).
 const CEIL_BIAS: float = 0.001
 
-# ============================================================================
-# LAYOUT CONSTANTS
-# Unscaled meters - every local var built from these still multiplies by f_scale,
-# same as before. Centralized here because several of these numbers used to be
-# hand-copied into 2-3 places with nothing linking them - that's exactly how the
-# elevator's duplicate phantom button (two independently-typed positions) happened.
-# (A supposed "west wall dead zone" was also chased here at one point - it never
-# existed; see the DOUBLE_ROOM_BASE_X note below for what that mistake actually was.)
-# If you're about to hardcode a coordinate that already has a name below, reference it.
-# World axes: +X = east, -X = west, +Z = south, -Z = north (see AGENTS.md).
-# ============================================================================
-
-const BASE_CORRIDOR_HEIGHT: float = 4.0
-const BASE_FLOOR_THICKNESS: float = 0.5
-# Full floor-to-floor height (room height + floor slab). elevator_controller.gd has no
-# generator instance to ask, so it reads this directly as
-# HotelLevelGenerator.BASE_FLOOR_TO_FLOOR_HEIGHT - keep it in sync with the two consts above.
-const BASE_FLOOR_TO_FLOOR_HEIGHT: float = BASE_CORRIDOR_HEIGHT + BASE_FLOOR_THICKNESS  # 4.5
-
-const BUILDING_LENGTH_Z: float = 60.0   # full north-south extent, Z = -30..+30
-const BUILDING_WIDTH_X: float = 25.3    # symmetric width, half_x = 12.65 on each side.
-# DoubleRoom's true west edge (from its own RoomNorthWall/RoomSouthWall span, not
-# WCWestWall - that's just the WC nook's internal partition) sits at
-# DOUBLE_ROOM_BASE_X - 4.9 = -12.55, i.e. 0.1m inside the west wall's inner face
-# (-12.65) - same natural clearance as SingleRoom gets on the east side. There is
-# NO gap to trim here; a west_trim const briefly existed and was wrong - it was
-# derived from mistaking WCWestWall for the room's outer wall, and cut the actual
-# west wall in from the real room edge, leaving DoubleRoom's beds outside it.
-const NORTH_ZONE_INNER_X: float = -2.55 # Floor_NW/Roof_NW's east edge (corridor side)
-
-const DOUBLE_ROOM_BASE_X: float = -7.65  # DoubleRoom instance anchor (= WCWestWall's local X=0,
-                                          # an interior partition; the room's true outer wall is
-                                          # 4.9m further west - see BUILDING_WIDTH_X note above)
-const SINGLE_ROOM_BASE_X: float = 8.7    # SingleRoom instance X
-
-const CORRIDOR_WEST_EDGE_X: float = -2.75  # DoubleRoom's east (corridor-facing) wall - must
-                                            # match double_room.tscn's RoomEastWall
-const CORRIDOR_EAST_EDGE_X: float = 4.85   # SingleRoom's west (corridor-facing) wall - must
-                                            # match single_room.tscn's RoomWestWall
-
-const NORTH_STAIRS_CENTER_X: float = 1.05
-const NORTH_STAIRS_CENTER_Z: float = -30.0
-
-const ELEVATOR_CENTER_X: float = 7.2
-const ELEVATOR_CENTER_Z: float = -25.0
-# The old single-panel door (native 1.4m mesh, squeezed by a generator-applied X scale down to
-# ~1.3m to fit) needed that scale retuned every time the hole size or open_offset changed, and
-# still had only ~0.25m of clearance from the car's own side wall when open - see
-# elevator_door.tscn's own history. Replaced 2026-08-24 with two panels
-# (sliding_door_pair.gd) sized directly at their real width, no generator-side scale hack
-# needed any more - removed the constant entirely, not just its usage, since nothing else
-# referenced it once tests/test_elevator_alignment.gd was updated for the two-panel layout.
-
-const SOUTH_STAIRS_DOOR_CENTER_X: float = 1.05  # same corridor centerline as north stairs
-const SOUTH_STAIRS_ZONE_Z_START: float = 25.0
-const SOUTH_STAIRS_ZONE_Z_END: float = 30.0
-const SOUTH_STAIRS_RAMP_INNER_X: float = 1.87   # Floor_SW's east edge - shared by both ramps
-const SOUTH_STAIRS_LANDING_INNER_X: float = 8.03
-const SOUTH_STAIRS_LANDING_OUTER_X: float = 12.65
-
-# Room number -> {z: position along the corridor, mirror: whether scale.z=-1 is applied}.
-# Contiguous by design (e.g. 403/405 touch with no gap at z=0) - the missing numbers
-# (404, 407, 414, 418, 419) are intentional room-numbering flavor, not physical gaps;
-# the blueprint texture (assets/textures/hotel_map.jpg) shows the same skips.
-const DOUBLE_ROOM_LAYOUT := {
-	401: {"z": -30.0, "mirror": false},
-	402: {"z": -20.0, "mirror": false},
-	403: {"z": 0.0, "mirror": true},
-	405: {"z": 0.0, "mirror": false},
-	406: {"z": 10.0, "mirror": false},
-	408: {"z": 30.0, "mirror": true},
-}
-const SINGLE_ROOM_LAYOUT := {
-	410: {"z": -20.0, "mirror": false},
-	411: {"z": -10.0, "mirror": true},
-	412: {"z": -10.0, "mirror": false},
-	413: {"z": 0.0, "mirror": true},
-	415: {"z": 0.0, "mirror": false},
-	416: {"z": 10.0, "mirror": true},
-	417: {"z": 15.0, "mirror": true},
-	420: {"z": 15.0, "mirror": false},
-	421: {"z": 25.0, "mirror": true},
-}
-
-# Where along a room's outer wall (local Z from the room's own origin, before mirroring) the
-# secret exit door goes - a stretch with no furniture against it. Not the layout "z" itself:
-# that's the room's edge, i.e. the partition between two rooms (or the building's corner).
-const DOUBLE_ROOM_EXIT_DOOR_LOCAL_Z: float = 5.0   # room center; beds end at Z=2.6
-const SINGLE_ROOM_EXIT_DOOR_LOCAL_Z: float = 3.05  # between Table (ends Z=2.43) and Bed (starts Z=3.66)
-
 @export var floor_number: int = 4
-@export var floor_thickness: float = BASE_FLOOR_THICKNESS
-@export var corridor_height: float = BASE_CORRIDOR_HEIGHT
+@export var floor_thickness: float = HotelConstants.BASE_FLOOR_THICKNESS
+@export var corridor_height: float = HotelConstants.BASE_CORRIDOR_HEIGHT
 @export var wall_thickness: float = 0.2
 @export var carpet_color: Color = Color(1.0, 1.0, 1.0, 1.0)
 @export var empty_box_mode: bool = false
@@ -361,8 +271,8 @@ func _build_floor_geometry(f_num: int, y_offset: float, suffix: String, c_color:
 	parent.position.y = y_offset
 	add_child(parent)
 	
-	var z_length = BUILDING_LENGTH_Z * f_scale
-	var x_width = BUILDING_WIDTH_X * f_scale
+	var z_length = HotelConstants.BUILDING_LENGTH_Z * f_scale
+	var x_width = HotelConstants.BUILDING_WIDTH_X * f_scale
 	var height = corridor_height * f_scale
 	var thickness = wall_thickness * f_scale
 	var floor_thick = floor_thickness * f_scale
@@ -403,15 +313,15 @@ func _build_floor_geometry(f_num: int, y_offset: float, suffix: String, c_color:
 	
 	var z_north_len = 4.82 * f_scale
 	var z_north_pos = -27.59 * f_scale
-	var x_nw_east = NORTH_ZONE_INNER_X * f_scale
+	var x_nw_east = HotelConstants.NORTH_ZONE_INNER_X * f_scale
 	var x_nw_len = x_nw_east + half_x
 	var x_nw_pos = (x_nw_east - half_x) / 2.0
 	var x_ne_len = 8.0 * f_scale
 	var x_ne_pos = 8.65 * f_scale
 
-	var z_sw_len = (SOUTH_STAIRS_ZONE_Z_END - SOUTH_STAIRS_ZONE_Z_START) * f_scale
-	var z_sw_pos = (SOUTH_STAIRS_ZONE_Z_START + SOUTH_STAIRS_ZONE_Z_END) / 2.0 * f_scale
-	var x_sw_east = SOUTH_STAIRS_RAMP_INNER_X * f_scale
+	var z_sw_len = (HotelConstants.SOUTH_STAIRS_ZONE_Z_END - HotelConstants.SOUTH_STAIRS_ZONE_Z_START) * f_scale
+	var z_sw_pos = (HotelConstants.SOUTH_STAIRS_ZONE_Z_START + HotelConstants.SOUTH_STAIRS_ZONE_Z_END) / 2.0 * f_scale
+	var x_sw_east = HotelConstants.SOUTH_STAIRS_RAMP_INNER_X * f_scale
 	var x_sw_len = x_sw_east + half_x
 	var x_sw_pos = (x_sw_east - half_x) / 2.0
 
@@ -440,8 +350,8 @@ func _build_floor_geometry(f_num: int, y_offset: float, suffix: String, c_color:
 	# floor_thick). (A previous version set y_landing = (height+floor_thick)/2 directly,
 	# mistaking the desired *surface* height for the box's center - that left the landing
 	# floor_thick/2 (~0.15-0.25m) too high, forming an unwalkable step where the ramps meet it.)
-	var x_landing_len = (SOUTH_STAIRS_LANDING_OUTER_X - SOUTH_STAIRS_LANDING_INNER_X) * f_scale
-	var x_landing_pos = (SOUTH_STAIRS_LANDING_INNER_X + SOUTH_STAIRS_LANDING_OUTER_X) / 2.0 * f_scale
+	var x_landing_len = (HotelConstants.SOUTH_STAIRS_LANDING_OUTER_X - HotelConstants.SOUTH_STAIRS_LANDING_INNER_X) * f_scale
+	var x_landing_pos = (HotelConstants.SOUTH_STAIRS_LANDING_INNER_X + HotelConstants.SOUTH_STAIRS_LANDING_OUTER_X) / 2.0 * f_scale
 	var y_landing = height / 2.0
 	_create_static_box(parent, "Landing_SouthStairs", Vector3(x_landing_pos, y_landing, z_sw_pos), Vector3(x_landing_len, floor_thick, z_sw_len), floor_mat)
 
@@ -460,7 +370,7 @@ func _build_floor_geometry(f_num: int, y_offset: float, suffix: String, c_color:
 		landing_gate.collision_mask = 1 # Player layer
 		landing_gate.set_script(load("res://scripts/levels/blocks/stairs_gate.gd"))
 		landing_gate.floor_num = f_num
-		landing_gate.y_step = BASE_FLOOR_TO_FLOOR_HEIGHT * f_scale
+		landing_gate.y_step = HotelConstants.BASE_FLOOR_TO_FLOOR_HEIGHT * f_scale
 		landing_gate.position = Vector3(x_landing_pos, y_landing + floor_thick / 2.0 + 1.1, z_sw_pos)
 
 		var landing_gate_coll = CollisionShape3D.new()
@@ -490,7 +400,7 @@ func _build_floor_geometry(f_num: int, y_offset: float, suffix: String, c_color:
 	_create_static_box(parent, "Wall_South", Vector3(0, outer_wall_y, half_z + thickness/2.0), Vector3(x_width + thickness * 2.0, outer_wall_height, thickness), wall_mat)
 	
 	if f_num == 1:
-		_create_static_box(parent, "Floor_NorthStairs", Vector3(NORTH_STAIRS_CENTER_X * f_scale, floor_y, -27.6 * f_scale), Vector3(7.6 * f_scale, floor_thick, 4.8 * f_scale), floor_mat)
+		_create_static_box(parent, "Floor_NorthStairs", Vector3(HotelConstants.NORTH_STAIRS_CENTER_X * f_scale, floor_y, -27.6 * f_scale), Vector3(7.6 * f_scale, floor_thick, 4.8 * f_scale), floor_mat)
 		
 		# Fill the South Stairs hole for the ground floor
 		var x_se_len = 10.78 * f_scale
@@ -523,9 +433,9 @@ func _build_floor_geometry(f_num: int, y_offset: float, suffix: String, c_color:
 	_add_south_stairs_gate(parent, f_num, f_scale)
 
 
-	for room_num in DOUBLE_ROOM_LAYOUT:
+	for room_num in HotelConstants.DOUBLE_ROOM_LAYOUT:
 		_generate_double_room(parent, f_scale, f_num, room_num)
-	for room_num in SINGLE_ROOM_LAYOUT:
+	for room_num in HotelConstants.SINGLE_ROOM_LAYOUT:
 		_generate_single_room(parent, f_scale, f_num, room_num)
 	
 	# Floor 5 only - must come before the cassettes, which need to know the sealed room.
@@ -682,7 +592,7 @@ func _move_player(f_scale: float) -> void:
 		GameStateManager.floor4_spawn_position = p_spawn
 
 		# Reactive line for the very first moment of the game - the player waking up with no
-		# memory (LORE.md's "Концепция и Сеттинг"). Fired here, not in some node's own _ready(),
+		# memory (LORE.md's "РљРѕРЅС†РµРїС†РёСЏ Рё РЎРµС‚С‚РёРЅРі"). Fired here, not in some node's own _ready(),
 		# because this is the exact point the player is actually placed in the world for the
 		# first time - trigger_alex_line()'s own at-most-once guard keeps a level reload from
 		# repeating it.
@@ -698,7 +608,7 @@ func _move_player(f_scale: float) -> void:
 			if resume_floor != GameStateManager.current_floor:
 				GameStateManager.current_floor = resume_floor
 			var resume_y: float = (resume_floor - floor_number) * (corridor_height + floor_thickness) * f_scale
-			player.global_position = Vector3(ELEVATOR_CENTER_X * f_scale, resume_y + 0.1, (ELEVATOR_CENTER_Z + 2.0) * f_scale)
+			player.global_position = Vector3(HotelConstants.ELEVATOR_CENTER_X * f_scale, resume_y + 0.1, (HotelConstants.ELEVATOR_CENTER_Z + 2.0) * f_scale)
 			player.rotation.y = PI # facing out of the lift lobby, down the corridor
 			print("[generator] continued game: player placed by the elevator of floor ", resume_floor, " at ", player.global_position)
 
@@ -760,7 +670,7 @@ func _generate_elevator(parent: Node, f_scale: float) -> void:
 
 		# position/scale MUST be set before add_child() - see _generate_maintenance_room()
 		# for why (add_child() fires _ready() synchronously on the whole subtree).
-		inst.position = Vector3(ELEVATOR_CENTER_X * f_scale, 0, ELEVATOR_CENTER_Z * f_scale)
+		inst.position = Vector3(HotelConstants.ELEVATOR_CENTER_X * f_scale, 0, HotelConstants.ELEVATOR_CENTER_Z * f_scale)
 		inst.scale.z = -1.0
 
 		# ElevatorDoor MUST be added to inst before inst itself is added to parent: adding inst
@@ -793,9 +703,9 @@ func _generate_north_stairs(parent: Node, f_scale: float, f_num: int) -> void:
 	if scene:
 		var inst = scene.instantiate()
 		# position MUST be set before add_child() - see _generate_maintenance_room() for why.
-		inst.position = Vector3(NORTH_STAIRS_CENTER_X * f_scale, 0, NORTH_STAIRS_CENTER_Z * f_scale)
+		inst.position = Vector3(HotelConstants.NORTH_STAIRS_CENTER_X * f_scale, 0, HotelConstants.NORTH_STAIRS_CENTER_Z * f_scale)
 
-		# Обе двери на южной стене (лицом в коридор, +Z, без поворота), ширина проёма 1.2м.
+		# РћР±Рµ РґРІРµСЂРё РЅР° СЋР¶РЅРѕР№ СЃС‚РµРЅРµ (Р»РёС†РѕРј РІ РєРѕСЂРёРґРѕСЂ, +Z, Р±РµР· РїРѕРІРѕСЂРѕС‚Р°), С€РёСЂРёРЅР° РїСЂРѕС‘РјР° 1.2Рј.
 		# Local coords, NOT multiplied by f_scale here: this whole block (like double_room.tscn/
 		# single_room.tscn) is static authored content that GlobalConfig.apply_dynamic_scale()
 		# rescales on its own via block.gd's _ready() - scaling it again here would double it
@@ -823,7 +733,7 @@ func _generate_north_stairs(parent: Node, f_scale: float, f_num: int) -> void:
 				gate.collision_mask = 1 # Player layer
 				gate.set_script(load("res://scripts/levels/blocks/stairs_gate.gd"))
 				gate.floor_num = f_num
-				gate.y_step = BASE_FLOOR_TO_FLOOR_HEIGHT * f_scale
+				gate.y_step = HotelConstants.BASE_FLOOR_TO_FLOOR_HEIGHT * f_scale
 				gate.position = Vector3(door_data[1], 1.1, 4.9)
 
 				var gate_coll = CollisionShape3D.new()
@@ -868,7 +778,7 @@ func _generate_north_stairs(parent: Node, f_scale: float, f_num: int) -> void:
 			landing_gate.collision_mask = 1 # Player layer
 			landing_gate.set_script(load("res://scripts/levels/blocks/stairs_gate.gd"))
 			landing_gate.floor_num = f_num
-			landing_gate.y_step = BASE_FLOOR_TO_FLOOR_HEIGHT * f_scale
+			landing_gate.y_step = HotelConstants.BASE_FLOOR_TO_FLOOR_HEIGHT * f_scale
 			landing_gate.position = Vector3(l_center.x, l_center.y + 0.1 + 1.1, l_center.z)
 
 			var landing_gate_coll = CollisionShape3D.new()
@@ -882,13 +792,13 @@ func _generate_north_stairs(parent: Node, f_scale: float, f_num: int) -> void:
 		parent.add_child(inst)
 
 func _generate_south_stairs_wall(parent: Node, f_scale: float, height: float, thickness: float, wall_mat: Material) -> void:
-	var z_pos = SOUTH_STAIRS_ZONE_Z_START * f_scale + (thickness / 2.0)
+	var z_pos = HotelConstants.SOUTH_STAIRS_ZONE_Z_START * f_scale + (thickness / 2.0)
 	var door_w = 1.2 * f_scale
 	var door_h = 2.2 * f_scale
 
-	var x_left = CORRIDOR_WEST_EDGE_X * f_scale
-	var x_right = CORRIDOR_EAST_EDGE_X * f_scale
-	var x_center = SOUTH_STAIRS_DOOR_CENTER_X * f_scale
+	var x_left = HotelConstants.CORRIDOR_WEST_EDGE_X * f_scale
+	var x_right = HotelConstants.CORRIDOR_EAST_EDGE_X * f_scale
+	var x_center = HotelConstants.SOUTH_STAIRS_DOOR_CENTER_X * f_scale
 	
 	var left_w = (x_center - door_w / 2.0) - x_left
 	var left_cx = x_left + (left_w / 2.0)
@@ -935,16 +845,16 @@ func _generate_south_stairs_ramp(parent: Node, f_scale: float, height: float, fl
 	#   Band 2 (Z 27.5..30):  RampB climbs WEST,  X 8.03 -> 1.87,  Y mid_y -> full_y
 	# RampB's arrival point (X=1.87, Y=full_y) is exactly where the floor-above's own
 	# Floor_SW edge sits, so it needs no landing of its own - the next floor provides it.
-	var x_inner = SOUTH_STAIRS_RAMP_INNER_X * f_scale      # Floor_SW's east edge
-	var x_outer = SOUTH_STAIRS_LANDING_INNER_X * f_scale   # Landing_SouthStairs' west edge
+	var x_inner = HotelConstants.SOUTH_STAIRS_RAMP_INNER_X * f_scale      # Floor_SW's east edge
+	var x_outer = HotelConstants.SOUTH_STAIRS_LANDING_INNER_X * f_scale   # Landing_SouthStairs' west edge
 	var mid_y = (height + floor_thick) / 2.0   # Landing_SouthStairs' walkable SURFACE height
 	                                            # (its box center, y_landing, sits floor_thick/2
 	                                            # below this, at height/2 - see that comment)
 	var full_y = height + floor_thick          # this floor's ceiling = next floor's floor
 
-	var band_depth = (SOUTH_STAIRS_ZONE_Z_END - SOUTH_STAIRS_ZONE_Z_START) / 2.0 * f_scale
-	var z_band1 = (SOUTH_STAIRS_ZONE_Z_START * f_scale) + band_depth / 2.0  # center of band 1
-	var z_band2 = (SOUTH_STAIRS_ZONE_Z_END * f_scale) - band_depth / 2.0    # center of band 2
+	var band_depth = (HotelConstants.SOUTH_STAIRS_ZONE_Z_END - HotelConstants.SOUTH_STAIRS_ZONE_Z_START) / 2.0 * f_scale
+	var z_band1 = (HotelConstants.SOUTH_STAIRS_ZONE_Z_START * f_scale) + band_depth / 2.0  # center of band 1
+	var z_band2 = (HotelConstants.SOUTH_STAIRS_ZONE_Z_END * f_scale) - band_depth / 2.0    # center of band 2
 
 	var run = x_outer - x_inner
 	var ramp_len = sqrt(run * run + mid_y * mid_y)
@@ -985,8 +895,8 @@ func _generate_south_stairs_ramp(parent: Node, f_scale: float, height: float, fl
 # Locks South Stairs floor-hopping at floor f_num's own doorway - see stairs_gate.gd for
 # the actual check/teleport. Sized to span the full doorway so the player can't sidestep it.
 func _add_south_stairs_gate(parent: Node, f_num: int, f_scale: float) -> void:
-	var z_pos = SOUTH_STAIRS_ZONE_Z_START * f_scale
-	var x_center = SOUTH_STAIRS_DOOR_CENTER_X * f_scale
+	var z_pos = HotelConstants.SOUTH_STAIRS_ZONE_Z_START * f_scale
+	var x_center = HotelConstants.SOUTH_STAIRS_DOOR_CENTER_X * f_scale
 	var door_w = 1.2 * f_scale
 	var door_h = 2.2 * f_scale
 
@@ -996,7 +906,7 @@ func _add_south_stairs_gate(parent: Node, f_num: int, f_scale: float) -> void:
 	gate.collision_mask = 1 # Player layer
 	gate.set_script(load("res://scripts/levels/blocks/stairs_gate.gd"))
 	gate.floor_num = f_num
-	gate.y_step = BASE_FLOOR_TO_FLOOR_HEIGHT * f_scale
+	gate.y_step = HotelConstants.BASE_FLOOR_TO_FLOOR_HEIGHT * f_scale
 	gate.position = Vector3(x_center, door_h / 2.0, z_pos)
 
 	var coll = CollisionShape3D.new()
@@ -1013,7 +923,7 @@ func _add_south_stairs_gate(parent: Node, f_num: int, f_scale: float) -> void:
 # the corridor's own layout, not floor-4-specific) and bounces the player back whenever they cross
 # it, keeping the elevator and North Stairs (the north end) permanently just out of reach - the
 # corridor never actually gets you there, no matter how far you walk. Percentages per the original
-# request: South Stairs' own Z (SOUTH_STAIRS_ZONE_Z_START) is 0%, this barrier's own position is
+# request: South Stairs' own Z (HotelConstants.SOUTH_STAIRS_ZONE_Z_START) is 0%, this barrier's own position is
 # 100%, and crossing it always sends the player back to the 50% mark - halfway back toward the
 # South Stairs end, comfortably clear of the barrier so it doesn't immediately re-trigger.
 # Deliberately floor 3, not floor 4 (moved 2026-08-23, corrected per user report) - floor 4 is the
@@ -1023,36 +933,15 @@ func _add_south_stairs_gate(parent: Node, f_num: int, f_scale: float) -> void:
 # the South Stairs door on floor 3 stays reachable from the south side regardless of where that
 # door ended up.
 func _add_floor3_corridor_barrier(parent: Node, f_scale: float) -> void:
-	var mid_z = -0.09 * f_scale # matches z_main_pos - Floor_Main's own Z center
-	var south_z = SOUTH_STAIRS_ZONE_Z_START * f_scale
-	var return_z = (south_z + mid_z) / 2.0
-
-	var corridor_center_x = (CORRIDOR_WEST_EDGE_X + CORRIDOR_EAST_EDGE_X) / 2.0 * f_scale
-	var corridor_width = (CORRIDOR_EAST_EDGE_X - CORRIDOR_WEST_EDGE_X) * f_scale
-
-	var barrier = Area3D.new()
-	barrier.name = "Floor3CorridorBarrier"
-	barrier.collision_layer = 0
-	barrier.collision_mask = 1 # Player layer
-	barrier.set_script(load("res://scripts/levels/blocks/corridor_barrier.gd"))
-	barrier.return_z = return_z
-	barrier.position = Vector3(corridor_center_x, 1.1 * f_scale, mid_z)
-
-	var coll = CollisionShape3D.new()
-	var shape = BoxShape3D.new()
-	shape.size = Vector3(corridor_width, 2.2 * f_scale, 1.0 * f_scale)
-	coll.shape = shape
-	barrier.add_child(coll)
-
-	parent.add_child(barrier)
+	HotelTrapBuilder.add_floor3_corridor_barrier(self, parent, f_scale)
 
 # One CRT computer terminal per floor (every floor except 1 - empty_box_mode returns out of
 # _build_floor_geometry before this ever runs - and the roof, generated by a wholly separate
-# function). Reads out one of the log entries from LORE.md's "Текстовые логи в CRT-терминалах"
+# function). Reads out one of the log entries from LORE.md's "РўРµРєСЃС‚РѕРІС‹Рµ Р»РѕРіРё РІ CRT-С‚РµСЂРјРёРЅР°Р»Р°С…"
 # on interact (crt_terminal.gd) - a real, if simple, payoff for content that existed in the lore
 # doc but was never actually reachable in-game.
 #
-# Anchored to DoubleRoom orig_num 406 (z=10.0, never mirrored - see DOUBLE_ROOM_LAYOUT), which
+# Anchored to DoubleRoom orig_num 406 (z=10.0, never mirrored - see HotelConstants.DOUBLE_ROOM_LAYOUT), which
 # exists identically on every floor, mounted flush against the OUTSIDE (corridor-facing) surface
 # of that room's own RoomEastWall (local X=4.8, size.x=0.2 -> outer face at local X=4.9) so it
 # stands in the corridor without touching the wall's own geometry at all - no CSG, no risk of the
@@ -1061,7 +950,7 @@ func _add_floor3_corridor_barrier(parent: Node, f_scale: float) -> void:
 func _add_floor_terminal(parent: Node, f_scale: float, at: Vector3 = Vector3.INF, rot_y: float = 0.0) -> void:
 	# X=5.05 = wall's own outer face (4.9) + half the casing's depth (0.14) - so the casing's
 	# BACK sits flush against the wall instead of embedded inside it or floating in mid-corridor.
-	var room_world = Vector3(DOUBLE_ROOM_BASE_X, 0, 10.0) * f_scale
+	var room_world = Vector3(HotelConstants.DOUBLE_ROOM_BASE_X, 0, 10.0) * f_scale
 	var local_offset = Vector3(5.05, 1.3, 2.0) * f_scale
 	var terminal_pos = room_world + local_offset
 	if at != Vector3.INF:
@@ -1140,7 +1029,7 @@ func _add_room_door(room_inst: Node3D, node_name: String, local_pos: Vector3, ro
 	room_inst.add_child(door_inst)
 
 func _generate_double_room(parent: Node, f_scale: float, f_num: int, orig_num: int) -> void:
-	var layout = DOUBLE_ROOM_LAYOUT.get(orig_num)
+	var layout = HotelConstants.DOUBLE_ROOM_LAYOUT.get(orig_num)
 	if not layout: return
 	var scene = load("res://scenes/levels/hotel_siberia/blocks/double_room.tscn")
 	if not scene: return
@@ -1153,20 +1042,20 @@ func _generate_double_room(parent: Node, f_scale: float, f_num: int, orig_num: i
 	# subtree synchronously, including every door's AnimatableBody3D - any code that reads
 	# global_transform in _ready() (including doors) would otherwise see the room still at
 	# its pre-move, pre-mirror identity transform.
-	inst.position = Vector3(DOUBLE_ROOM_BASE_X * f_scale, 0, layout["z"] * f_scale)
+	inst.position = Vector3(HotelConstants.DOUBLE_ROOM_BASE_X * f_scale, 0, layout["z"] * f_scale)
 	if layout["mirror"]:
 		inst.scale.z = -1.0
 
-	# Проём в RoomEastWall (X=4.8, Z=8.5), коридор к востоку -> basis.z смотрит +X (поворот +90°).
+	# РџСЂРѕС‘Рј РІ RoomEastWall (X=4.8, Z=8.5), РєРѕСЂРёРґРѕСЂ Рє РІРѕСЃС‚РѕРєСѓ -> basis.z СЃРјРѕС‚СЂРёС‚ +X (РїРѕРІРѕСЂРѕС‚ +90В°).
 	_add_room_door(inst, "RoomDoor", Vector3(4.8, 0.0, 8.5), PI / 2.0, str(final_num))
-	# Проём в WCSouthWall (X=2.35, Z=4.9), номер к югу -> basis.z смотрит +Z (без поворота).
+	# РџСЂРѕС‘Рј РІ WCSouthWall (X=2.35, Z=4.9), РЅРѕРјРµСЂ Рє СЋРіСѓ -> basis.z СЃРјРѕС‚СЂРёС‚ +Z (Р±РµР· РїРѕРІРѕСЂРѕС‚Р°).
 	_add_room_door(inst, "WCDoor", Vector3(2.35, 0.0, 4.9), 0.0)
 
 	_bake_csg(inst)
 	parent.add_child(inst)
 
 func _generate_single_room(parent: Node, f_scale: float, f_num: int, orig_num: int) -> void:
-	var layout = SINGLE_ROOM_LAYOUT.get(orig_num)
+	var layout = HotelConstants.SINGLE_ROOM_LAYOUT.get(orig_num)
 	if not layout: return
 	var scene = load("res://scenes/levels/hotel_siberia/blocks/single_room.tscn")
 	if not scene: return
@@ -1176,84 +1065,29 @@ func _generate_single_room(parent: Node, f_scale: float, f_num: int, orig_num: i
 	inst.name = "SingleRoom_" + str(final_num)
 
 	# See _generate_double_room() for why this must happen before add_child().
-	inst.position = Vector3(SINGLE_ROOM_BASE_X * f_scale, 0, layout["z"] * f_scale)
+	inst.position = Vector3(HotelConstants.SINGLE_ROOM_BASE_X * f_scale, 0, layout["z"] * f_scale)
 	if layout["mirror"]:
 		inst.scale.z = -1.0
 
-	# Проём в RoomWestWall (X=-3.75, Z=3.5), коридор к западу -> basis.z смотрит -X (поворот -90°).
+	# РџСЂРѕС‘Рј РІ RoomWestWall (X=-3.75, Z=3.5), РєРѕСЂРёРґРѕСЂ Рє Р·Р°РїР°РґСѓ -> basis.z СЃРјРѕС‚СЂРёС‚ -X (РїРѕРІРѕСЂРѕС‚ -90В°).
 	_add_room_door(inst, "RoomDoor", Vector3(-3.75, 0.0, 3.5), -PI / 2.0, str(final_num))
-	# Проём в WCSouthWall (X=-2.55, Z=2.5), номер к югу -> basis.z смотрит +Z (без поворота).
+	# РџСЂРѕС‘Рј РІ WCSouthWall (X=-2.55, Z=2.5), РЅРѕРјРµСЂ Рє СЋРіСѓ -> basis.z СЃРјРѕС‚СЂРёС‚ +Z (Р±РµР· РїРѕРІРѕСЂРѕС‚Р°).
 	_add_room_door(inst, "WCDoor", Vector3(-2.55, 0.0, 2.5), 0.0)
 
 	_bake_csg(inst)
 	parent.add_child(inst)
 
-# A two-part trigger for a room's doorway, shared by the floor traps that act on ENTERING a room
-# (room_shuffle_trap.gd, name_door_trap.gd): the returned Area3D is a slab 0.35..0.95m inside
-# the door, and its "Threshold" child sits in the doorway itself. The scripts arm on the
-# threshold and fire on the slab, so walking out (slab first) never triggers them. Positions are
-# the room's own local ones mapped through its transform, so mirrored rooms come out right; the
-# trigger is meant to be parented to the FLOOR, keeping its shapes out from under a mirrored scale.
-func _make_doorway_trigger(room: Node3D, is_double: bool, trigger_script: Script) -> Area3D:
-	var doorway: Vector3 = Vector3(4.8, 1.1, 8.5) if is_double else Vector3(-3.75, 1.1, 3.5)
-	var inward_x: float = -1.0 if is_double else 1.0
-
-	var trigger = Area3D.new()
-	trigger.collision_layer = 0
-	trigger.collision_mask = 1 # Player layer
-	trigger.set_script(trigger_script)
-	trigger.position = room.transform * (doorway + Vector3(inward_x * 0.65, 0, 0))
-	var inner_shape = BoxShape3D.new()
-	inner_shape.size = Vector3(0.6, 2.2, 1.2)
-	var inner_coll = CollisionShape3D.new()
-	inner_coll.shape = inner_shape
-	trigger.add_child(inner_coll)
-
-	var threshold = Area3D.new()
-	threshold.name = "Threshold"
-	threshold.collision_layer = 0
-	threshold.collision_mask = 1
-	threshold.position = Vector3(-inward_x * 0.65, 0, 0) # back at the doorway itself
-	var threshold_shape = BoxShape3D.new()
-	threshold_shape.size = Vector3(0.5, 2.2, 1.0)
-	var threshold_coll = CollisionShape3D.new()
-	threshold_coll.shape = threshold_shape
-	threshold.add_child(threshold_coll)
-	trigger.add_child(threshold)
-	return trigger
 
 # Floor 8's nightmare - see name_door_trap.gd for the rule. Every room door gets a surname
 # instead of its number and a trigger behind it; one random room is the hero's own, and
 # _spawn_cassettes_other_floor() puts two of the floor's tapes in it (the third is always in
 # the maintenance room, which has neither a plate nor a trigger).
-const FLOOR8_OTHER_NAMES: Array = ["КРЫЛОВА", "СОКОЛОВ", "ЛЕБЕДЕВ", "ВОЛКОВ", "ЗАЙЦЕВА", "МОРОЗОВ", "ПАВЛОВ",
-	"ОРЛОВА", "ГУСЕВ", "ТИТОВ", "БЕЛОВА", "КОМАРОВ", "ЖУКОВ", "НЕЧАЕВА"]
-const FLOOR8_OWN_NAME: String = "НЕЧАЕВ"
+const FLOOR8_OTHER_NAMES: Array = ["РљР Р«Р›РћР’Рђ", "РЎРћРљРћР›РћР’", "Р›Р•Р‘Р•Р”Р•Р’", "Р’РћР›РљРћР’", "Р—РђР™Р¦Р•Р’Рђ", "РњРћР РћР—РћР’", "РџРђР’Р›РћР’",
+	"РћР Р›РћР’Рђ", "Р“РЈРЎР•Р’", "РўРРўРћР’", "Р‘Р•Р›РћР’Рђ", "РљРћРњРђР РћР’", "Р–РЈРљРћР’", "РќР•Р§РђР•Р’Рђ"]
+const FLOOR8_OWN_NAME: String = "РќР•Р§РђР•Р’"
 
 func _add_name_doors(parent: Node3D, f_num: int, f_scale: float) -> void:
-	var trap_script = load("res://scripts/levels/blocks/name_door_trap.gd")
-	var nums: Array = DOUBLE_ROOM_LAYOUT.keys() + SINGLE_ROOM_LAYOUT.keys()
-	nums.sort()
-	var own_num: int = nums[randi() % nums.size()]
-	var other_names: Array = FLOOR8_OTHER_NAMES.duplicate()
-	other_names.shuffle()
-	for num in nums:
-		var is_double: bool = DOUBLE_ROOM_LAYOUT.has(num)
-		var room: Node3D = parent.get_node_or_null(("DoubleRoom_" if is_double else "SingleRoom_") + str(f_num * 100 + num % 100))
-		if not room:
-			continue
-		var is_own: bool = num == own_num
-		var label: Label3D = room.get_node_or_null("RoomDoor/AnimatableBody3D/RoomNumberLabel")
-		if label:
-			label.text = FLOOR8_OWN_NAME if is_own else other_names.pop_back()
-			label.font_size = 36 # a surname is longer than a three-digit number
-		var trap: Area3D = _make_doorway_trigger(room, is_double, trap_script)
-		trap.name = "NameDoorTrap_" + str(num)
-		trap.is_own_room = is_own
-		trap.return_position = parent.global_position + Vector3(ELEVATOR_CENTER_X * f_scale, 0.1, (ELEVATOR_CENTER_Z + 2.0) * f_scale)
-		parent.add_child(trap)
-		if is_own:
-			parent.set_meta("own_room", room)
+	HotelTrapBuilder.add_name_doors(self, parent, f_num, f_scale)
 
 # Floor 5's nightmare - see room_shuffle_trap.gd for the rule. Gives every room on the floor a
 # trap just inside its doorway, and seals one random room's door from the corridor side so that
@@ -1264,33 +1098,7 @@ func _add_name_doors(parent: Node3D, f_num: int, f_scale: float) -> void:
 var _sealed_room_door: Node = null
 
 func _add_room_shuffle_trap(parent: Node3D, f_num: int) -> void:
-	var trap_script = load("res://scripts/levels/blocks/room_shuffle_trap.gd")
-	var traps: Array = []
-	var nums: Array = DOUBLE_ROOM_LAYOUT.keys() + SINGLE_ROOM_LAYOUT.keys()
-	nums.sort()
-	for num in nums:
-		var is_double: bool = DOUBLE_ROOM_LAYOUT.has(num)
-		var room: Node3D = parent.get_node_or_null(("DoubleRoom_" if is_double else "SingleRoom_") + str(f_num * 100 + num % 100))
-		if not room:
-			continue
-		var trap: Area3D = _make_doorway_trigger(room, is_double, trap_script)
-		trap.name = "RoomShuffleTrap_" + str(num)
-		trap.room = room
-		trap.traps = traps
-		trap.index = traps.size()
-		trap.inside_local = Vector3(2.5, 0.1, 7.5) if is_double else Vector3(-1.5, 0.1, 3.6)
-		trap.facing_yaw = PI / 2.0 if is_double else -PI / 2.0
-
-		traps.append(trap)
-		parent.add_child(trap)
-
-	if traps.is_empty():
-		return
-	var sealed_room: Node3D = traps[randi() % traps.size()].room
-	parent.set_meta("sealed_room", sealed_room)
-	_sealed_room_door = sealed_room.get_node_or_null("RoomDoor/AnimatableBody3D")
-	if _sealed_room_door:
-		_sealed_room_door.locked_from_corridor = not GameStateManager.floor5_rooms_unlocked # false in a continued game past floor 5
+	HotelTrapBuilder.add_room_shuffle_trap(self, parent, f_num)
 
 func _create_static_box(parent: Node, node_name: String, pos: Vector3, size: Vector3, mat: Material, rot: Vector3 = Vector3.ZERO) -> void:
 	var static_body = StaticBody3D.new()
@@ -1324,8 +1132,8 @@ func _find_props(node: Node, prop_name: String, arr: Array) -> void:
 	for child in node.get_children():
 		_find_props(child, prop_name, arr)
 
-# Per LORE.md, Cassette #1 ("Личность") is found in the starting room's furniture and
-# Cassette #2 ("Инцидент") is nearby in the corridor - both close to where the player actually
+# Per LORE.md, Cassette #1 ("Р›РёС‡РЅРѕСЃС‚СЊ") is found in the starting room's furniture and
+# Cassette #2 ("РРЅС†РёРґРµРЅС‚") is nearby in the corridor - both close to where the player actually
 # appears. The player spawns at the same world (X=0, Z=0) on every floor (see _move_player()),
 # so "closest to spawn" is a stand-in for "in/near the starting room" that works on any floor,
 # not just the one the player happens to be reading this on.
@@ -1352,7 +1160,7 @@ func _spawn_cassettes(parent: Node, f_scale: float, f_num: int) -> void:
 	var scene = load("res://entities/interactables/vhs_tape.tscn")
 	if not scene: return
 
-	# Floor 4 is the player's starting floor - Cassette #1 ("Личность") always sits in the same
+	# Floor 4 is the player's starting floor - Cassette #1 ("Р›РёС‡РЅРѕСЃС‚СЊ") always sits in the same
 	# room the player spawns in (see _move_player()), which relies on "closest wardrobe/table to
 	# world origin" specifically. Every other floor has no such spawn-point relationship, so it
 	# gets a simpler, fully-random layout instead (table/maintenance-room/wardrobe - see
@@ -1579,42 +1387,21 @@ func _spawn_sleepers(parent: Node3D, f_scale: float, off_flag: StringName) -> vo
 		inst.position = Vector3(post.x * f_scale, 0, post.y * f_scale)
 		inst.rotation.y = PI / 2.0 if post.x < 1.0 else -PI / 2.0 # backs to the wall, facing across
 		# Where one of them puts a caught player: the open corridor in front of this floor's
-		# elevator door (elevator at ELEVATOR_CENTER_X, its door on the Z=-25 face).
-		inst.return_position = parent.global_position + Vector3(ELEVATOR_CENTER_X * f_scale, 0.1, (ELEVATOR_CENTER_Z + 2.0) * f_scale)
+		# elevator door (elevator at HotelConstants.ELEVATOR_CENTER_X, its door on the Z=-25 face).
+		inst.return_position = parent.global_position + Vector3(HotelConstants.ELEVATOR_CENTER_X * f_scale, 0.1, (HotelConstants.ELEVATOR_CENTER_Z + 2.0) * f_scale)
 		parent.add_child(inst)
 
 # Floor 7's nightmare - see blackout_trap.gd for the rule. It gets this floor's own lights (the
 # same list _set_lit_floor() switches) and the glowing ceiling panels that go with them, and the
 # same "back by the elevator" spot floor 6's sleepers use.
 func _add_blackout_trap(parent: Node3D, f_num: int, lights: Array, f_scale: float) -> void:
-	var trap = Node3D.new()
-	trap.name = "BlackoutTrap"
-	trap.set_script(load("res://scripts/levels/blocks/blackout_trap.gd"))
-	trap.floor_num = f_num
-	trap.off_flag = &"floor7_lights_steady" if f_num == 7 else &"floor2_done"
-	trap.lights = lights
-	trap.lamp_meshes = parent.find_children("*LightMesh", "MeshInstance3D", true, false)
-	trap.return_position = parent.global_position + Vector3(ELEVATOR_CENTER_X * f_scale, 0.1, (ELEVATOR_CENTER_Z + 2.0) * f_scale)
-	parent.add_child(trap)
+	HotelTrapBuilder.add_blackout_trap(parent, f_num, lights, f_scale)
 
 # Floor 9's sweeping ceiling units (sweep_camera_trap.gd) and floor 10's advancing edge
 # (edge_wall_trap.gd): one node each, sitting at the floor's own origin so the script can work
 # in floor-local coordinates. Both put a caught player back by that floor's elevator.
 func _add_floor_wide_trap(parent: Node3D, f_num: int, f_scale: float) -> void:
-	var trap = Node3D.new()
-	if f_num == 9:
-		trap.name = "SweepCameraTrap"
-		trap.set_script(load("res://scripts/levels/blocks/sweep_camera_trap.gd"))
-		trap.corridor_x_min = CORRIDOR_WEST_EDGE_X * f_scale
-		trap.corridor_x_max = CORRIDOR_EAST_EDGE_X * f_scale
-	else:
-		trap.name = "EdgeWallTrap"
-		trap.set_script(load("res://scripts/levels/blocks/edge_wall_trap.gd"))
-		trap.width = BUILDING_WIDTH_X * f_scale
-		trap.height = corridor_height * f_scale
-	trap.floor_num = f_num
-	trap.return_position = parent.global_position + Vector3(ELEVATOR_CENTER_X * f_scale, 0.1, (ELEVATOR_CENTER_Z + 2.0) * f_scale)
-	parent.add_child(trap)
+	HotelTrapBuilder.add_floor_wide_trap(self, parent, f_num, f_scale)
 
 # The ground-floor lobby (floor 1 only). Plan, north on the left as the owner drew it:
 #
@@ -1635,11 +1422,11 @@ const LOBBY_NORTH_ZONE_EAST_X: float = 9.65    # its east wall - where the maint
 
 func _build_lobby(parent: Node3D, f_scale: float, height: float, wall_mat: Material) -> void:
 	var hh: float = height / f_scale
-	var west: float = CORRIDOR_WEST_EDGE_X
-	var east: float = CORRIDOR_EAST_EDGE_X
-	var half_x: float = BUILDING_WIDTH_X / 2.0
-	var north_z: float = ELEVATOR_CENTER_Z            # -25: the lift's and the north stairs' own doors
-	var south_z: float = SOUTH_STAIRS_ZONE_Z_START    # 25: the south stairs wall
+	var west: float = HotelConstants.CORRIDOR_WEST_EDGE_X
+	var east: float = HotelConstants.CORRIDOR_EAST_EDGE_X
+	var half_x: float = HotelConstants.BUILDING_WIDTH_X / 2.0
+	var north_z: float = HotelConstants.ELEVATOR_CENTER_Z            # -25: the lift's and the north stairs' own doors
+	var south_z: float = HotelConstants.SOUTH_STAIRS_ZONE_Z_START    # 25: the south stairs wall
 	var cw: float = LOBBY_CORRIDOR_HALF_WIDTH
 	var parts_script = load("res://scripts/levels/blocks/lobby_parts.gd")
 	# A box given by its extents (unscaled meters) rather than by center and size.
@@ -1655,7 +1442,7 @@ func _build_lobby(parent: Node3D, f_scale: float, height: float, wall_mat: Mater
 	box.call("Lobby_EastWall", wall_mat, east, east + 0.2, 0.0, hh, LOBBY_NORTH_ZONE_Z, south_z)
 	box.call("Lobby_NorthZone_S", wall_mat, east, LOBBY_NORTH_ZONE_EAST_X, 0.0, hh, LOBBY_NORTH_ZONE_Z, LOBBY_NORTH_ZONE_Z + 0.2)
 	box.call("Lobby_NorthZone_E", wall_mat, LOBBY_NORTH_ZONE_EAST_X, LOBBY_NORTH_ZONE_EAST_X + 0.2, 0.0, hh, north_z, LOBBY_NORTH_ZONE_Z + 0.2)
-	box.call("Lobby_NorthWall_W", wall_mat, west - 0.2, NORTH_STAIRS_CENTER_X - 3.8, 0.0, hh, north_z - 0.2, north_z)
+	box.call("Lobby_NorthWall_W", wall_mat, west - 0.2, HotelConstants.NORTH_STAIRS_CENTER_X - 3.8, 0.0, hh, north_z - 0.2, north_z)
 
 	# --- Reception: a long desk in the middle of the hall, in front of the east wall, facing
 	# the corridor to the entrance. There is room to walk round either end and behind it. ---
@@ -1791,7 +1578,7 @@ func _build_lobby(parent: Node3D, f_scale: float, height: float, wall_mat: Mater
 	kill_zone.role = "turrets"
 	kill_zone.position = Vector3((zone_x0 + zone_x1) / 2.0, 1.2, 0.0) * f_scale
 	# Where he comes to: in front of the lift he arrived by.
-	kill_zone.return_position = parent.global_position + Vector3(ELEVATOR_CENTER_X * f_scale, 0.1, (ELEVATOR_CENTER_Z + 2.0) * f_scale)
+	kill_zone.return_position = parent.global_position + Vector3(HotelConstants.ELEVATOR_CENTER_X * f_scale, 0.1, (HotelConstants.ELEVATOR_CENTER_Z + 2.0) * f_scale)
 	var zone_coll = CollisionShape3D.new()
 	var zone_shape = BoxShape3D.new()
 	zone_shape.size = Vector3(zone_x1 - zone_x0, 2.4, cw * 2.0 - 0.2) * f_scale
@@ -1858,8 +1645,8 @@ func _add_lab_tank(parent: Node3D, tank_name: String, center: Vector3, size: Vec
 	parent.add_child(body)
 
 func _build_lab(parent: Node3D, f_scale: float) -> void:
-	var half_x: float = BUILDING_WIDTH_X / 2.0
-	var half_z: float = BUILDING_LENGTH_Z / 2.0
+	var half_x: float = HotelConstants.BUILDING_WIDTH_X / 2.0
+	var half_z: float = HotelConstants.BUILDING_LENGTH_Z / 2.0
 	var drop: float = LAB_LEVEL_DROP
 	var y1: float = -drop          # level -1 floor
 	var y2: float = -2.0 * drop    # level -2 floor
@@ -2040,8 +1827,8 @@ func _generate_roof(y_offset: float, f_scale: float) -> void:
 	parent.position.y = y_offset
 	add_child(parent)
 	
-	var z_length = BUILDING_LENGTH_Z * f_scale
-	var x_width = BUILDING_WIDTH_X * f_scale
+	var z_length = HotelConstants.BUILDING_LENGTH_Z * f_scale
+	var x_width = HotelConstants.BUILDING_WIDTH_X * f_scale
 	var thickness = wall_thickness * f_scale
 	var floor_thick = floor_thickness * f_scale
 
@@ -2062,21 +1849,21 @@ func _generate_roof(y_offset: float, f_scale: float) -> void:
 	var z_north_len = 4.82 * f_scale
 	var z_north_pos = -27.59 * f_scale
 	
-	var x_nw_east = NORTH_ZONE_INNER_X * f_scale
+	var x_nw_east = HotelConstants.NORTH_ZONE_INNER_X * f_scale
 	var x_nw_len = x_nw_east + half_x
 	var x_nw_pos = (x_nw_east - half_x) / 2.0
 	var x_ne_len = 8.0 * f_scale
 	var x_ne_pos = 8.65 * f_scale
 
 	# The main slab stops at the south stairs zone: the part of that zone over the upper ramp
-	# (X SOUTH_STAIRS_RAMP_INNER_X..LANDING_INNER_X, the southern half of the zone) is left open,
+	# (X HotelConstants.SOUTH_STAIRS_RAMP_INNER_X..LANDING_INNER_X, the southern half of the zone) is left open,
 	# so the top flight of floor 10's south stairs comes out onto the roof instead of running
 	# into the underside of the slab.
 	var half_z_roof = z_length / 2.0
-	var z_stairs_mid = (SOUTH_STAIRS_ZONE_Z_START + SOUTH_STAIRS_ZONE_Z_END) / 2.0 * f_scale
+	var z_stairs_mid = (HotelConstants.SOUTH_STAIRS_ZONE_Z_START + HotelConstants.SOUTH_STAIRS_ZONE_Z_END) / 2.0 * f_scale
 	var z_main_north = z_south_pos - z_south_len / 2.0
-	var x_ramp_west = SOUTH_STAIRS_RAMP_INNER_X * f_scale
-	var x_ramp_east = SOUTH_STAIRS_LANDING_INNER_X * f_scale
+	var x_ramp_west = HotelConstants.SOUTH_STAIRS_RAMP_INNER_X * f_scale
+	var x_ramp_east = HotelConstants.SOUTH_STAIRS_LANDING_INNER_X * f_scale
 	_create_static_box(parent, "Roof_Main", Vector3(0, floor_y, (z_main_north + z_stairs_mid) / 2.0), Vector3(x_width, floor_thick, z_stairs_mid - z_main_north), roof_mat)
 	_create_static_box(parent, "Roof_SW", Vector3((x_ramp_west - half_x) / 2.0, floor_y, (z_stairs_mid + half_z_roof) / 2.0), Vector3(x_ramp_west + half_x, floor_thick, half_z_roof - z_stairs_mid), roof_mat)
 	_create_static_box(parent, "Roof_SE", Vector3((x_ramp_east + half_x) / 2.0, floor_y, (z_stairs_mid + half_z_roof) / 2.0), Vector3(half_x - x_ramp_east, floor_thick, half_z_roof - z_stairs_mid), roof_mat)
@@ -2130,7 +1917,7 @@ func _build_roof_structures(parent: Node3D, f_scale: float, mat: Material) -> vo
 		gate.collision_mask = 1 # Player layer
 		gate.set_script(gate_script)
 		gate.floor_num = ROOF_FLOOR_INDEX
-		gate.y_step = BASE_FLOOR_TO_FLOOR_HEIGHT * f_scale
+		gate.y_step = HotelConstants.BASE_FLOOR_TO_FLOOR_HEIGHT * f_scale
 		gate.position = (pos + Vector3(0, 1.1, 0)) * f_scale
 		gate.rotation.y = rot_y
 		var gate_coll = CollisionShape3D.new()
@@ -2141,13 +1928,13 @@ func _build_roof_structures(parent: Node3D, f_scale: float, mat: Material) -> vo
 		parent.add_child(gate)
 
 	# --- North stairs bulkhead, over the stairwell hole (X -2.65..4.75, Z -30..-25.1). Its door
-	# is where every floor's own "west" stair door is (X = NORTH_STAIRS_CENTER_X - 2.8): that is
+	# is where every floor's own "west" stair door is (X = HotelConstants.NORTH_STAIRS_CENTER_X - 2.8): that is
 	# where floor 10's top flight arrives. ---
-	var nx0: float = NORTH_STAIRS_CENTER_X - 3.8
-	var nx1: float = NORTH_STAIRS_CENTER_X + 3.8
-	var nz0: float = -BUILDING_LENGTH_Z / 2.0
+	var nx0: float = HotelConstants.NORTH_STAIRS_CENTER_X - 3.8
+	var nx1: float = HotelConstants.NORTH_STAIRS_CENTER_X + 3.8
+	var nz0: float = -HotelConstants.BUILDING_LENGTH_Z / 2.0
 	var nz1: float = -25.1
-	var ndoor: float = NORTH_STAIRS_CENTER_X - 2.8
+	var ndoor: float = HotelConstants.NORTH_STAIRS_CENTER_X - 2.8
 	box.call("NorthExit_West", nx0, nx0 + 0.2, 0.0, hh, nz0, nz1)
 	box.call("NorthExit_East", nx1 - 0.2, nx1, 0.0, hh, nz0, nz1)
 	box.call("NorthExit_North", nx0, nx1, 0.0, hh, nz0, nz0 + 0.2)
@@ -2159,12 +1946,12 @@ func _build_roof_structures(parent: Node3D, f_scale: float, mat: Material) -> vo
 	add_gate.call("NorthExitGate", Vector3(ndoor, 0, nz1), 0.0)
 
 	# --- South stairs bulkhead, over the opening left in the slab above the upper ramp. The
-	# ramp climbs west and arrives at X = SOUTH_STAIRS_RAMP_INNER_X, so the door is in the west
+	# ramp climbs west and arrives at X = HotelConstants.SOUTH_STAIRS_RAMP_INNER_X, so the door is in the west
 	# side, opening west onto Roof_SW. ---
-	var sx0: float = SOUTH_STAIRS_RAMP_INNER_X
-	var sx1: float = SOUTH_STAIRS_LANDING_INNER_X
-	var sz0: float = (SOUTH_STAIRS_ZONE_Z_START + SOUTH_STAIRS_ZONE_Z_END) / 2.0
-	var sz1: float = SOUTH_STAIRS_ZONE_Z_END
+	var sx0: float = HotelConstants.SOUTH_STAIRS_RAMP_INNER_X
+	var sx1: float = HotelConstants.SOUTH_STAIRS_LANDING_INNER_X
+	var sz0: float = (HotelConstants.SOUTH_STAIRS_ZONE_Z_START + HotelConstants.SOUTH_STAIRS_ZONE_Z_END) / 2.0
+	var sz1: float = HotelConstants.SOUTH_STAIRS_ZONE_Z_END
 	var sdoor: float = (sz0 + sz1) / 2.0
 	box.call("SouthExit_North", sx0, sx1, 0.0, hh, sz0 - 0.2, sz0)
 	box.call("SouthExit_South", sx0, sx1, 0.0, hh, sz1 - 0.2, sz1)
@@ -2178,25 +1965,25 @@ func _build_roof_structures(parent: Node3D, f_scale: float, mat: Material) -> vo
 
 	# --- Elevator machine room, over the lift shaft (shaft interior X 4.95..9.45, Z -30..-25).
 	# An ordinary room on the roof: a door, no floor gate. ---
-	var mx0: float = ELEVATOR_CENTER_X - 2.0
-	var mx1: float = ELEVATOR_CENTER_X + 2.0
+	var mx0: float = HotelConstants.ELEVATOR_CENTER_X - 2.0
+	var mx1: float = HotelConstants.ELEVATOR_CENTER_X + 2.0
 	var mz0: float = -29.6
 	var mz1: float = -26.0
 	box.call("MachineRoom_West", mx0, mx0 + 0.2, 0.0, hh, mz0, mz1)
 	box.call("MachineRoom_East", mx1 - 0.2, mx1, 0.0, hh, mz0, mz1)
 	box.call("MachineRoom_North", mx0, mx1, 0.0, hh, mz0, mz0 + 0.2)
-	box.call("MachineRoom_SouthA", mx0, ELEVATOR_CENTER_X - 0.6, 0.0, hh, mz1 - 0.1, mz1 + 0.1)
-	box.call("MachineRoom_SouthB", ELEVATOR_CENTER_X + 0.6, mx1, 0.0, hh, mz1 - 0.1, mz1 + 0.1)
-	box.call("MachineRoom_Lintel", ELEVATOR_CENTER_X - 0.6, ELEVATOR_CENTER_X + 0.6, 2.2, hh, mz1 - 0.1, mz1 + 0.1)
+	box.call("MachineRoom_SouthA", mx0, HotelConstants.ELEVATOR_CENTER_X - 0.6, 0.0, hh, mz1 - 0.1, mz1 + 0.1)
+	box.call("MachineRoom_SouthB", HotelConstants.ELEVATOR_CENTER_X + 0.6, mx1, 0.0, hh, mz1 - 0.1, mz1 + 0.1)
+	box.call("MachineRoom_Lintel", HotelConstants.ELEVATOR_CENTER_X - 0.6, HotelConstants.ELEVATOR_CENTER_X + 0.6, 2.2, hh, mz1 - 0.1, mz1 + 0.1)
 	box.call("MachineRoom_Cap", mx0, mx1, hh, hh + 0.2, mz0, mz1 + 0.1)
-	add_door.call("MachineRoomDoor", Vector3(ELEVATOR_CENTER_X, 0, mz1), 0.0)
+	add_door.call("MachineRoomDoor", Vector3(HotelConstants.ELEVATOR_CENTER_X, 0, mz1), 0.0)
 
 	var room_light = OmniLight3D.new()
 	room_light.name = "MachineRoomLight"
 	room_light.light_color = Color(1.0, 0.25, 0.15) # emergency red
 	room_light.light_energy = 1.2
 	room_light.omni_range = 5.0 * f_scale
-	room_light.position = Vector3(ELEVATOR_CENTER_X, 2.2, (mz0 + mz1) / 2.0) * f_scale
+	room_light.position = Vector3(HotelConstants.ELEVATOR_CENTER_X, 2.2, (mz0 + mz1) / 2.0) * f_scale
 	parent.add_child(room_light)
 
 	# The code plate on the back wall - see roof_code_plate.gd.
@@ -2205,7 +1992,7 @@ func _build_roof_structures(parent: Node3D, f_scale: float, mat: Material) -> vo
 	plate.collision_layer = 4 # same layer vhs_tape.tscn uses - the interact raycast's mask
 	plate.collision_mask = 0
 	plate.set_script(load("res://scripts/interactables/roof_code_plate.gd"))
-	plate.position = Vector3(ELEVATOR_CENTER_X, 1.4, mz0 + 0.26) * f_scale
+	plate.position = Vector3(HotelConstants.ELEVATOR_CENTER_X, 1.4, mz0 + 0.26) * f_scale
 	var plate_coll = CollisionShape3D.new()
 	var plate_shape = BoxShape3D.new()
 	plate_shape.size = Vector3(0.9, 0.6, 0.2) * f_scale
@@ -2250,7 +2037,7 @@ func _on_all_tapes_collected() -> void:
 		GameStateManager.secret_portal_active = true
 
 		var is_double = randi() % 2 == 0
-		var layout = DOUBLE_ROOM_LAYOUT if is_double else SINGLE_ROOM_LAYOUT
+		var layout = HotelConstants.DOUBLE_ROOM_LAYOUT if is_double else HotelConstants.SINGLE_ROOM_LAYOUT
 		var keys = layout.keys()
 
 		GameStateManager.secret_portal_floor = GameStateManager.current_floor
@@ -2332,10 +2119,10 @@ func _create_exit_portal() -> void:
 	if not floor_node: return
 
 	var is_double = GameStateManager.secret_portal_is_double
-	var layout = DOUBLE_ROOM_LAYOUT if is_double else SINGLE_ROOM_LAYOUT
+	var layout = HotelConstants.DOUBLE_ROOM_LAYOUT if is_double else HotelConstants.SINGLE_ROOM_LAYOUT
 	var room_layout = layout.get(GameStateManager.secret_portal_room_num)
 	if not room_layout: return
-	var door_local_z = DOUBLE_ROOM_EXIT_DOOR_LOCAL_Z if is_double else SINGLE_ROOM_EXIT_DOOR_LOCAL_Z
+	var door_local_z = HotelConstants.DOUBLE_ROOM_EXIT_DOOR_LOCAL_Z if is_double else HotelConstants.SINGLE_ROOM_EXIT_DOOR_LOCAL_Z
 	if room_layout["mirror"]:
 		door_local_z = -door_local_z
 	var room_z = (room_layout["z"] + door_local_z) * f_scale
@@ -2354,8 +2141,8 @@ func _create_exit_portal() -> void:
 	var wall_mesh: MeshInstance3D = old_wall.get_node("MeshInstance3D")
 	var wall_mat: Material = wall_mesh.mesh.material
 
-	var half_x = (BUILDING_WIDTH_X * f_scale) / 2.0
-	var half_z = (BUILDING_LENGTH_Z * f_scale) / 2.0
+	var half_x = (HotelConstants.BUILDING_WIDTH_X * f_scale) / 2.0
+	var half_z = (HotelConstants.BUILDING_LENGTH_Z * f_scale) / 2.0
 	var thickness = wall_thickness * f_scale
 	var height = corridor_height * f_scale
 	var floor_thick = floor_thickness * f_scale
@@ -2433,7 +2220,7 @@ func _create_exit_portal() -> void:
 # portal this replaces.
 func _pick_random_floor3_target() -> Vector3:
 	var is_single = randi() % 2 == 1
-	var layout = SINGLE_ROOM_LAYOUT if is_single else DOUBLE_ROOM_LAYOUT
+	var layout = HotelConstants.SINGLE_ROOM_LAYOUT if is_single else HotelConstants.DOUBLE_ROOM_LAYOUT
 	var keys = layout.keys()
 	var room_num = keys[randi() % keys.size()]
 	var prefix = "SingleRoom_" if is_single else "DoubleRoom_"
@@ -2449,3 +2236,4 @@ func _pick_random_floor3_target() -> Vector3:
 	else:
 		target_pos += room_node.global_basis * Vector3(2.5, 0.5, 7.5)
 	return target_pos
+
