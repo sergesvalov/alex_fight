@@ -82,7 +82,15 @@ func unlock_floor(floor_num: int) -> void:
     unlocked_floor_min = min(unlocked_floor_min, floor_num)
     unlocked_floor_max = max(unlocked_floor_max, floor_num)
 
+# The lift's service code, on a plate in the machine room on the roof (roof_code_plate.gd). Reading
+# it sets lobby_unlocked, which is the only thing that ever opens floor 1 - unlock_floor()
+# refuses anything below MIN_UNLOCKABLE_FLOOR, so floor 1 can never join the range by accident.
+var lift_code: String = "%04d" % (randi() % 10000)
+var lobby_unlocked: bool = false
+
 func is_floor_unlocked(floor_num: int) -> bool:
+    if floor_num == 1:
+        return lobby_unlocked
     return floor_num >= unlocked_floor_min and floor_num <= unlocked_floor_max
 
 # The one-time secret exit door punched through a random room's OUTER wall once any floor's 3

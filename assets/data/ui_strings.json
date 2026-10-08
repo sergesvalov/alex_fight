@@ -5,6 +5,8 @@
     "elevator_floor_locked": "Этаж ещё не разблокирован",
     "tapes_counter_format": "Кассеты: %d/%d",
     "interact_prompt_desktop": "[E]",
+    "roof_plate_format": "ЛИФТ\nСЛУЖЕБНЫЙ КОД\n%s",
+    "roof_code_found": "Служебный код лифта — %s. Теперь он пойдёт и на первый этаж.",
     "terminal_tapes_title": "ОПИСЬ НОСИТЕЛЕЙ — ЭТ. %d",
     "terminal_tapes_intro": "АВТОМАТИЧЕСКАЯ ОПИСЬ МАГНИТНЫХ НОСИТЕЛЕЙ\nНе сданы в архив:",
     "terminal_tapes_none": "АВТОМАТИЧЕСКАЯ ОПИСЬ МАГНИТНЫХ НОСИТЕЛЕЙ\nВсе носители этажа сданы в архив.",

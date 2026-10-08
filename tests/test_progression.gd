@@ -327,23 +327,12 @@ func _ready() -> void:
 	_check(listener.global_position == own_traps[0].global_position, "entering his own room does not")
 	for id in range(3):
 		_collect(8, id)
-	_check(GameStateManager.floor8_named and GameStateManager.is_floor_unlocked(9) and not GameStateManager.is_floor_unlocked(10),
-		"floor 8's three tapes open every door and unlock floor 9")
+	_check(GameStateManager.floor8_named and GameStateManager.is_floor_unlocked(2) and not GameStateManager.is_floor_unlocked(9) and not GameStateManager.is_floor_unlocked(1),
+		"floor 8's three tapes open every door and unlock floor 2 - not 9, and never floor 1")
 	listener.global_position = wrong_trap.global_position
 	wrong_trap._on_threshold_entered(listener)
 	wrong_trap._on_body_entered(listener)
 	_check(listener.global_position == wrong_trap.global_position, "after that any room can be entered")
-
-	# --- 9 -> 10 -> 2: the rest of the story's route ---
-	GameStateManager.current_floor = 9
-	for id in range(3):
-		_collect(9, id)
-	_check(GameStateManager.is_floor_unlocked(10) and not GameStateManager.is_floor_unlocked(2), "floor 9's three tapes unlock floor 10")
-	GameStateManager.current_floor = 10
-	for id in range(3):
-		_collect(10, id)
-	_check(GameStateManager.is_floor_unlocked(2) and not GameStateManager.is_floor_unlocked(1), "floor 10's three tapes unlock floor 2 - and never floor 1")
-	_check(_routes() == [4, 2, 3, 4, 5, 6, 7, 8, 9, 10], "the elevator now reaches every furnished floor: " + str(_routes()))
 
 	# --- Floor 2: "that night" - sleepers and blackouts together ---
 	var floor2: Node3D = generator.get_floor_node(2)
@@ -363,6 +352,38 @@ func _ready() -> void:
 	_check(GameStateManager.floor2_done and blackout2.phase == blackout2.Phase.LIT, "floor 2's three tapes end that night: the lights stay on")
 	sleepers2[1].hear_noise(sleepers2[1].global_position + Vector3(3, 0, 0))
 	_check(sleepers2[1].current_state != sleepers2[1].State.INVESTIGATE, "...and its sleepers no longer wake")
+	_check(GameStateManager.is_floor_unlocked(9) and not GameStateManager.is_floor_unlocked(10), "floor 2's three tapes unlock floor 9")
+
+	# --- 9 -> 10: the top of the route ---
+	GameStateManager.current_floor = 9
+	for id in range(3):
+		_collect(9, id)
+	_check(GameStateManager.is_floor_unlocked(10), "floor 9's three tapes unlock floor 10")
+	_check(_routes() == [4, 2, 3, 4, 5, 6, 7, 8, 9, 10], "the elevator now reaches every furnished floor: " + str(_routes()))
+	GameStateManager.current_floor = 10
+	for id in range(3):
+		_collect(10, id)
+	_check(not GameStateManager.is_floor_unlocked(1), "floor 10's tapes do not open floor 1 - that takes the code on the roof")
+
+	# --- The roof: stair exits, the lift machine room, the code that opens floor 1 ---
+	_check(GameStateManager.is_floor_unlocked(11), "floor 10's three tapes open the roof (the stair gates' \"floor 11\")")
+	var roof: Node3D = generator.get_floor_node(11)
+	var roof_parts: Array = roof.get_children().map(func(c): return String(c.name))
+	_check(["Parapet_West", "Parapet_East", "Parapet_North", "Parapet_South"].all(func(p): return roof_parts.has(p)), "the roof has its parapet on all four sides")
+	_check(["NorthExitDoor", "NorthExitGate", "NorthExit_Cap", "SouthExitDoor", "SouthExitGate", "SouthExit_Cap"].all(func(p): return roof_parts.has(p)),
+		"both stairwells come out through a bulkhead with a door and a floor gate")
+	_check(roof.get_node("NorthExitGate").floor_num == 11 and roof.get_node("SouthExitGate").floor_num == 11, "those gates treat the roof as floor 11")
+	_check(["Roof_Main", "Roof_SW", "Roof_SE"].all(func(p): return roof_parts.has(p))
+		and roof.get_node("Roof_Main").position.z + roof.get_node("Roof_Main/CollisionShape3D").shape.size.z / 2.0 < 27.6,
+		"the roof slab is cut open over the south stairs' top flight")
+	_check(["MachineRoomDoor", "MachineRoom_Cap", "LiftCodePlate"].all(func(p): return roof_parts.has(p)), "the lift machine room is there, with a door and the code plate")
+	var plate = roof.get_node("LiftCodePlate")
+	_check(GameStateManager.lift_code.length() == 4 and GameStateManager.lift_code.is_valid_int() and plate.get_node("Text").text.contains(GameStateManager.lift_code),
+		"the plate shows the game's four-digit lift code: " + GameStateManager.lift_code)
+	_check(ElevatorController.route_floor(1) == 4, "before the code is read, the floor 1 button still leads to floor 4")
+	plate.interact(listener)
+	_check(GameStateManager.lobby_unlocked and ElevatorController.route_floor(1) == 1, "reading the code sends the elevator to floor 1")
+	_check(_routes() == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], "every button of the elevator now goes where it says: " + str(_routes()))
 
 
 	print("==================================================")
