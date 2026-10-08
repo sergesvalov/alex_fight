@@ -132,6 +132,10 @@ pipeline {
                                     echo '❌ АВТОТЕСТ СООТВЕТСТВИЯ УРОВНЯ КАРТЕ ПРОВАЛЕН!'
                                     exit 1
                                 }
+                                godot --headless tests/test_touch_input.tscn || {
+                                    echo '❌ АВТОТЕСТ СЕНСОРНОГО УПРАВЛЕНИЯ ПРОВАЛЕН!'
+                                    exit 1
+                                }
                                 godot --headless tests/test_save.tscn || {
                                     echo '❌ АВТОТЕСТ СОХРАНЕНИЙ ПРОВАЛЕН!'
                                     exit 1

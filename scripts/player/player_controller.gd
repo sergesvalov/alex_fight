@@ -85,14 +85,16 @@ func _ready() -> void:
         hud = get_node_or_null("../HUD")
         
     if hud:
-        var left = hud.find_child("LeftJoystick", true, false)
-        var right_zone = hud.find_child("RightZone", true, false)
-        if left: 
-            left.input_vector_changed.connect(_on_left_joystick_changed)
-            if is_vr: left.hide()
-        if right_zone: 
-            right_zone.swipe_dragged.connect(_on_right_swipe_dragged)
-            if is_vr: right_zone.hide()
+        # Touch: both halves of the screen carry one_finger_input.gd and behave the same -
+        # drag to turn, hold to walk forward, tap to shoot.
+        for zone_name in ["LeftJoystick", "RightZone"]:
+            var zone = hud.find_child(zone_name, true, false)
+            if not zone:
+                continue
+            zone.swipe_dragged.connect(camera_comp.process_swipe)
+            zone.walk_changed.connect(_on_touch_walk_changed.bind(zone_name))
+            zone.tapped.connect(weapon.shoot)
+            if is_vr: zone.hide()
         
         var interact_btn = hud.find_child("InteractButton", true, false)
         if interact_btn:
@@ -106,9 +108,6 @@ func _ready() -> void:
 
 func _input(event: InputEvent) -> void:
     camera_comp.process_input(event)
-        
-    if event is InputEventScreenTouch and event.pressed and event.double_tap:
-        weapon.shoot()
         
     if camera_comp.is_desktop and event is InputEventKey and event.pressed and not event.echo:
         if event.keycode == KEY_E:
@@ -156,11 +155,14 @@ func _physics_process(delta: float) -> void:
         
     movement.process_movement(delta)
 
-func _on_left_joystick_changed(vector: Vector2) -> void:
-    movement.set_move_input(vector)
+# Which touch zones currently have a finger held down - walking forward as long as any does.
+var _touch_walking: Dictionary = {}
 
-func _on_right_swipe_dragged(relative: Vector2) -> void:
-    camera_comp.process_swipe(relative)
+func _on_touch_walk_changed(walking: bool, zone_name: String) -> void:
+    _touch_walking[zone_name] = walking
+    # (0, -1) is "forward" to player_movement.gd, the same thing the up key gives it.
+    movement.set_move_input(Vector2(0, -1) if _touch_walking.values().has(true) else Vector2.ZERO)
+
 
 func _on_right_controller_button_pressed(button_name: String) -> void:
     if button_name == "trigger_click":

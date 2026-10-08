@@ -1,7 +1,7 @@
 [gd_scene load_steps=2 format=3 uid="uid://blablahud222"]
 
-[ext_resource type="Script" path="res://scripts/ui/relative_touch_input.gd" id="3_rel_touch"]
-[ext_resource type="Script" path="res://scripts/ui/swipe_look_input.gd" id="4_swipe"]
+[ext_resource type="Script" path="res://scripts/ui/one_finger_input.gd" id="3_rel_touch"]
+[ext_resource type="Script" path="res://scripts/ui/one_finger_input.gd" id="4_swipe"]
 
 [ext_resource type="Script" path="res://scripts/ui/hud.gd" id="1_hud"]
 [ext_resource type="Script" path="res://scripts/ui/health_bar_ui.gd" id="health_script"]
