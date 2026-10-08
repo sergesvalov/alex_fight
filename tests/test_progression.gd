@@ -426,6 +426,33 @@ func _ready() -> void:
 	_check(GameStateManager.lobby_unlocked and ElevatorController.route_floor(1) == 1, "reading the code sends the elevator to floor 1")
 	_check(_routes() == [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], "every button of the elevator now goes where it says: " + str(_routes()))
 
+	# --- Floor 1: the lobby ---
+	var lobby: Node3D = generator.get_floor_node(1)
+	var lobby_parts: Array = lobby.get_children().map(func(c): return String(c.name))
+	_check(["Lobby_WestWall_N", "Lobby_WestWall_S", "Lobby_Corridor_N", "Lobby_Corridor_S", "Lobby_EastWall", "Reception_Desk", "Aquarium",
+		"LowerLiftPanel", "LowerLift_DoorL", "Entrance_DoorL", "TurretKillZone", "SouthStairsDoor", "SouthStairsRampA"].all(func(p): return lobby_parts.has(p)),
+		"the lobby has its hall walls, reception, aquarium, second lift, entrance with turrets and the second staircase")
+	var desk: Node3D = lobby.get_node("Reception_Desk")
+	var tank: Node3D = lobby.get_node("Aquarium")
+	var lift2: Node3D = lobby.get_node("LowerLiftPanel")
+	var zone: Node3D = lobby.get_node("TurretKillZone")
+	_check(absf(desk.position.z) < 0.1 and absf(zone.position.z) < 0.1 and zone.position.x < HotelLevelGenerator.CORRIDOR_WEST_EDGE_X and desk.position.x > 0.0,
+		"the corridor to the entrance runs west, straight across the hall from the reception")
+	_check(tank.position.x > desk.position.x and tank.position.z > 2.6 and tank.position.z < 8.0 and tank.get_node_or_null("Creature") != null,
+		"the aquarium stands against the east wall right next to the reception, with something in it")
+	_check(lift2.position.x > desk.position.x and absf(lift2.position.z) < 1.5, "the second lift is in the east wall behind the desk")
+	GameStateManager.lobby_unlocked = false
+	lift2.interact(listener)
+	_check(not GameStateManager.lower_lift_called, "without the roof code the second lift's panel does nothing")
+	GameStateManager.lobby_unlocked = true
+	lift2.interact(listener)
+	_check(GameStateManager.lower_lift_called, "with the code it accepts it")
+	listener.global_position = zone.global_position
+	zone._on_turret_zone_entered(listener)
+	_check(listener.global_position.distance_to(zone.return_position) < 0.01
+		and absf(zone.return_position.x - HotelLevelGenerator.ELEVATOR_CENTER_X) < 0.01,
+		"the entrance turrets put the player back by the lobby's elevator")
+
 
 	print("==================================================")
 	if errors > 0:

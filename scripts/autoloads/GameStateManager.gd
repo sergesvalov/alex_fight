@@ -88,6 +88,10 @@ func unlock_floor(floor_num: int) -> void:
 var lift_code: String = "%04d" % (randi() % 10000)
 var lobby_unlocked: bool = false
 
+# The lobby (floor 1, lobby_parts.gd): whether the second lift - the one that goes
+# underground - has taken the code.
+var lower_lift_called: bool = false
+
 func is_floor_unlocked(floor_num: int) -> bool:
     if floor_num == 1:
         return lobby_unlocked

@@ -491,6 +491,13 @@ func _build_floor_geometry(f_num: int, y_offset: float, suffix: String, c_color:
 	_generate_north_stairs(parent, f_scale, f_num)
 
 	if is_empty:
+		# Floor 1 has no rooms - it is the lobby. It still needs its own flight of the south
+		# stairs (the "second staircase" at the far end of the hall), which the furnished
+		# floors get further down.
+		_generate_south_stairs_wall(parent, f_scale, height, thickness, wall_mat)
+		_generate_south_stairs_ramp(parent, f_scale, height, floor_thick, floor_mat)
+		_add_south_stairs_gate(parent, f_num, f_scale)
+		_build_lobby(parent, f_scale, height, wall_mat)
 		return parent
 
 	# 3.5 Maintenance Room
@@ -1528,6 +1535,212 @@ func _add_floor_wide_trap(parent: Node3D, f_num: int, f_scale: float) -> void:
 	trap.floor_num = f_num
 	trap.return_position = parent.global_position + Vector3(ELEVATOR_CENTER_X * f_scale, 0.1, (ELEVATOR_CENTER_Z + 2.0) * f_scale)
 	parent.add_child(trap)
+
+# The ground-floor lobby (floor 1 only). Plan, north on the left as the owner drew it:
+#
+#     north stairs + lift | ......... main hall ......... | south stairs
+#                         |        [reception] [aquarium] |        <- east wall
+#                         |______      ______ ____________|
+#                                |    |                             <- west wall
+#                                |    |  corridor, straight across from the reception
+#                                |door|  main entrance at its end, under the turrets
+#
+# The hall runs along the same axis as every floor's corridor, between the lift at the north end
+# and the second staircase at the south end; in front of the lift it is as wide as the lift
+# lobby of the floors above. The rest of the floor's box is walled off. Coordinates are the
+# floor's own, unscaled meters, like the layout constants at the top of this file.
+const LOBBY_CORRIDOR_HALF_WIDTH: float = 2.5   # the corridor to the entrance, centred on Z=0
+const LOBBY_NORTH_ZONE_Z: float = -20.0        # south edge of the wider zone in front of the lift
+const LOBBY_NORTH_ZONE_EAST_X: float = 9.65    # its east wall - where the maintenance room starts upstairs
+
+func _build_lobby(parent: Node3D, f_scale: float, height: float, wall_mat: Material) -> void:
+	var hh: float = height / f_scale
+	var west: float = CORRIDOR_WEST_EDGE_X
+	var east: float = CORRIDOR_EAST_EDGE_X
+	var half_x: float = BUILDING_WIDTH_X / 2.0
+	var north_z: float = ELEVATOR_CENTER_Z            # -25: the lift's and the north stairs' own doors
+	var south_z: float = SOUTH_STAIRS_ZONE_Z_START    # 25: the south stairs wall
+	var cw: float = LOBBY_CORRIDOR_HALF_WIDTH
+	var parts_script = load("res://scripts/levels/blocks/lobby_parts.gd")
+	# A box given by its extents (unscaled meters) rather than by center and size.
+	var box = func(box_name: String, mat: Material, x0: float, x1: float, y0: float, y1: float, z0: float, z1: float) -> void:
+		_create_static_box(parent, box_name, Vector3((x0 + x1) / 2.0, (y0 + y1) / 2.0, (z0 + z1) / 2.0) * f_scale,
+			Vector3(absf(x1 - x0), absf(y1 - y0), absf(z1 - z0)) * f_scale, mat)
+
+	# --- Walls ---
+	box.call("Lobby_WestWall_N", wall_mat, west - 0.2, west, 0.0, hh, north_z, -cw)
+	box.call("Lobby_WestWall_S", wall_mat, west - 0.2, west, 0.0, hh, cw, south_z)
+	box.call("Lobby_Corridor_N", wall_mat, -half_x, west, 0.0, hh, -cw - 0.2, -cw)
+	box.call("Lobby_Corridor_S", wall_mat, -half_x, west, 0.0, hh, cw, cw + 0.2)
+	box.call("Lobby_EastWall", wall_mat, east, east + 0.2, 0.0, hh, LOBBY_NORTH_ZONE_Z, south_z)
+	box.call("Lobby_NorthZone_S", wall_mat, east, LOBBY_NORTH_ZONE_EAST_X, 0.0, hh, LOBBY_NORTH_ZONE_Z, LOBBY_NORTH_ZONE_Z + 0.2)
+	box.call("Lobby_NorthZone_E", wall_mat, LOBBY_NORTH_ZONE_EAST_X, LOBBY_NORTH_ZONE_EAST_X + 0.2, 0.0, hh, north_z, LOBBY_NORTH_ZONE_Z + 0.2)
+	box.call("Lobby_NorthWall_W", wall_mat, west - 0.2, NORTH_STAIRS_CENTER_X - 3.8, 0.0, hh, north_z - 0.2, north_z)
+
+	# --- Reception: a long desk in the middle of the hall, in front of the east wall, facing
+	# the corridor to the entrance. There is room to walk round either end and behind it. ---
+	var wood = StandardMaterial3D.new()
+	wood.albedo_color = Color(0.28, 0.16, 0.08)
+	wood.roughness = 0.6
+	box.call("Reception_Desk", wood, 2.5, 3.3, 0.0, 1.1, -2.6, 2.6)
+	box.call("Reception_Top", wood, 2.3, 3.4, 1.1, 1.18, -2.7, 2.7)
+	var desk_light = OmniLight3D.new()
+	desk_light.name = "ReceptionLight"
+	desk_light.light_color = Color(1.0, 0.85, 0.6)
+	desk_light.light_energy = 1.0
+	desk_light.omni_range = 7.0 * f_scale
+	desk_light.position = Vector3(2.9, 2.6, 0.0) * f_scale
+	parent.add_child(desk_light)
+
+	# --- The second lift, the one that goes underground: doors in the east wall behind the
+	# desk, and a panel beside them (see lobby_parts.gd, role "lift"). ---
+	var steel = StandardMaterial3D.new()
+	steel.albedo_color = Color(0.4, 0.4, 0.45)
+	steel.metallic = 0.8
+	steel.roughness = 0.25
+	box.call("LowerLift_DoorL", steel, east - 0.08, east, 0.0, 2.5, -0.66, 0.0)
+	box.call("LowerLift_DoorR", steel, east - 0.1, east, 0.0, 2.5, 0.0, 0.66)
+	box.call("LowerLift_Frame", steel, east - 0.14, east, 2.5, 2.7, -0.8, 0.8)
+	var lift_panel = Area3D.new()
+	lift_panel.name = "LowerLiftPanel"
+	lift_panel.collision_layer = 4 # the interact raycast's layer
+	lift_panel.collision_mask = 0
+	lift_panel.set_script(parts_script)
+	lift_panel.role = "lift"
+	lift_panel.position = Vector3(east - 0.1, 1.3, 1.05) * f_scale
+	var panel_coll = CollisionShape3D.new()
+	var panel_shape = BoxShape3D.new()
+	panel_shape.size = Vector3(0.2, 0.5, 0.35) * f_scale
+	panel_coll.shape = panel_shape
+	lift_panel.add_child(panel_coll)
+	var panel_mesh = MeshInstance3D.new()
+	var panel_box = BoxMesh.new()
+	panel_box.size = Vector3(0.05, 0.4, 0.25) * f_scale
+	var panel_mat = StandardMaterial3D.new()
+	panel_mat.albedo_color = Color(0.1, 0.1, 0.1)
+	panel_mat.emission_enabled = true
+	panel_mat.emission = Color(1.0, 0.6, 0.1)
+	panel_mat.emission_energy_multiplier = 1.5
+	panel_box.material = panel_mat
+	panel_mesh.mesh = panel_box
+	lift_panel.add_child(panel_mesh)
+	parent.add_child(lift_panel)
+
+	# --- The aquarium: against the east wall, right next to the reception. Glowing, cloudy
+	# water you cannot quite see through, and something in it (lobby_parts.gd, "creature"). ---
+	var tank_x0: float = 3.55
+	var tank_x1: float = east - 0.05
+	var tank_z0: float = 3.4
+	var tank_z1: float = 9.4
+	var tank_h: float = 2.8
+	var tank_body = StaticBody3D.new()
+	tank_body.name = "Aquarium"
+	tank_body.collision_layer = 2
+	tank_body.position = Vector3((tank_x0 + tank_x1) / 2.0, tank_h / 2.0 + 0.3, (tank_z0 + tank_z1) / 2.0) * f_scale
+	var tank_size: Vector3 = Vector3(tank_x1 - tank_x0, tank_h, tank_z1 - tank_z0) * f_scale
+	var tank_coll = CollisionShape3D.new()
+	var tank_shape = BoxShape3D.new()
+	tank_shape.size = tank_size
+	tank_coll.shape = tank_shape
+	tank_body.add_child(tank_coll)
+	var water = MeshInstance3D.new()
+	water.name = "Water"
+	var water_box = BoxMesh.new()
+	water_box.size = tank_size
+	var water_mat = StandardMaterial3D.new()
+	water_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	water_mat.albedo_color = Color(0.1, 0.55, 0.45, 0.78)
+	water_mat.emission_enabled = true
+	water_mat.emission = Color(0.1, 0.9, 0.7)
+	water_mat.emission_energy_multiplier = 0.7
+	water_mat.roughness = 0.1
+	water_box.material = water_mat
+	water.mesh = water_box
+	tank_body.add_child(water)
+	var creature = Node3D.new()
+	creature.name = "Creature"
+	creature.set_script(parts_script)
+	creature.role = "creature"
+	creature.swim_half_length = (tank_z1 - tank_z0) / 2.0 * f_scale - 1.2 * f_scale
+	var creature_mat = StandardMaterial3D.new()
+	creature_mat.albedo_color = Color(0.01, 0.02, 0.02)
+	creature_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	# Body, and something long trailing behind it - only ever a darker shape in the murk.
+	for part in [[Vector3(0.28, 0.5, 1.0), Vector3(0, 0, 0)], [Vector3(0.12, 0.2, 1.3), Vector3(0, -0.1, -1.0)], [Vector3(0.5, 0.08, 0.5), Vector3(0, 0.2, 0.3)]]:
+		var shape_mesh = MeshInstance3D.new()
+		var sphere = SphereMesh.new()
+		sphere.radius = 0.5
+		sphere.height = 1.0
+		sphere.material = creature_mat
+		shape_mesh.mesh = sphere
+		shape_mesh.scale = part[0] * 2.0 * f_scale
+		shape_mesh.position = part[1] * f_scale
+		creature.add_child(shape_mesh)
+	tank_body.add_child(creature)
+	box.call("Aquarium_Base", steel, tank_x0 - 0.05, tank_x1, 0.0, 0.3, tank_z0 - 0.05, tank_z1 + 0.05)
+	parent.add_child(tank_body)
+	var tank_light = OmniLight3D.new()
+	tank_light.name = "AquariumLight"
+	tank_light.light_color = Color(0.2, 1.0, 0.8)
+	tank_light.light_energy = 2.2
+	tank_light.omni_range = 12.0 * f_scale
+	tank_light.position = Vector3(tank_x0 - 0.8, 1.8, (tank_z0 + tank_z1) / 2.0) * f_scale
+	parent.add_child(tank_light)
+
+	# --- The main entrance at the west end of the corridor, and the turrets over it. ---
+	var door_mat = StandardMaterial3D.new()
+	door_mat.albedo_color = Color(0.12, 0.1, 0.08)
+	door_mat.metallic = 0.3
+	box.call("Entrance_DoorL", door_mat, -half_x, -half_x + 0.12, 0.0, 2.6, -1.3, -0.02)
+	box.call("Entrance_DoorR", door_mat, -half_x, -half_x + 0.12, 0.0, 2.6, 0.02, 1.3)
+	var exit_sign = MeshInstance3D.new()
+	exit_sign.name = "Entrance_Sign"
+	var sign_box = BoxMesh.new()
+	sign_box.size = Vector3(0.05, 0.3, 1.2) * f_scale
+	var sign_mat = StandardMaterial3D.new()
+	sign_mat.albedo_color = Color(0.1, 0.5, 0.15)
+	sign_mat.emission_enabled = true
+	sign_mat.emission = Color(0.2, 1.0, 0.3)
+	sign_mat.emission_energy_multiplier = 2.5
+	sign_box.material = sign_mat
+	exit_sign.mesh = sign_box
+	exit_sign.position = Vector3(-half_x + 0.16, 2.95, 0.0) * f_scale
+	parent.add_child(exit_sign)
+	var eye_mat = StandardMaterial3D.new()
+	eye_mat.albedo_color = Color(0.6, 0.05, 0.05)
+	eye_mat.emission_enabled = true
+	eye_mat.emission = Color(1.0, 0.15, 0.05)
+	eye_mat.emission_energy_multiplier = 3.0
+	var turret_x: float = west - 2.0
+	for side in [-1.0, 1.0]:
+		box.call("Turret_%s" % ("N" if side < 0.0 else "S"), steel, turret_x - 0.25, turret_x + 0.25, hh - 0.45, hh, side * 1.5 - 0.25, side * 1.5 + 0.25)
+		box.call("TurretEye_%s" % ("N" if side < 0.0 else "S"), eye_mat, turret_x - 0.32, turret_x - 0.25, hh - 0.32, hh - 0.2, side * 1.5 - 0.08, side * 1.5 + 0.08)
+	var turret_light = OmniLight3D.new()
+	turret_light.name = "TurretLight"
+	turret_light.light_color = Color(1.0, 0.12, 0.08)
+	turret_light.light_energy = 1.5
+	turret_light.omni_range = 9.0 * f_scale
+	turret_light.position = Vector3(turret_x - 2.0, hh - 0.6, 0.0) * f_scale
+	parent.add_child(turret_light)
+
+	# The kill zone: the corridor from just past its mouth all the way to the door.
+	var zone_x0: float = -half_x + 0.2
+	var zone_x1: float = west - 1.5
+	var kill_zone = Area3D.new()
+	kill_zone.name = "TurretKillZone"
+	kill_zone.collision_layer = 0
+	kill_zone.collision_mask = 1 # Player layer
+	kill_zone.set_script(parts_script)
+	kill_zone.role = "turrets"
+	kill_zone.position = Vector3((zone_x0 + zone_x1) / 2.0, 1.2, 0.0) * f_scale
+	# Where he comes to: in front of the lift he arrived by.
+	kill_zone.return_position = parent.global_position + Vector3(ELEVATOR_CENTER_X * f_scale, 0.1, (ELEVATOR_CENTER_Z + 2.0) * f_scale)
+	var zone_coll = CollisionShape3D.new()
+	var zone_shape = BoxShape3D.new()
+	zone_shape.size = Vector3(zone_x1 - zone_x0, 2.4, cw * 2.0 - 0.2) * f_scale
+	zone_coll.shape = zone_shape
+	kill_zone.add_child(zone_coll)
+	parent.add_child(kill_zone)
 
 func _generate_roof(y_offset: float, f_scale: float) -> void:
 	var parent = Node3D.new()
