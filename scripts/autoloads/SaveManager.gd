@@ -27,7 +27,7 @@ const SAVED_FIELDS: Array = [
 	"secret_portal_active", "secret_portal_floor", "secret_portal_is_double", "secret_portal_room_num",
 	"secret_portal_target", "secret_portal_target_floor",
 	"floor3_corridor_unlocked", "floor5_rooms_unlocked", "floor6_sleepers_off", "floor7_lights_steady",
-	"floor8_named", "floor2_done", "floor9_cameras_off", "floor10_edge_stopped",
+	"floor8_named", "floor2_done", "floor9_cameras_off", "floor10_edge_stopped", "wake_up_done",
 	"current_floor", # last: its setter rebuilds the floor's tape count from collected_tapes
 ]
 

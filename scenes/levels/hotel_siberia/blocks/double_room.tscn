@@ -6,6 +6,9 @@
 [ext_resource type="PackedScene" path="res://entities/props/chair.tscn" id="4_chair"]
 [ext_resource type="PackedScene" path="res://entities/props/bed.tscn" id="5_bed"]
 [ext_resource type="PackedScene" path="res://entities/props/wardrobe.tscn" id="6_wardrobe"]
+[ext_resource type="PackedScene" path="res://entities/props/sink.tscn" id="7_sink"]
+[ext_resource type="PackedScene" path="res://entities/props/toilet.tscn" id="8_toilet"]
+[ext_resource type="PackedScene" path="res://entities/props/bathtub.tscn" id="9_bathtub"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wall"]
 albedo_texture = ExtResource("1_wallpaper")
@@ -124,6 +127,17 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.2, 0.0, 1.6)
 
 [node name="Wardrobe" parent="." instance=ExtResource("6_wardrobe")]
 transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 3.5, 0.0, 9.4)
+
+; The bathroom (X 0.1..4.7, Z 0.2..4.8): bathtub and washbasin along the north wall, toilet on
+; the corridor-side wall. All clear of the door leaf, which swings 1m in from its hinge at X=1.85.
+[node name="Bathtub" parent="." instance=ExtResource("9_bathtub")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.05, 0.0, 0.2)
+
+[node name="Sink" parent="." instance=ExtResource("7_sink")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.0, 0.0, 0.2)
+
+[node name="Toilet" parent="." instance=ExtResource("8_toilet")]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 4.7, 0.0, 2.6)
 
 [node name="Table1" parent="." instance=ExtResource("3_table")]
 transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, -2.5, 0.0, 9.4)

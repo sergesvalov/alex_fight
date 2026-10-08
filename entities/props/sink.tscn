@@ -1,0 +1,58 @@
+[gd_scene load_steps=1 format=3]
+
+; A washbasin on a cabinet, with a mirror over it. Its back is at local Z=0 and it stands out
+; into +Z - the same way round as wardrobe.tscn. The basin is cut into the left of the top; the
+; right of it is flat (the wake-up room's pistol lies there - see wake_up_room.gd).
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ceramic"]
+albedo_color = Color(0.88, 0.88, 0.84, 1)
+roughness = 0.25
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_cabinet"]
+albedo_color = Color(0.32, 0.36, 0.34, 1)
+roughness = 0.8
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_chrome"]
+albedo_color = Color(0.75, 0.77, 0.8, 1)
+metallic = 0.9
+roughness = 0.25
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_mirror"]
+albedo_color = Color(0.55, 0.62, 0.66, 1)
+metallic = 1.0
+roughness = 0.08
+
+[node name="Sink" type="CSGCombiner3D"]
+use_collision = true
+collision_layer = 2
+
+[node name="Cabinet" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0.39, 0.23)
+size = Vector3(0.76, 0.78, 0.42)
+material = SubResource("StandardMaterial3D_cabinet")
+
+[node name="Top" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0.825, 0.25)
+size = Vector3(0.8, 0.09, 0.5)
+material = SubResource("StandardMaterial3D_ceramic")
+
+[node name="Basin" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.14, 0.85, 0.27)
+operation = 2
+size = Vector3(0.4, 0.08, 0.32)
+material = SubResource("StandardMaterial3D_ceramic")
+
+[node name="Tap" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.14, 0.95, 0.06)
+size = Vector3(0.04, 0.16, 0.04)
+material = SubResource("StandardMaterial3D_chrome")
+
+[node name="Spout" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.14, 1.01, 0.13)
+size = Vector3(0.04, 0.04, 0.14)
+material = SubResource("StandardMaterial3D_chrome")
+
+[node name="Mirror" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 1.55, 0.015)
+size = Vector3(0.6, 0.7, 0.03)
+material = SubResource("StandardMaterial3D_mirror")

@@ -25,9 +25,21 @@ func set_door_number(number: String) -> void:
 # but not from the corridor - basis.z is every door's corridor-facing side.
 var locked_from_corridor: bool = false
 
+# Set on the wake-up room's door until its lock is shot off (wake_up_room.gd, door_lock.gd): it
+# only rattles in its frame.
+var locked: bool = false
+signal rattled
+
 func interact(player: Node) -> void:
 	if is_moving:
 		return
+
+	if locked:
+		sfx_close.pitch_scale = 2.2
+		sfx_close.play()
+		rattled.emit()
+		return
+	sfx_close.pitch_scale = 1.0
 
 	if locked_from_corridor and not is_open and player != null \
 			and (player.global_position - global_position).dot(global_transform.basis.z) > 0:

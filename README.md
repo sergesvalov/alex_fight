@@ -88,7 +88,7 @@ alex_fight/
 │   ├── player/                     ← Компоненты контроллера игрока
 │   ├── enemies/                    ← ИИ Цербера (Movement, Sensors, StateMachine)
 │   └── ui/                         ← Виджеты HUD (HealthBar, HeatBar)
-├── entities/props/                 ← door.tscn, wardrobe.tscn, bed.tscn, table.tscn, chair.tscn
+├── entities/props/                 ← door.tscn, wardrobe.tscn, bed.tscn, table.tscn, chair.tscn, sink.tscn, toilet.tscn, bathtub.tscn
 ├── assets/                         ← Текстуры и модели (только JPG!)
 ├── tests/                          ← Smoke, Logic и Layout-Seams тесты для Jenkins
 └── Jenkinsfile                     ← Пайплайн сборки

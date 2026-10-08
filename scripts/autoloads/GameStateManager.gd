@@ -138,6 +138,11 @@ var secret_portal_target_floor: int = 3
 # "endless corridor" nightmare belongs to floor 3 (reached via the secret door), not the start.
 var floor3_corridor_unlocked: bool = false
 
+# The wake-up room (wake_up_room.gd): the starting room of floor 4 stays shut until the player
+# has turned, walked, opened a door, picked the pistol up and shot the lock off. Set true the
+# moment its door opens; a continued game never gets the room again.
+var wake_up_done: bool = false
+
 # Floor 5's own nightmare (room_shuffle_trap.gd - walk into one room, end up in another). Set
 # true, never reset, the moment floor 5's 3 tapes are collected - which also unlocks floor 6.
 var floor5_rooms_unlocked: bool = false

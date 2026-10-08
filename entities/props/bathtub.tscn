@@ -1,0 +1,37 @@
+[gd_scene load_steps=1 format=3]
+
+; 1.7m long along X; its back edge is at local Z=0 and it stands out into +Z, like wardrobe.tscn.
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ceramic"]
+albedo_color = Color(0.88, 0.88, 0.84, 1)
+roughness = 0.25
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_chrome"]
+albedo_color = Color(0.75, 0.77, 0.8, 1)
+metallic = 0.9
+roughness = 0.25
+
+[node name="Bathtub" type="CSGCombiner3D"]
+use_collision = true
+collision_layer = 2
+
+[node name="Body" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0.28, 0.375)
+size = Vector3(1.7, 0.56, 0.75)
+material = SubResource("StandardMaterial3D_ceramic")
+
+[node name="Hollow" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0.34, 0.375)
+operation = 2
+size = Vector3(1.54, 0.46, 0.6)
+material = SubResource("StandardMaterial3D_ceramic")
+
+[node name="Tap" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.7, 0.68, 0.06)
+size = Vector3(0.05, 0.24, 0.05)
+material = SubResource("StandardMaterial3D_chrome")
+
+[node name="Spout" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.7, 0.76, 0.14)
+size = Vector3(0.05, 0.05, 0.16)
+material = SubResource("StandardMaterial3D_chrome")

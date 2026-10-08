@@ -6,6 +6,8 @@
 [ext_resource type="PackedScene" path="res://entities/props/table.tscn" id="4_table"]
 [ext_resource type="PackedScene" path="res://entities/props/chair.tscn" id="5_chair"]
 [ext_resource type="PackedScene" path="res://entities/props/wardrobe.tscn" id="6_wardrobe"]
+[ext_resource type="PackedScene" path="res://entities/props/sink.tscn" id="7_sink"]
+[ext_resource type="PackedScene" path="res://entities/props/toilet.tscn" id="8_toilet"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wall"]
 albedo_texture = ExtResource("1_wallpaper")
@@ -124,3 +126,11 @@ transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, 3.0, 0.0, 1.93)
 
 [node name="Wardrobe" parent="." instance=ExtResource("6_wardrobe")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3, 0.0, 0.51)
+
+; The bathroom (X -3.65..-1.45, Z 0.2..2.4): washbasin on the wall facing its door, toilet on the
+; east wall. Both stay clear of the door leaf, which swings 1m in from its hinge at X=-3.05.
+[node name="Sink" parent="." instance=ExtResource("7_sink")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.55, 0.0, 0.2)
+
+[node name="Toilet" parent="." instance=ExtResource("8_toilet")]
+transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -1.45, 0.0, 1.3)

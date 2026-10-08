@@ -1,20 +1,14 @@
 [gd_scene load_steps=10 format=3 uid="uid://hitmarker_fx"]
 
 [ext_resource type="Script" path="res://scripts/fx/hit_marker.gd" id="1_script"]
-[ext_resource type="Texture2D" path="res://assets/textures/laser_burn.jpg" id="2_tex"]
+[ext_resource type="Shader" path="res://shaders/laser_burn.gdshader" id="2_burn"]
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_burn"]
-blend_mode = 3
-albedo_texture = ExtResource("2_tex")
-emission_enabled = true
-emission = Color(1, 0.4, 0, 1)
-emission_energy_multiplier = 2.0
-emission_operator = 1
-emission_texture = ExtResource("2_tex")
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_burn"]
+shader = ExtResource("2_burn")
 
 [sub_resource type="QuadMesh" id="QuadMesh_burn"]
-material = SubResource("StandardMaterial3D_burn")
-size = Vector2(0.3, 0.3)
+material = SubResource("ShaderMaterial_burn")
+size = Vector2(0.24, 0.24)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_spark"]
 emission_enabled = true
@@ -44,6 +38,7 @@ script = ExtResource("1_script")
 
 [node name="BurnDecal" type="MeshInstance3D" parent="."]
 transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 0, -0.01)
+cast_shadow = 0
 mesh = SubResource("QuadMesh_burn")
 
 [node name="Sparks" type="GPUParticles3D" parent="."]

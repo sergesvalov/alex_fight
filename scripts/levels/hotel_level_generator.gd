@@ -535,6 +535,8 @@ func _build_floor_geometry(f_num: int, y_offset: float, suffix: String, c_color:
 		_add_room_shuffle_trap(parent, f_num)
 
 	_spawn_cassettes(parent, f_scale, f_num)
+	if f_num == 4 and suffix == "Main":
+		_add_wake_up_room(parent)
 	# The level scene's own floor already has its hand-placed robot (base_hotel_level.tscn's
 	# Enemies/Cerberus) - a generated one on top of it would double it up.
 	# Floor 6 has no patrol at all - its robots are the sleepers (see sleeper_cerberus.gd).
@@ -667,6 +669,10 @@ func _move_player(f_scale: float) -> void:
 		player.global_position = p_spawn
 		if "velocity" in player:
 			player.velocity = Vector3.ZERO
+		# A new game starts in the wake-up room instead: across the room from that wardrobe,
+		# facing the wall, with empty hands (see wake_up_room.gd).
+		if is_instance_valid(_wake_up_room):
+			_wake_up_room.place_player(player)
 		print("Player moved to: ", p_spawn)
 
 		# floor_number defaults to 4 and this is always that floor's own instance
@@ -1355,6 +1361,32 @@ func _spawn_cassettes(parent: Node, f_scale: float, f_num: int) -> void:
 		_spawn_cassettes_start_floor(parent, f_scale, scene)
 	else:
 		_spawn_cassettes_other_floor(parent, f_scale, scene)
+
+# The game's tutorial - see wake_up_room.gd. The room is the one the player starts in, i.e. the
+# one whose wardrobe holds Cassette #1 (same pick as _spawn_cassettes_start_floor() and
+# _move_player()), so it has to come after the cassettes. A new game only: a continued one puts
+# the hero by an elevator (_move_player()), and a room locked from the inside with the pistol in
+# it would then be a room he could never get into.
+var _wake_up_room: Node3D = null
+
+func _add_wake_up_room(parent: Node3D) -> void:
+	_wake_up_room = null
+	if SaveManager.resuming:
+		GameStateManager.wake_up_done = true
+	if GameStateManager.wake_up_done:
+		return
+	var wardrobes: Array = []
+	_find_props(parent, "Wardrobe", wardrobes)
+	var start_wardrobe = _closest_to_spawn(wardrobes)
+	# wake_up_room.gd is laid out for a single room, which is what the starting room is.
+	if start_wardrobe == null or not start_wardrobe.get_parent().name.begins_with("SingleRoom_"):
+		push_warning("[generator] no wake-up room: the starting room is not a single room")
+		return
+	_wake_up_room = Node3D.new()
+	_wake_up_room.name = "WakeUpRoom"
+	_wake_up_room.set_script(load("res://scripts/levels/blocks/wake_up_room.gd"))
+	_wake_up_room.room = start_wardrobe.get_parent()
+	parent.add_child(_wake_up_room)
 
 func _spawn_cassettes_start_floor(parent: Node, f_scale: float, scene: PackedScene) -> void:
 	var wardrobes = []

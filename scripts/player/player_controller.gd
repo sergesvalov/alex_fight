@@ -132,7 +132,12 @@ func _input(event: InputEvent) -> void:
                 GameStateManager.change_state(GameStateManager.GameState.SPECTATOR)
 
 func _physics_process(delta: float) -> void:
-    if Input.is_action_just_pressed("shoot") and camera_comp.is_desktop and not is_vr:
+    # Only while the mouse is captured, i.e. while it is aiming. With the cursor free the same
+    # left click is pressing something - a floor on the elevator panel, INVENTORY, the window
+    # itself to give it focus - and the action fires for those clicks too: the pistol went off
+    # "by itself".
+    if Input.is_action_just_pressed("shoot") and camera_comp.is_desktop and not is_vr \
+            and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
         weapon.shoot()
         
     if is_vr:

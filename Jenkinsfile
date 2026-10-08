@@ -136,6 +136,10 @@ pipeline {
                                     echo '❌ АВТОТЕСТ СЕНСОРНОГО УПРАВЛЕНИЯ ПРОВАЛЕН!'
                                     exit 1
                                 }
+                                godot --headless tests/test_wake_up_room.tscn || {
+                                    echo '❌ АВТОТЕСТ КОМНАТЫ ПРОБУЖДЕНИЯ (ОБУЧЕНИЕ) ПРОВАЛЕН!'
+                                    exit 1
+                                }
                                 godot --headless tests/test_save.tscn || {
                                     echo '❌ АВТОТЕСТ СОХРАНЕНИЙ ПРОВАЛЕН!'
                                     exit 1
