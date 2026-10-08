@@ -597,6 +597,23 @@ func _build_floor_geometry(f_num: int, y_offset: float, suffix: String, c_color:
 	prog_mesh.set_script(load("res://scripts/levels/blocks/flicker_material.gd"))
 	prog_mesh.position = Vector3(-2.74 * f_scale, 2.0 * f_scale, -15.5 * f_scale)
 	prog_mesh.rotation.y = PI / 2.0
+	# The top strip of the picture has a scrap of an English poster in it - cropped off.
+	prog_mat.uv1_scale = Vector3(1.0, 0.93, 1.0)
+	prog_mat.uv1_offset = Vector3(0.0, 0.07, 0.0)
+	# The screen is the hotel's internal broadcast: looking at it and interacting plays the
+	# address recorded for this floor - see broadcast_screen.gd.
+	var broadcast = Area3D.new()
+	broadcast.name = "Broadcast"
+	broadcast.collision_layer = 4 # same layer vhs_tape.tscn uses - the interact raycast's mask
+	broadcast.collision_mask = 0
+	broadcast.set_script(load("res://scripts/interactables/broadcast_screen.gd"))
+	broadcast.floor_num = f_num
+	var broadcast_coll = CollisionShape3D.new()
+	var broadcast_shape = BoxShape3D.new()
+	broadcast_shape.size = Vector3(1.5, 2.0, 0.2)
+	broadcast_coll.shape = broadcast_shape
+	broadcast.add_child(broadcast_coll)
+	prog_mesh.add_child(broadcast)
 	parent.add_child(prog_mesh)
 
 	# 7. Ad Screen

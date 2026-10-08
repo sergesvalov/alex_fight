@@ -140,6 +140,10 @@ pipeline {
                                     echo '❌ АВТОТЕСТ СОХРАНЕНИЙ ПРОВАЛЕН!'
                                     exit 1
                                 }
+                                godot --headless tests/test_broadcast.tscn || {
+                                    echo '❌ АВТОТЕСТ ЭКРАНОВ ТРАНСЛЯЦИИ ПРОВАЛЕН!'
+                                    exit 1
+                                }
                                 godot --headless tests/test_progression.tscn || {
                                     echo '❌ АВТОТЕСТ ПРОГРЕССА (КАССЕТЫ/ЛИФТ/ЭТАЖИ) ПРОВАЛЕН!'
                                     exit 1

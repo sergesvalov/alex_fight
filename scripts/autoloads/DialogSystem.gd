@@ -131,6 +131,7 @@ func show_thought(text: String, duration: float = 5.0) -> void:
 var _alex_lines_fired: Dictionary = {}
 var alex_lines: Dictionary = {}
 var terminal_entries: Array = []
+var broadcasts: Dictionary = {} # floor number (as a string) -> the address on that floor's screen, see broadcast_screen.gd
 
 func load_narrative_data() -> void:
     var file = FileAccess.open("res://assets/data/narrative_lines.json", FileAccess.READ)
@@ -140,6 +141,7 @@ func load_narrative_data() -> void:
         if error == OK:
             alex_lines = json.data.get("alex_lines", {})
             terminal_entries = json.data.get("terminal_entries", [])
+            broadcasts = json.data.get("broadcasts", {})
         else:
             push_error("Failed to parse narrative_lines.json")
     else:
