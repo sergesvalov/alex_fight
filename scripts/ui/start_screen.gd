@@ -45,7 +45,8 @@ func _ready() -> void:
 	add_child(column)
 
 	column.add_child(_line(UIStrings.get_string("start_header", ">> ГОСТИНИЦА «СИБИРЬ» :: ВНУТРЕННЯЯ СЕТЬ <<"), 20, DIM_GREEN))
-	column.add_child(_line("ALEX FIGHT", 64, GREEN))
+	column.add_child(_line(UIStrings.get_string("game_title_top", "СЛУЧАЙ В ГОСТИНИЦЕ"), 30, GREEN))
+	column.add_child(_line(UIStrings.get_string("game_title_main", "«СИБИРЬ»"), 64, GREEN))
 	_status = _line("", 18, DIM_GREEN)
 	column.add_child(_status)
 	column.add_child(_spacer(18))

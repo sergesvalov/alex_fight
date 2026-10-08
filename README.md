@@ -1,4 +1,4 @@
-# Alex Fight
+# Случай в гостинице «Сибирь»
 
 > 3D-шутер | Godot 4.7.2 | Android / PC / VR (Quest 2) | Ретрофутуризм | P.T.-style Horror
 

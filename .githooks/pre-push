@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Stops a push if the level no longer loads. Runs the quick subset of the headless tests (about
+# two minutes); Jenkins runs all of them. Enable once per clone:
+#     git config core.hooksPath .githooks
+# Skip for a single push with: git push --no-verify
+exec "$(git rev-parse --show-toplevel)/tools/run_tests.sh" --quick

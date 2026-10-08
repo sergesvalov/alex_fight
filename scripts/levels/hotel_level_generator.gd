@@ -381,67 +381,7 @@ func _generate_south_stairs_wall(parent: Node, f_scale: float, height: float, th
 		parent.add_child(door_inst)
 
 func _generate_south_stairs_ramp(parent: Node, f_scale: float, height: float, floor_thick: float, floor_mat: Material) -> void:
-	# Dog-leg staircase, self-contained per floor (same philosophy as north_stairs.tscn's
-	# 3 flights: each floor climbs its own full 0 -> floor-to-floor-height run, and stacking
-	# floors is what makes it continuous - no geometry is shared with or duplicated by the
-	# neighboring floor). One door only, so both flights start/end at the same X as the door
-	# area (Floor_SW's edge), not two separate doors like the north stairs.
-	#
-	# Layout inside the 5m-deep south-stairs zone (Z 25..30), split into two 2.5m bands so
-	# the up-flight and the return flight sit side by side instead of stacked (stacking them
-	# would need the upper flight to clear headroom over the lower one; side by side avoids
-	# that entirely):
-	#   Band 1 (Z 25..27.5):  RampA climbs EAST,  X 1.87 -> 8.03,  Y 0 -> mid_y
-	#   Landing (full Z 25..30, X 8.03..12.65, Y mid_y): turn here (reuses Landing_SouthStairs)
-	#   Band 2 (Z 27.5..30):  RampB climbs WEST,  X 8.03 -> 1.87,  Y mid_y -> full_y
-	# RampB's arrival point (X=1.87, Y=full_y) is exactly where the floor-above's own
-	# Floor_SW edge sits, so it needs no landing of its own - the next floor provides it.
-	var x_inner = HotelConstants.SOUTH_STAIRS_RAMP_INNER_X * f_scale      # Floor_SW's east edge
-	var x_outer = HotelConstants.SOUTH_STAIRS_LANDING_INNER_X * f_scale   # Landing_SouthStairs' west edge
-	var mid_y = (height + floor_thick) / 2.0   # Landing_SouthStairs' walkable SURFACE height
-	                                            # (its box center, y_landing, sits floor_thick/2
-	                                            # below this, at height/2 - see that comment)
-	var full_y = height + floor_thick          # this floor's ceiling = next floor's floor
-
-	var band_depth = (HotelConstants.SOUTH_STAIRS_ZONE_Z_END - HotelConstants.SOUTH_STAIRS_ZONE_Z_START) / 2.0 * f_scale
-	var z_band1 = (HotelConstants.SOUTH_STAIRS_ZONE_Z_START * f_scale) + band_depth / 2.0  # center of band 1
-	var z_band2 = (HotelConstants.SOUTH_STAIRS_ZONE_Z_END * f_scale) - band_depth / 2.0    # center of band 2
-
-	var run = x_outer - x_inner
-	var ramp_len = sqrt(run * run + mid_y * mid_y)
-	var angle_up = atan2(mid_y, run)
-
-	# _create_static_box positions the box by its geometric CENTER, but a player walks on
-	# its top face (local +Y), which - once the box is rotated to form the incline - sits
-	# slab_half_t away from the center, perpendicular to the slope, not straight up. Naively
-	# centering the box on the two floor-surface points (as an earlier version did) leaves
-	# the walkable surface short of both ends by about slab_half_t * cos(angle_up), which
-	# was enough of a ledge at the landing to block walking up (not down, since a ledge you
-	# step down off doesn't stop you, only one you'd have to step up onto does).
-	# Shifting the center by this same perpendicular offset (derived from where a box's top
-	# face corners land after rotating around Z) puts the actual walking surface exactly on
-	# the intended points instead of the box's centerline.
-	var slab_half_t = 0.1 * f_scale
-	var offset_x = slab_half_t * sin(angle_up)
-	var offset_y = slab_half_t * cos(angle_up)
-
-	# RampA: rises to the east, Band 1
-	_create_static_box(
-		parent, "SouthStairsRampA",
-		Vector3((x_inner + x_outer) / 2.0 + offset_x, mid_y / 2.0 - offset_y, z_band1),
-		Vector3(ramp_len, slab_half_t * 2.0, band_depth),
-		floor_mat,
-		Vector3(0, 0, angle_up)
-	)
-
-	# RampB: rises to the west, Band 2 - same shape as RampA, mirrored in X and offset up by mid_y
-	_create_static_box(
-		parent, "SouthStairsRampB",
-		Vector3((x_inner + x_outer) / 2.0 - offset_x, mid_y + (full_y - mid_y) / 2.0 - offset_y, z_band2),
-		Vector3(ramp_len, slab_half_t * 2.0, band_depth),
-		floor_mat,
-		Vector3(0, 0, -angle_up)
-	)
+	HotelBlockBuilder.generate_south_stairs_ramp(self, parent, f_scale, height, floor_thick, floor_mat)
 
 # Locks South Stairs floor-hopping at floor f_num's own doorway - see stairs_gate.gd for
 # the actual check/teleport. Sized to span the full doorway so the player can't sidestep it.
@@ -511,11 +451,8 @@ func _generate_single_room(parent: Node, f_scale: float, f_num: int, orig_num: i
 # Floor 8's nightmare - see name_door_trap.gd for the rule. Every room door gets a surname
 # instead of its number and a trigger behind it; one random room is the hero's own, and
 # _spawn_cassettes_other_floor() puts two of the floor's tapes in it (the third is always in
-# the maintenance room, which has neither a plate nor a trigger).
-const FLOOR8_OTHER_NAMES: Array = ["КРЫЛОВА", "СОКОЛОВ", "ЛЕБЕДЕВ", "ВОЛКОВ", "ЗАЙЦЕВА", "МОРОЗОВ", "ПАВЛОВ",
-	"ОРЛОВА", "ГУСЕВ", "ТИТОВ", "БЕЛОВА", "КОМАРОВ", "ЖУКОВ", "НЕЧАЕВА"]
-const FLOOR8_OWN_NAME: String = "НЕЧАЕВ"
-
+# the maintenance room, which has neither a plate nor a trigger). The surnames themselves are
+# in ui_strings.json (floor8_own_name / floor8_other_names).
 func _add_name_doors(parent: Node3D, f_num: int, f_scale: float) -> void:
 	HotelTrapBuilder.add_name_doors(self, parent, f_num, f_scale)
 

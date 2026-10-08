@@ -1,5 +1,5 @@
 # 📋 Game Design Document & Technical Architecture
-## «ALEX FIGHT» — 3D-шутер | Godot 4.7.2 | Android
+## «СЛУЧАЙ В ГОСТИНИЦЕ „СИБИРЬ“» — 3D-шутер | Godot 4.7.2 | Android
 
 > **Версия документа:** 1.0  
 > **Платформа:** Android (Vulkan Mobile)  

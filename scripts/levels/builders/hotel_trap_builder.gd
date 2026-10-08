@@ -34,7 +34,7 @@ static func add_name_doors(generator, parent: Node3D, f_num: int, f_scale: float
 	var nums: Array = HotelConstants.DOUBLE_ROOM_LAYOUT.keys() + HotelConstants.SINGLE_ROOM_LAYOUT.keys()
 	nums.sort()
 	var own_num: int = nums[randi() % nums.size()]
-	var other_names: Array = generator.FLOOR8_OTHER_NAMES.duplicate()
+	var other_names: Array = Array(UIStrings.get_string("floor8_other_names").split(",", false))
 	other_names.shuffle()
 	for num in nums:
 		var is_double: bool = HotelConstants.DOUBLE_ROOM_LAYOUT.has(num)
@@ -44,7 +44,7 @@ static func add_name_doors(generator, parent: Node3D, f_num: int, f_scale: float
 		var is_own: bool = num == own_num
 		var label: Label3D = room.get_node_or_null("RoomDoor/AnimatableBody3D/RoomNumberLabel")
 		if label:
-			label.text = generator.FLOOR8_OWN_NAME if is_own else other_names.pop_back()
+			label.text = UIStrings.get_string("floor8_own_name") if is_own else str(other_names.pop_back())
 			label.font_size = 36
 		var trap: Area3D = make_doorway_trigger(room, is_double, trap_script)
 		trap.name = "NameDoorTrap_" + str(num)

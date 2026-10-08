@@ -9,7 +9,7 @@ pipeline {
     }
 
     parameters {
-        booleanParam(name: 'RUN_TESTS', defaultValue: false, description: 'Запускать ли автотесты Godot перед сборкой')
+        booleanParam(name: 'RUN_TESTS', defaultValue: true, description: 'Запускать ли автотесты Godot перед сборкой')
         booleanParam(name: 'BUILD_ANDROID', defaultValue: true, description: 'Собирать ли APK для Android (Phone и Quest 2)')
         booleanParam(name: 'BUILD_MAC', defaultValue: false, description: 'Собирать ли версию для macOS')
         booleanParam(name: 'BUILD_WINDOWS', defaultValue: true, description: 'Собирать ли версию для ПК (Windows)')
@@ -75,7 +75,9 @@ pipeline {
                     echo "Запускаем процесс компиляции внутри Godot-образа..."
                     
                     // Запускаем контейнер из только что собранного образа
-                    docker.image("${BUILDER_IMAGE}:${env.GODOT_VERSION}").inside('-u root') {
+                    // Именованный том для /root/.gradle: без него дистрибутив gradle и все зависимости
+                    // Android-сборки скачиваются заново при каждом прогоне (контейнер одноразовый).
+                    docker.image("${BUILDER_IMAGE}:${env.GODOT_VERSION}").inside('-u root -v alex-fight-gradle-cache:/root/.gradle') {
                         
                         // --- Prepare Version ---
                         echo "Обновляем номер сборки в export_presets.cfg..."
@@ -119,65 +121,10 @@ pipeline {
                         stage('Run Autotests') {
                             if (params.RUN_TESTS) {
                                 echo "Запуск headless автотестов Godot..."
-                                sh '''
-                                godot --headless tests/test_runner.tscn || {
-                                    echo '❌ АВТОТЕСТ МЕНЕДЖЕРА УРОВНЕЙ ПРОВАЛЕН!'
-                                    exit 1
-                                }
-                                godot --headless tests/test_layout_seams.tscn || {
-                                    echo '❌ АВТОТЕСТ СТЫКОВ ГЕОМЕТРИИ (СТЕНЫ/КОМНАТЫ/ЛИФТ/ЛЕСТНИЦЫ) ПРОВАЛЕН!'
-                                    exit 1
-                                }
-                                godot --headless tests/test_map_layout.tscn || {
-                                    echo '❌ АВТОТЕСТ СООТВЕТСТВИЯ УРОВНЯ КАРТЕ ПРОВАЛЕН!'
-                                    exit 1
-                                }
-                                godot --headless tests/test_touch_input.tscn || {
-                                    echo '❌ АВТОТЕСТ СЕНСОРНОГО УПРАВЛЕНИЯ ПРОВАЛЕН!'
-                                    exit 1
-                                }
-                                godot --headless tests/test_wake_up_room.tscn || {
-                                    echo '❌ АВТОТЕСТ КОМНАТЫ ПРОБУЖДЕНИЯ (ОБУЧЕНИЕ) ПРОВАЛЕН!'
-                                    exit 1
-                                }
-                                godot --headless tests/test_save.tscn || {
-                                    echo '❌ АВТОТЕСТ СОХРАНЕНИЙ ПРОВАЛЕН!'
-                                    exit 1
-                                }
-                                godot --headless tests/test_broadcast.tscn || {
-                                    echo '❌ АВТОТЕСТ ЭКРАНОВ ТРАНСЛЯЦИИ ПРОВАЛЕН!'
-                                    exit 1
-                                }
-                                godot --headless tests/test_progression.tscn || {
-                                    echo '❌ АВТОТЕСТ ПРОГРЕССА (КАССЕТЫ/ЛИФТ/ЭТАЖИ) ПРОВАЛЕН!'
-                                    exit 1
-                                }
-                                godot --headless tests/test_stairs_doors.tscn || {
-                                    echo '❌ АВТОТЕСТ ЛЕСТНИЦ И ПРОЕМОВ ПРОВАЛЕН!'
-                                    exit 1
-                                }
-                                godot --headless tests/test_stairs_map.tscn || {
-                                    echo '❌ АВТОТЕСТ КАРТЫ ЛЕСТНИЦ ПРОВАЛЕН!'
-                                    exit 1
-                                }
-                                godot --headless tests/test_elevator_alignment.tscn || {
-                                    echo '❌ АВТОТЕСТ ВЫРАВНИВАНИЯ ЛИФТА ПРОВАЛЕН!'
-                                    exit 1
-                                }
-                                godot --headless tests/test_north_stairs_border.tscn || {
-                                    echo '❌ АВТОТЕСТ ГРАНИЦ СЕВЕРНОЙ ЛЕСТНИЦЫ ПРОВАЛЕН!'
-                                    exit 1
-                                }
-                                godot --headless tests/test_north_stairs_map.tscn || {
-                                    echo '❌ АВТОТЕСТ КАРТЫ СЕВЕРНОЙ ЛЕСТНИЦЫ ПРОВАЛЕН!'
-                                    exit 1
-                                }
-                                godot --headless tests/test_north_stairs_side_map.tscn || {
-                                    echo '❌ АВТОТЕСТ БОКОВОЙ КАРТЫ СЕВЕРНОЙ ЛЕСТНИЦЫ ПРОВАЛЕН!'
-                                    exit 1
-                                }
-                                echo '✅ ВСЕ АВТОТЕСТЫ ПРОЙДЕНЫ!'
-                                '''
+                                // tools/run_tests.sh прогоняет все tests/*.tscn и считает сцену
+                                // проваленной не только по коду возврата, но и по "SCRIPT ERROR" в
+                                // логе: скрипт, который не компилируется, оставляет сцену с кодом 0.
+                                sh 'TEST_TIMEOUT=600 bash tools/run_tests.sh'
                             } else {
                                 echo "Автотесты пропущены (RUN_TESTS = false)"
                             }
@@ -186,23 +133,44 @@ pipeline {
                         stage('Build & Sign Android APKs') {
                             if (params.BUILD_ANDROID) {
                                 echo "Запуск экспорта и подписи Android-проектов (Phone & VR)..."
+                                // Release-подпись: keystore и пароль лежат в Jenkins credentials
+                                //   alex-fight-release-keystore       (Secret file)
+                                //   alex-fight-release-keystore-pass  (Secret text)
+                                // Пока их нет, сборка подписывается debug-ключом, как раньше.
+                                // Наличие проверяется отдельным пустым withCredentials, чтобы
+                                // try/catch не проглотил ошибку самой сборки.
+                                def releaseCreds = [
+                                    file(credentialsId: 'alex-fight-release-keystore', variable: 'RELEASE_KEYSTORE'),
+                                    string(credentialsId: 'alex-fight-release-keystore-pass', variable: 'RELEASE_KEYSTORE_PASS')
+                                ]
+                                def haveReleaseCreds = false
+                                try {
+                                    withCredentials(releaseCreds) { haveReleaseCreds = true }
+                                } catch (err) {
+                                    echo "Release-ключ в Jenkins credentials не найден - APK будут подписаны debug-ключом."
+                                }
+                                def buildAndroid = {
                                 sh '''
                                 sign_apk() {
                                     APK_PATH=$1
                                     if [ -f "$APK_PATH" ]; then
-                                        if [ -f "release.keystore" ]; then
-                                            zipalign -v -p 4 "$APK_PATH" "${APK_PATH%.apk}-aligned.apk"
-                                            apksigner sign --ks release.keystore --ks-pass pass:YOUR_PASSWORD_HERE --out "${APK_PATH%.apk}-release.apk" "${APK_PATH%.apk}-aligned.apk"
+                                        # RELEASE_KEYSTORE / RELEASE_KEYSTORE_PASS приходят из Jenkins
+                                        # credentials (см. withCredentials ниже); пароль читает сам
+                                        # apksigner из окружения, в лог он не попадает.
+                                        if [ -n "${RELEASE_KEYSTORE:-}" ] && [ -f "$RELEASE_KEYSTORE" ]; then
+                                            echo "Подписываем $APK_PATH release-ключом..."
+                                            zipalign -p 4 "$APK_PATH" "${APK_PATH%.apk}-aligned.apk"
+                                            apksigner sign --ks "$RELEASE_KEYSTORE" --ks-pass env:RELEASE_KEYSTORE_PASS --out "${APK_PATH%.apk}-release.apk" "${APK_PATH%.apk}-aligned.apk"
                                             rm "$APK_PATH" "${APK_PATH%.apk}-aligned.apk"
                                             # Переименовываем обратно, чтобы архив Jenkins корректно подхватил файлы
                                             mv "${APK_PATH%.apk}-release.apk" "$APK_PATH"
                                         else
-                                            echo "Файл release.keystore не найден. Выполняем подпись с помощью debug.keystore для $APK_PATH..."
+                                            echo "Release-ключ не задан. Выполняем подпись с помощью debug.keystore для $APK_PATH..."
                                             if [ ! -f "debug.keystore" ]; then
                                                 echo "Генерируем временный debug.keystore..."
                                                 keytool -keyalg RSA -genkeypair -alias androiddebugkey -keypass android -keystore debug.keystore -storepass android -dname "CN=Android Debug,O=Android,C=US" -validity 9999
                                             fi
-                                            zipalign -v -p 4 "$APK_PATH" "${APK_PATH%.apk}-aligned.apk"
+                                            zipalign -p 4 "$APK_PATH" "${APK_PATH%.apk}-aligned.apk"
                                             apksigner sign --ks debug.keystore --ks-pass pass:android --ks-key-alias androiddebugkey --key-pass pass:android --out "${APK_PATH%.apk}-signed.apk" "${APK_PATH%.apk}-aligned.apk"
                                             rm "$APK_PATH" "${APK_PATH%.apk}-aligned.apk"
                                             mv "${APK_PATH%.apk}-signed.apk" "$APK_PATH"
@@ -210,19 +178,36 @@ pipeline {
                                     fi
                                 }
 
+                                # Экспорт без "|| true": код возврата и лог сохраняются. Сборка падает,
+                                # если файла нет; ненулевой код при готовом файле - предупреждение с
+                                # хвостом лога (Godot возвращает его и по безобидным поводам вроде
+                                # недоступного adb). Файл от ПРЕДЫДУЩЕЙ сборки удаляется заранее -
+                                # build/ между прогонами не чистится, и без этого упавший экспорт
+                                # выглядел бы успешным.
+                                run_export() {
+                                    PRESET=$1; OUT=$2; LOG=$3; shift 3
+                                    rm -f "$OUT"
+                                    set +e
+                                    godot --headless "$@" --export-release "$PRESET" "$OUT" > "$LOG" 2>&1
+                                    EXPORT_CODE=$?
+                                    set -e
+                                    if [ ! -f "$OUT" ]; then
+                                        tail -n 80 "$LOG"
+                                        echo "ЭКСПОРТ '$PRESET' ПРОВАЛЕН: $OUT не создан (код возврата $EXPORT_CODE)"
+                                        return 1
+                                    fi
+                                    if [ "$EXPORT_CODE" -ne 0 ]; then
+                                        tail -n 30 "$LOG"
+                                        echo "ПРЕДУПРЕЖДЕНИЕ: экспорт '$PRESET' вернул код $EXPORT_CODE, но $OUT создан."
+                                    fi
+                                    grep -E 'ERROR|SCRIPT ERROR' "$LOG" | head -n 20 || true
+                                    return 0
+                                }
+
                                 if grep -q 'name="Android"' export_presets.cfg 2>/dev/null; then
                                     echo "Копируем конфиг телефона..."
                                     cp configs/project.phone.godot project.godot
-                                    # Тот же класс бага, что уже чинили для Windows (см. ниже,
-                                    # секцию "Build PC (Windows)", "Полная чистка перед
-                                    # экспортом") - build/ не чистится между
-                                    # прогонами Jenkins, а --export-release гасится через || true,
-                                    # так что без явного удаления apk от ПРЕДЫДУЩЕЙ сборки
-                                    # проверка "файл существует" ниже сочла бы упавший экспорт
-                                    # успешным и подписала бы устаревший apk.
-                                    rm -f build/alex_fight.apk
-                                    godot --headless --export-release "Android" build/alex_fight.apk || true
-                                    if [ ! -f "build/alex_fight.apk" ]; then echo 'APK build failed!'; exit 1; fi
+                                    run_export "Android" build/alex_fight.apk build/android_export.log
                                     echo "Подписываем build/alex_fight.apk..."
                                     sign_apk "build/alex_fight.apk"
                                 else
@@ -234,8 +219,6 @@ pipeline {
                                     cp configs/project.vr.godot project.godot
                                     echo "Запуск автотеста конфигурации VR..."
                                     godot --headless -s tests/verify_vr_config.gd || { echo 'VR CONFIG TEST FAILED!'; exit 1; }
-                                    # См. комментарий у Android-сборки выше - тот же риск устаревшего apk.
-                                    rm -f build/alex_fight_vr.apk
                                     # OpenXR в Godot 4.7 экспортируется только gradle-сборкой
                                     # (gradle_build/use_gradle_build в пресете), а ей нужен шаблон
                                     # сборки в res://android/build - его ставит
@@ -258,10 +241,7 @@ org.gradle.daemon=false
 EOF
                                     echo "Память перед gradle-сборкой:"
                                     grep -E 'MemTotal|MemAvailable|SwapTotal|SwapFree' /proc/meminfo || true
-                                    godot --headless --install-android-build-template --export-release "Android Quest 2" build/alex_fight_vr.apk > build/vr_export.log 2>&1 || true
-                                    tail -n 60 build/vr_export.log
-                                    if [ ! -f "build/alex_fight_vr.apk" ]; then
-                                        echo 'VR APK build failed!'
+                                    if ! run_export "Android Quest 2" build/alex_fight_vr.apk build/vr_export.log --install-android-build-template; then
                                         # Отличаем OOM-killer (oom_kill > 0) от падения самой JVM (hs_err).
                                         echo "Память после падения:"
                                         grep -E 'MemTotal|MemAvailable|SwapTotal|SwapFree' /proc/meminfo || true
@@ -275,6 +255,12 @@ EOF
                                     echo "Пресет Android Quest 2 не найден в export_presets.cfg. Сборка VR APK пропущена."
                                 fi
                                 '''
+                                }
+                                if (haveReleaseCreds) {
+                                    withCredentials(releaseCreds) { buildAndroid() }
+                                } else {
+                                    buildAndroid()
+                                }
                             } else {
                                 echo "Сборка и подпись Android APK пропущены (BUILD_ANDROID = false)"
                             }
@@ -287,7 +273,7 @@ EOF
                                 REPORT="build/windows_build_report.txt"
                                 mkdir -p build
                                 {
-                                    echo "=== Alex Fight - отчёт о сборке Windows ==="
+                                    echo "=== Случай в гостинице «Сибирь» - отчёт о сборке Windows ==="
                                     echo "Jenkins build: #${BUILD_NUMBER}"
                                     # git сам по себе не установлен в образе сборщика (см.
                                     # Dockerfile.android) - используем переменную окружения,
@@ -368,8 +354,16 @@ EOF
                                     # тот же риск устаревшего zip от предыдущего прогона Jenkins.
                                     rm -rf build/mac
                                     mkdir -p build/mac
-                                    godot --headless --export-release "macOS" build/mac/alex_fight_mac.zip || true
-                                    if [ ! -f "build/mac/alex_fight_mac.zip" ]; then echo 'macOS build failed!'; exit 1; fi
+                                    set +e
+                                    godot --headless --export-release "macOS" build/mac/alex_fight_mac.zip > build/mac_export.log 2>&1
+                                    EXPORT_CODE=$?
+                                    set -e
+                                    if [ ! -f "build/mac/alex_fight_mac.zip" ]; then
+                                        tail -n 80 build/mac_export.log
+                                        echo "macOS build failed! (код возврата $EXPORT_CODE)"
+                                        exit 1
+                                    fi
+                                    [ "$EXPORT_CODE" -eq 0 ] || { tail -n 30 build/mac_export.log; echo "ПРЕДУПРЕЖДЕНИЕ: экспорт macOS вернул код $EXPORT_CODE"; }
                                     
                                     echo "Копируем сборку Mac в корень build..."
                                     cp build/mac/alex_fight_mac.zip build/
@@ -395,7 +389,7 @@ EOF
         }
         success {
             archiveArtifacts artifacts: 'build/*.apk, build/*.zip, build/windows_build_report.txt', fingerprint: true, allowEmptyArchive: true
-            echo "Successfully built Alex Fight via Godot Docker Builder! 🎉"
+            echo "Successfully built Случай в гостинице «Сибирь» via Godot Docker Builder! 🎉"
         }
         failure {
             // Отчёт по Windows-сборке архивируется и при падении пайплайна - именно тогда в нём
