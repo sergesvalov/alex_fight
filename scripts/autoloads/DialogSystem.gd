@@ -10,10 +10,8 @@ signal narrative_ended
 var is_playing: bool = false
 var holo_scene: PackedScene = preload("res://scenes/fx/holo_projection.tscn")
 
-# Movement locks for this long at most while a tape plays (long tapes keep narrating/showing the
-# subtitle for their full duration regardless - only the READING movement-lock is capped, so the
-# player never feels frozen in place for a 10s+ narration).
-const MAX_READING_LOCK: float = 2.0
+# The hologram of the tape currently playing, freed again in end_narrative().
+var _holo_instance: Node3D = null
 
 var tape_data: Dictionary = {}
 
@@ -67,7 +65,6 @@ func play_tape_for_floor(floor_num: int, tape_id: int, spawn_position: Vector3) 
     print("[DialogSystem] current_tape=", current_tape)
 
     is_playing = true
-    GameStateManager.change_state(GameStateManager.GameState.READING)
     # hud.gd shows the actual readable text as a screen-space subtitle on this signal - see its
     # comment for why (the old design read text off a world-space Label3D floating over the
     # hologram, which forced players to tilt the camera up at whatever angle the pickup spot
@@ -76,6 +73,7 @@ func play_tape_for_floor(floor_num: int, tape_id: int, spawn_position: Vector3) 
 
     if holo_scene:
         var holo_instance = holo_scene.instantiate()
+        _holo_instance = holo_instance
         # Small ambient flicker hovering just above the tape's own spot - purely atmospheric
         # now that the subtitle (hud.gd) carries the actual text, so it no longer needs to clear
         # head height or avoid the camera ending up inside its cone (the cone is short and this
@@ -87,27 +85,29 @@ func play_tape_for_floor(floor_num: int, tape_id: int, spawn_position: Vector3) 
     else:
         push_error("[DialogSystem] holo_scene is null - no hologram will show")
 
-    var duration: float = current_tape["duration"]
-    var lock_time: float = min(MAX_READING_LOCK, duration)
-    await get_tree().create_timer(lock_time).timeout
-    # Only the movement lock ends here - the subtitle/hologram (and is_playing, so the player
-    # can't immediately start a second tape) keep going for the rest of the tape's duration.
-    # Guarded by still-READING in case something else (combat, death) already changed state
-    # during the lock.
-    if GameStateManager.current_state == GameStateManager.GameState.READING:
-        GameStateManager.change_state(GameStateManager.GameState.EXPLORING)
+    # A tape playing is loud: every robot on this floor within earshot comes to look (see
+    # enemy_ai_base.gd::hear_noise()). That is the price of a memory - per LORE.md the hero
+    # stays vulnerable while one plays - and why WHERE and WHEN to take a tape is a decision.
+    # Replaying one from the inventory makes the same noise, so it also works as a lure.
+    var listener = get_tree().get_first_node_in_group("player")
+    get_tree().call_group("enemies", "hear_noise", listener.global_position if listener else spawn_position)
 
-    var remaining: float = duration - lock_time
-    if remaining > 0.0:
-        await get_tree().create_timer(remaining).timeout
+    # No movement lock (there used to be a 2s one): per LORE.md narration never stops gameplay.
+    # process_always=false - the timer must not run down while the inventory or a terminal has
+    # the game paused, or the subtitle would be gone before the player ever saw it.
+    await get_tree().create_timer(current_tape["duration"], false).timeout
     print("[DialogSystem] narrative timer finished for tape_id=", tape_id)
     end_narrative()
+
 
 func end_narrative() -> void:
     print("[DialogSystem] end_narrative, is_playing -> false")
     is_playing = false
-    if GameStateManager.current_state == GameStateManager.GameState.READING:
-        GameStateManager.change_state(GameStateManager.GameState.EXPLORING)
+    # The hologram belongs to this one playback - without this every pickup and every replay
+    # left its cone standing in the level for good.
+    if is_instance_valid(_holo_instance):
+        _holo_instance.queue_free()
+    _holo_instance = null
     narrative_ended.emit()
     if not _tape_queue.is_empty():
         var next: Array = _tape_queue.pop_front()

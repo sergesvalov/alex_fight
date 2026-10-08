@@ -175,8 +175,17 @@ func _on_left_controller_button_pressed(button_name: String) -> void:
             hud_node = get_tree().current_scene.find_child("HUD", true, false)
         if not hud_node: hud_node = get_node_or_null("../HUD")
         if hud_node:
+            # The same button closes whatever panel is open. In VR nothing can click the
+            # panels' own CLOSE buttons (the HUD is a texture on a quad, input never reaches
+            # it), and both panels pause the game - so opening one used to be a dead end.
+            var terminal_ui = hud_node.find_child("TerminalUI", true, false)
+            if terminal_ui and terminal_ui.visible:
+                terminal_ui.close()
+                return
             var inv_ui = hud_node.find_child("InventoryUI", true, false)
-            if inv_ui and inv_ui.has_method("open"):
+            if inv_ui and inv_ui.visible:
+                inv_ui.close()
+            elif inv_ui and inv_ui.has_method("open"):
                 inv_ui.open()
 
 func _setup_vr_hud() -> void:

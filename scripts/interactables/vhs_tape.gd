@@ -82,15 +82,26 @@ func _generate_tape_texture() -> ImageTexture:
 
     return ImageTexture.create_from_image(img)
 
+const PICKUP_SOUND: AudioStream = preload("res://assets/audio/sfx/door_close.wav")
+
 func interact(_player):
-    print("[vhs_tape] interact tape_id=", tape_id, " global_position=", global_position,
-        " is_playing_before=", DialogSystem.is_playing, " current_floor=", GameStateManager.current_floor)
-    GameStateManager.collect_tape(tape_id)
-    GameStateManager.add_to_inventory(GameStateManager.current_floor, tape_id)
-    DialogSystem.play_tape(tape_id, global_position)
-    # By now is_playing is already true (play_tape() runs synchronously up to its first await),
-    # so trigger_alex_line() will correctly wait for this tape's own narrative to finish first
-    # instead of stepping on it.
-    if tape_id == 0:
+    # WHICH recording this is depends on the order of finding, not on which shelf it lay on:
+    # the first tape taken on a floor plays that floor's first recording, the third its last.
+    # A floor's story therefore always unfolds in order, and its closing recording is always
+    # the one that comes with the floor's own event. tape_id itself only tells the three
+    # physical cassettes of a floor apart (placement, texture).
+    var floor_num: int = GameStateManager.current_floor
+    var recording: int = GameStateManager.tapes_found.size()
+    print("[vhs_tape] interact tape_id=", tape_id, " recording=", recording, " global_position=", global_position,
+        " is_playing_before=", DialogSystem.is_playing, " current_floor=", floor_num)
+    # A cassette clunking into the player - door_close.wav pitched up until a proper sound exists.
+    AudioManager.play_sfx(PICKUP_SOUND, global_position, 2.4, -6.0)
+    # Narration first, so is_playing is already true (play_tape() runs synchronously up to its
+    # first await) by the time collect_tape() fires the floor's event and any trigger_alex_line()
+    # that comes with it - those wait for the narration to finish instead of stepping on it.
+    DialogSystem.play_tape(recording, global_position)
+    GameStateManager.collect_tape(recording)
+    GameStateManager.add_to_inventory(floor_num, recording)
+    if recording == 0:
         DialogSystem.trigger_alex_line("tape1")
     queue_free()

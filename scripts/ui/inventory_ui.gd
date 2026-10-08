@@ -12,19 +12,15 @@ func _ready():
     _rebuild_slots()
     close_btn.pressed.connect(close)
 
-# Cassette slots, sorted by lore order (floor, then id) - NOT by the order the player happened
-# to pick them up in, so finding tape #3 before #1 still lists #1 first.
+# Cassette slots in the order the memories came back - which is the story's order: floor 4
+# first, then 3, then 5... (sorting by floor number put the floor-3 interrogation ahead of
+# waking up on floor 4). Within a floor a tape's id already IS its order of finding, see
+# vhs_tape.gd.
 func _rebuild_slots() -> void:
     for child in grid.get_children():
         child.queue_free()
 
-    var tapes = GameStateManager.collected_tapes.duplicate()
-    tapes.sort_custom(func(a, b):
-        if a["floor"] != b["floor"]:
-            return a["floor"] < b["floor"]
-        return a["id"] < b["id"]
-    )
-
+    var tapes = GameStateManager.collected_tapes
     for i in range(SLOT_COUNT):
         if i < tapes.size():
             grid.add_child(_make_tape_slot(tapes[i]))

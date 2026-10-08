@@ -1489,10 +1489,13 @@ func _on_all_tapes_collected() -> void:
 		GameStateManager.secret_portal_target_floor = 3
 
 		_create_exit_portal()
+		# What just happened, in Alex's own words - the tape's text no longer has to say it.
+		DialogSystem.trigger_alex_line("floor4_done")
 
 	if GameStateManager.current_floor == 3 and not GameStateManager.floor3_corridor_unlocked:
 		GameStateManager.floor3_corridor_unlocked = true
 		GameStateManager.unlock_floor(5)
+		DialogSystem.trigger_alex_line("floor3_done")
 
 	# 3. Floor 5's own tapes - its room-shuffling trap (room_shuffle_trap.gd) switches off, the
 	#    sealed room's door opens normally again, and floor 6 unlocks.
@@ -1501,6 +1504,7 @@ func _on_all_tapes_collected() -> void:
 		if is_instance_valid(_sealed_room_door):
 			_sealed_room_door.locked_from_corridor = false
 		GameStateManager.unlock_floor(6)
+		DialogSystem.trigger_alex_line("floor5_done")
 
 # Rebuilds the same doorway from GameStateManager's persisted secret_portal_* fields - called
 # both right after _on_all_tapes_collected() rolls them, and from _ready() if this level scene

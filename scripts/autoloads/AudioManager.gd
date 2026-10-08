@@ -31,10 +31,12 @@ func play_music(track_name: String, fade_duration: float = 1.0) -> void:
     tween = create_tween()
     tween.tween_property(music_player, "volume_db", 0, fade_duration)
 
-func play_sfx(sfx: AudioStream, position: Vector3 = Vector3.ZERO) -> void:
+func play_sfx(sfx: AudioStream, position: Vector3 = Vector3.ZERO, pitch: float = 1.0, volume_db: float = 0.0) -> void:
     var player = AudioStreamPlayer3D.new()
     add_child(player)
     player.stream = sfx
+    player.pitch_scale = pitch
+    player.volume_db = volume_db
     player.global_position = position
     player.play()
     player.finished.connect(player.queue_free)

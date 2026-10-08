@@ -151,10 +151,14 @@ func _state_chase(_delta: float) -> void:
 		_los_check_timer = LOS_CHECK_INTERVAL
 
 	if not _last_los:
-		if attack_timer <= -3.0:
+		# A robot that came for a sound (hear_noise()) gets extra time to actually arrive
+		# before the usual "3s without seeing them" gives up on it.
+		if attack_timer <= -3.0 - _search_time_left:
+			_search_time_left = 0.0
 			_set_state(State.RETURN)
 	else:
 		attack_timer = 0.0
+		_search_time_left = 0.0
 
 	if _flat_distance(player.global_position) <= attack_range:
 		_set_state(State.ATTACK)
@@ -250,6 +254,34 @@ func _on_player_detected(p: Node3D) -> void:
 
 func _on_player_lost() -> void:
 	pass
+
+# How far a playing tape carries, and how much longer than usual a robot that came for the
+# sound keeps looking before giving up (on top of _state_chase()'s normal 3s without sight).
+const HEARING_RADIUS: float = 25.0
+const HEARING_PERSISTENCE: float = 8.0
+var _search_time_left: float = 0.0
+
+# Called on every enemy (group "enemies") when a tape starts playing - see
+# DialogSystem.play_tape_for_floor(). A robot on the same floor and within earshot heads for
+# whoever is listening, exactly as if it had spotted them, but without needing to see them yet.
+func hear_noise(noise_position: Vector3) -> void:
+	if current_state == State.DEAD or current_state == State.CHASE or current_state == State.ATTACK:
+		return
+	if process_mode == Node.PROCESS_MODE_DISABLED:
+		return # parked on a floor nobody is on (see hotel_level_generator.gd)
+	if absf(noise_position.y - global_position.y) > EnemySensors.SAME_FLOOR_Y_TOLERANCE:
+		return
+	if _flat_distance(noise_position) > HEARING_RADIUS:
+		return
+	if GameStateManager.current_state == GameStateManager.GameState.SPECTATOR:
+		return
+	var listener = get_tree().get_first_node_in_group("player")
+	if not listener:
+		return
+	print("[EnemyAI] ", name, " heard a tape at ", noise_position, " - investigating")
+	player = listener
+	_set_state(State.CHASE)
+	_search_time_left = HEARING_PERSISTENCE
 
 func take_damage(amount: int) -> void:
 	print(name, " took damage: ", amount)

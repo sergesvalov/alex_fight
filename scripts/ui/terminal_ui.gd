@@ -48,16 +48,25 @@ func _tape_inventory_entry() -> Dictionary:
 		for child in floor_node.get_children():
 			if child.name.begins_with("Cassette_") and not child.is_queued_for_deletion():
 				var hint_key: String = child.location_hint if child.location_hint != "" else "tape_hint_unknown"
-				lines.append(UIStrings.get_string("terminal_tapes_line") % [child.tape_id + 1, UIStrings.get_string(hint_key)])
+				# No tape numbers here: which recording a cassette turns out to be depends on
+				# the order of finding (vhs_tape.gd), not on where it lies.
+				lines.append(UIStrings.get_string("terminal_tapes_line") % UIStrings.get_string(hint_key))
 	lines.sort()
 	var text: String = UIStrings.get_string("terminal_tapes_none")
 	if not lines.is_empty():
 		text = UIStrings.get_string("terminal_tapes_intro") + "\n\n" + "\n".join(lines)
 	return {"title": UIStrings.get_string("terminal_tapes_title") % floor_num, "text": text}
 
+# An archive entry stays classified until enough tapes have been recovered (its "requires_tapes"
+# in narrative_lines.json, counted over the whole game) - the terminal confirms what Alex has
+# remembered instead of telling him everything on the first floor.
+func _is_locked(i: int) -> bool:
+	return GameStateManager.collected_tapes.size() < int(entries[i].get("requires_tapes", 0))
+
 func open() -> void:
 	entries[0] = _tape_inventory_entry()
-	(entry_list.get_child(0) as Button).text = entries[0]["title"]
+	for i in range(entries.size()):
+		(entry_list.get_child(i) as Button).text = UIStrings.get_string("terminal_locked_title") if _is_locked(i) else entries[i]["title"]
 	show()
 	get_tree().paused = true
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
@@ -72,4 +81,8 @@ func close() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 func _show_entry(i: int) -> void:
+	if _is_locked(i):
+		body_text.text = UIStrings.get_string("terminal_locked_text") % [
+			int(entries[i].get("requires_tapes", 0)), GameStateManager.collected_tapes.size()]
+		return
 	body_text.text = "[b]" + entries[i]["title"] + "[/b]\n\n" + entries[i]["text"]

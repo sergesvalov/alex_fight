@@ -137,6 +137,17 @@ func _ready() -> void:
 	_check(DialogSystem.is_playing and DialogSystem._tape_queue.size() == 1,
 		"a second tape started mid-narration waits in the queue (%d queued)" % DialogSystem._tape_queue.size())
 	DialogSystem._tape_queue.clear()
+	_check(is_instance_valid(DialogSystem._holo_instance), "a playing tape has its hologram")
+	DialogSystem.end_narrative()
+	_check(DialogSystem._holo_instance == null and not DialogSystem.is_playing,
+		"the hologram is removed when the narration ends")
+
+	# --- The terminal archive opens up as tapes are recovered ---
+	var needs: Array = DialogSystem.terminal_entries.map(func(e): return int(e.get("requires_tapes", -1)))
+	var sorted_needs: Array = needs.duplicate()
+	sorted_needs.sort()
+	_check(needs.size() > 0 and needs[0] == 0 and needs == sorted_needs and needs.max() <= 27,
+		"archive entries unlock progressively, the first one from the start: " + str(needs))
 	_check(GameStateManager.is_floor_unlocked(5), "floor 3's third tape unlocks floor 5")
 	_check(_routes() == [4, 4, 3, 4, 5, 4, 4, 4, 4, 4],
 		"the elevator now reaches 3, 4 and 5, everything else leads to 4: " + str(_routes()))
@@ -193,6 +204,40 @@ func _ready() -> void:
 		_check(GameStateManager.is_floor_unlocked(6), "floor 5's three tapes unlock floor 6")
 		_check(_routes() == [4, 4, 3, 4, 5, 6, 4, 4, 4, 4],
 			"the elevator now reaches 3-6, everything else leads to 4: " + str(_routes()))
+
+	# --- Floor 6, through the real pickup code: recordings come in order of finding, and the
+	# --- robot of that floor (and only that floor) comes for the sound ---
+	DialogSystem.end_narrative()
+	DialogSystem._tape_queue.clear()
+	GameStateManager.current_floor = 6
+	generator._set_lit_floor(6) # what the generator does itself once the player is up there
+	var floor6: Node3D = generator.get_floor_node(6)
+	var listener := CharacterBody3D.new()
+	listener.add_to_group("player")
+	add_child(listener)
+	listener.global_position = floor6.global_position + Vector3(1.0, 0.1, 5.0)
+
+	var cassettes: Array = []
+	for child in floor6.get_children():
+		if child.name.begins_with("Cassette_"):
+			cassettes.append(child)
+	cassettes.sort_custom(func(a, b): return a.tape_id > b.tape_id) # take them in REVERSE: 2, 1, 0
+	var robot6 = floor6.get_node_or_null("Cerberus")
+	var robot5 = generator.get_floor_node(5).get_node_or_null("Cerberus")
+	_check(robot6 != null and robot6.current_state != robot6.State.CHASE, "floor 6's robot is not hunting before any tape plays")
+
+	cassettes[0].interact(listener)
+	_check(robot6 != null and robot6.current_state == robot6.State.CHASE, "a tape playing on floor 6 brings floor 6's robot")
+	_check(robot5 != null and robot5.current_state != robot5.State.CHASE, "floor 5's robot does not hear a tape played on floor 6")
+	cassettes[1].interact(listener)
+	cassettes[2].interact(listener)
+	var floor6_ids: Array = []
+	for entry in GameStateManager.collected_tapes:
+		if entry["floor"] == 6:
+			floor6_ids.append(entry["id"])
+	_check(floor6_ids == [0, 1, 2] and GameStateManager.tapes_found == [0, 1, 2],
+		"tapes taken as cassettes 2,1,0 still play recordings 1,2,3 in that order: " + str(floor6_ids))
+	_check(cassettes.all(func(c): return c.is_queued_for_deletion()), "taken cassettes leave the level")
 
 	print("==================================================")
 	if errors > 0:
