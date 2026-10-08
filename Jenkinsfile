@@ -228,7 +228,13 @@ pipeline {
                                     godot --headless -s tests/verify_vr_config.gd || { echo 'VR CONFIG TEST FAILED!'; exit 1; }
                                     # См. комментарий у Android-сборки выше - тот же риск устаревшего apk.
                                     rm -f build/alex_fight_vr.apk
-                                    godot --headless --export-release "Android Quest 2" build/alex_fight_vr.apk || true
+                                    # OpenXR в Godot 4.7 экспортируется только gradle-сборкой
+                                    # (gradle_build/use_gradle_build в пресете), а ей нужен шаблон
+                                    # сборки в res://android/build - его ставит
+                                    # --install-android-build-template. Лог сохраняем: без него
+                                    # упавший gradle выглядит просто как "apk не появился".
+                                    godot --headless --install-android-build-template --export-release "Android Quest 2" build/alex_fight_vr.apk > build/vr_export.log 2>&1 || true
+                                    tail -n 60 build/vr_export.log
                                     if [ ! -f "build/alex_fight_vr.apk" ]; then echo 'VR APK build failed!'; exit 1; fi
                                     echo "Подписываем build/alex_fight_vr.apk..."
                                     sign_apk "build/alex_fight_vr.apk"

@@ -31,6 +31,10 @@ RUN mkdir -p ${ANDROID_HOME}/cmdline-tools && \
 # Соглашаемся с лицензиями и ставим базовые пакеты платформы
 RUN yes | sdkmanager --licenses
 RUN sdkmanager "platform-tools" "platforms;android-34" "build-tools;34.0.0"
+# VR-сборка (Quest) идёт через gradle: в Godot 4.7 режим OpenXR без "Use Gradle Build" не
+# экспортируется. Версии - из platform/android/java/app/config.gradle тега 4.7.2-stable;
+# без них gradle докачивал бы их при каждой сборке.
+RUN sdkmanager "platforms;android-36" "build-tools;36.1.0" "ndk;29.0.14206865"
 
 # Установка Godot (Сборка под Linux x86_64)
 ARG GODOT_VERSION=4.7.2

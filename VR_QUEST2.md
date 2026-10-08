@@ -33,7 +33,7 @@ else:
 | Preset | Для чего | Ключевые отличия |
 |--------|----------|-----------------|
 | `Android Phone` | Смартфон | без XR-плагина, `xr_mode=0`, APK ~меньше |
-| `Android Quest 2` | Oculus | с плагином `godot_openxr_vendors`, `xr_mode=1` |
+| `Android Quest 2` | Oculus | `xr_mode=1`, gradle-сборка |
 
 Оба билдятся из **одной и той же** кодовой базы. Разница только в export preset.
 
@@ -89,12 +89,14 @@ openxr/default_action_map="res://openxr_action_map.tres"
 
 **Плагин:** установить `Godot OpenXR Vendors` через AssetLib (или вручную в `addons/godot_openxr_vendors`). Это официальный Meta-плагин для Godot 4.
 
-**`export_presets.cfg`** — в секцию `[preset.0.options]` добавить:
+> **Godot 4.7:** плагин необязателен (начиная с 4.6 загрузчик OpenXR идёт с шаблоном сборки). В репозитории его нет. Ставить его стоит, только если понадобятся функции Meta или публикация в магазине.
+
+**`export_presets.cfg`** — в опциях пресета `Android Quest 2` обязательны две строки:
 ```ini
-xr_features/xr_mode=1    # OpenXR
-package/min_sdk=29        # Quest требует API 29+
-package/target_sdk=32
+xr_features/xr_mode=1                  ; OpenXR. Именно число: строка "OpenXR" читается как 0
+gradle_build/use_gradle_build=true     ; без gradle-сборки режим OpenXR не экспортируется
 ```
+Если `xr_mode` не равен 1, apk собирается обычным приложением и в шлеме открывается плоским окном. Это проверяет `tests/verify_vr_config.gd`. Gradle-сборке нужен шаблон в `res://android/build` — Jenkins ставит его флагом `--install-android-build-template`; пакеты SDK для неё (android-36, build-tools 36.1.0, NDK) добавлены в `Dockerfile.android`.
 
 **Создать `openxr_action_map.tres`** — маппинг действий контроллеров:
 - Левый стик → `move` (движение)
