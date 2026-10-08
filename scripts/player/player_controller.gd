@@ -175,10 +175,6 @@ func _on_left_controller_button_pressed(button_name: String) -> void:
             if inv_ui and inv_ui.has_method("open"):
                 inv_ui.open()
 
-# Helper methods to maintain compatibility with external calls (like vhs_tape.gd calling collect_tape or cerberus_ai)
-func collect_tape() -> void:
-    interaction.collect_tape()
-
 func _setup_vr_hud() -> void:
     var hud = null
     if get_tree().current_scene:

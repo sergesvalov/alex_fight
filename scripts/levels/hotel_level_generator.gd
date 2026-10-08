@@ -2,6 +2,9 @@
 extends Node3D
 class_name HotelLevelGenerator
 
+const CsgBaker = preload("res://scripts/levels/csg_baker.gd")
+const FloorMap = preload("res://scripts/levels/floor_map.gd")
+
 # Small vertical offset to prevent Z-fighting between the ceiling of one floor
 # and the floor slab of the floor above on Android (gl_compatibility / 16-bit depth).
 const CEIL_BIAS: float = 0.001
@@ -87,17 +90,34 @@ const SINGLE_ROOM_LAYOUT := {
 	416: {"z": 10.0, "mirror": true},
 	417: {"z": 15.0, "mirror": true},
 	420: {"z": 15.0, "mirror": false},
-	421: {"z": 20.0, "mirror": false},
+	421: {"z": 25.0, "mirror": true},
 }
 
+# Where along a room's outer wall (local Z from the room's own origin, before mirroring) the
+# secret exit door goes - a stretch with no furniture against it. Not the layout "z" itself:
+# that's the room's edge, i.e. the partition between two rooms (or the building's corner).
+const DOUBLE_ROOM_EXIT_DOOR_LOCAL_Z: float = 5.0   # room center; beds end at Z=2.6
+const SINGLE_ROOM_EXIT_DOOR_LOCAL_Z: float = 3.05  # between Table (ends Z=2.43) and Bed (starts Z=3.66)
+
 @export var floor_number: int = 4
-@export var player_spawn_pos: Vector3 = Vector3(0, 1.0, 0)
 @export var floor_thickness: float = BASE_FLOOR_THICKNESS
 @export var corridor_height: float = BASE_CORRIDOR_HEIGHT
 @export var wall_thickness: float = 0.2
 @export var carpet_color: Color = Color(1.0, 1.0, 1.0, 1.0)
-@export var map_texture: Texture2D = null
 @export var empty_box_mode: bool = false
+# Swap every block's CSG for a shared pre-computed mesh as it's placed (see csg_baker.gd). Off =
+# the generated tree keeps its live CSG nodes, which is what tests reading wall sizes need.
+@export var bake_csg: bool = true
+
+# The one place a block/prop instance passes through between instantiate() and add_child().
+func _bake_csg(inst: Node) -> void:
+	if not bake_csg or Engine.is_editor_hint():
+		return
+	# Any non-default floor/player scale makes block.gd resize CSG boxes in place after the
+	# block enters the tree - nothing to share between instances then.
+	if not is_equal_approx(GlobalConfig.get_floor_scale(), 1.0) or not is_equal_approx(GlobalConfig.get_player_scale(), 1.0):
+		return
+	CsgBaker.bake(inst, self)
 
 static func _load_texture_safe(path: String) -> Texture2D:
 	if DisplayServer.get_name() == "headless":
@@ -116,7 +136,6 @@ static func _load_texture_safe(path: String) -> Texture2D:
 @onready var wall_texture = _load_texture_safe("res://assets/textures/hotel_wallpaper.jpg")
 @onready var retro_wall_texture = _load_texture_safe("res://assets/textures/retro_wallpaper.jpg")
 @onready var ceiling_texture = _load_texture_safe("res://assets/textures/hotel_wallpaper.jpg")
-@onready var floor_texture = _load_texture_safe("res://assets/textures/hotel_carpet.jpg")
 
 # Per-floor lighting: all 10 floors physically coexist in this one scene, stacked at
 # different Y offsets (see _generate_level) - without this, every room/stairs/elevator
@@ -126,10 +145,30 @@ var _floor_lights_by_index: Dictionary = {}   # int floor index (1..10) -> Array
 var _lit_floor_index: int = -1
 var _light_y_step: float = 0.0
 
+# Per-floor visibility, same reasoning as the lights above: without it the renderer draws all
+# 10 floors' worth of rooms/props/doors that fall inside the camera frustum (there are no
+# occluders, so a slab between floors hides nothing as far as culling is concerned). Only the
+# player's floor and its two neighbors (seen through the stairwells) stay visible. Index 11 is
+# the roof. Collision, navigation and scripts are unaffected - this only toggles `visible`.
+var _floor_nodes_by_index: Dictionary = {}    # int floor index (1..11) -> Node3D
+# Off until the navmesh is baked, so the bake always parses the whole building.
+var _floor_culling_enabled: bool = false
+
+# Room shadows further than this from the camera aren't rendered at all - every room on the
+# floor keeps a shadow-casting light, but only the handful near the player ever matter.
+const LIGHT_SHADOW_FADE_DISTANCE: float = 18.0
+
+# Debug builds only - prints FPS/draw calls so a rendering change can be judged by numbers.
+const PERF_LOG_INTERVAL: float = 5.0
+var _perf_log_timer: float = PERF_LOG_INTERVAL
+
 func _ready() -> void:
 	if GameStateManager.has_signal("all_tapes_collected"):
 		GameStateManager.connect("all_tapes_collected", _on_all_tapes_collected)
+	var build_start_ms: int = Time.get_ticks_msec()
 	_generate_level()
+	print("[perf] level built in ", Time.get_ticks_msec() - build_start_ms, " ms (started at ",
+		build_start_ms, " ms since engine start)")
 	if "secret_portal_active" in GameStateManager and GameStateManager.secret_portal_active:
 		_create_exit_portal()
 		
@@ -147,19 +186,23 @@ func _ready() -> void:
 			# on slower hardware if baking this whole 10-floor hotel takes longer than that guess.
 			# Awaiting the region's own bake_finished signal is the actual correct completion
 			# signal regardless of how long baking takes.
+			var bake_start_ms: int = Time.get_ticks_msec()
 			nav_region.bake_navigation_mesh()
 			await nav_region.bake_finished
+			print("[perf] navmesh baked in ", Time.get_ticks_msec() - bake_start_ms, " ms")
 			print("[generator] navigation mesh baked - releasing enemies to patrol")
 			get_tree().call_group("enemies", "_on_navmesh_ready")
 		else:
 			print("[generator] WARNING: parent is not NavigationRegion3D, navmesh never baked - ", nav_region)
 
+		_floor_culling_enabled = true
+		_apply_floor_visibility()
+
 func _generate_level() -> void:
-	print("Generating 3 hotel levels geometry with StaticBodies...")
-	
 	for child in get_children():
 		child.free()
 	_floor_lights_by_index.clear()
+	_floor_nodes_by_index.clear()
 	_lit_floor_index = -1
 
 	var f_scale = GlobalConfig.get_floor_scale()
@@ -174,48 +217,48 @@ func _generate_level() -> void:
 	# (e.g. this level scene reloading mid-playthrough), since the range is meant to persist.
 	GameStateManager.init_floor_access(floor_number)
 
-	var get_color_from_scene = func(level_num: int) -> Color:
+	# Another floor's own carpet color, read from that floor's level scene.
+	var get_carpet_color_from_scene = func(level_num: int) -> Color:
 		var scene_path = "res://scenes/levels/hotel_siberia/hotel_level_" + str(level_num) + ".tscn"
 		if ResourceLoader.exists(scene_path):
 			var packed = load(scene_path)
 			if packed:
 				var temp = packed.instantiate()
 				var geom = temp.get_node_or_null("NavigationRegion3D/HotelGeometry")
-				if geom and "carpet_color" in geom:
-					var c = geom.carpet_color
-					temp.queue_free()
-					return c
+				var color = geom.carpet_color if geom and "carpet_color" in geom else Color(1, 1, 1)
 				temp.queue_free()
+				return color
 		return Color(1, 1, 1) # Default
-		
+
 	for i in range(1, 11):
 		var y_offset = (i - floor_number) * y_step
 		var suffix = str(i)
 		if i == floor_number:
 			suffix = "Main"
-			
+
 		var c_color = carpet_color
+		if i != floor_number:
+			c_color = get_carpet_color_from_scene.call(i)
 		if i == 4:
 			c_color = Color(1.0, 1.0, 1.0, 1.0)
-		elif i != floor_number:
-			c_color = get_color_from_scene.call(i)
-			
-		var m_tex = null
-		if i == floor_number:
-			m_tex = map_texture
-			
+
 		var is_empty = false
 		if i == 1:
 			is_empty = true
 
-		var floor_node = _build_floor_geometry(i, y_offset, suffix, c_color, m_tex, is_empty, f_scale)
+		var floor_node = _build_floor_geometry(i, y_offset, suffix, c_color, is_empty, f_scale)
 		var lights: Array = []
 		_find_lights(floor_node, lights)
+		for light in lights:
+			light.distance_fade_enabled = true
+			light.distance_fade_shadow = LIGHT_SHADOW_FADE_DISTANCE
 		_floor_lights_by_index[i] = lights
+		_floor_nodes_by_index[i] = floor_node
 
 	# Generate roof above the 10th floor
 	var roof_y_offset = (11 - floor_number) * y_step
 	_generate_roof(roof_y_offset, f_scale)
+	_floor_nodes_by_index[11] = get_node_or_null("GeneratedRoof")
 
 	_light_y_step = y_step
 	# Every light defaults to visible=true when created - explicitly turn all of them off
@@ -246,10 +289,28 @@ func _set_lit_floor(floor_index: int) -> void:
 		for light in _floor_lights_by_index[floor_index]:
 			light.visible = true
 	_lit_floor_index = floor_index
+	_apply_floor_visibility()
 
-func _process(_delta: float) -> void:
+func _apply_floor_visibility() -> void:
+	for i in _floor_nodes_by_index:
+		var floor_node = _floor_nodes_by_index[i]
+		if is_instance_valid(floor_node):
+			var shown: bool = not _floor_culling_enabled or absi(i - _lit_floor_index) <= 1
+			floor_node.visible = shown
+			# A robot on a floor nobody can see has nobody to hunt - no point running its
+			# physics, navigation and sensors.
+			var robot = floor_node.get_node_or_null("Cerberus")
+			if robot:
+				robot.process_mode = Node.PROCESS_MODE_INHERIT if shown else Node.PROCESS_MODE_DISABLED
+
+var _first_frame_logged: bool = false
+
+func _process(delta: float) -> void:
 	if Engine.is_editor_hint() or _light_y_step <= 0.0:
 		return
+	if not _first_frame_logged:
+		_first_frame_logged = true
+		print("[perf] first frame at ", Time.get_ticks_msec(), " ms since engine start")
 	var player = get_node_or_null("../../Player")
 	if not player:
 		if get_tree() and get_tree().current_scene:
@@ -260,7 +321,16 @@ func _process(_delta: float) -> void:
 	floor_index = clampi(floor_index, 1, 10)
 	_set_lit_floor(floor_index)
 
-func _build_floor_geometry(f_num: int, y_offset: float, suffix: String, c_color: Color, m_texture: Texture2D, is_empty: bool, f_scale: float) -> Node3D:
+	if OS.is_debug_build():
+		_perf_log_timer -= delta
+		if _perf_log_timer <= 0.0:
+			_perf_log_timer = PERF_LOG_INTERVAL
+			print("[perf] fps=", Engine.get_frames_per_second(),
+				" draw_calls=", Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME),
+				" objects=", Performance.get_monitor(Performance.RENDER_TOTAL_OBJECTS_IN_FRAME),
+				" floor=", _lit_floor_index, " floor_culling=", _floor_culling_enabled)
+
+func _build_floor_geometry(f_num: int, y_offset: float, suffix: String, c_color: Color, is_empty: bool, f_scale: float) -> Node3D:
 	var parent = Node3D.new()
 	parent.name = "GeneratedFloor_" + suffix
 	parent.position.y = y_offset
@@ -323,6 +393,16 @@ func _build_floor_geometry(f_num: int, y_offset: float, suffix: String, c_color:
 	# Central Main (covers everything from Z=-25.18 to Z=25.0)
 	_create_static_box(parent, "Floor_Main", Vector3(0, floor_y, z_main_pos), Vector3(x_width, floor_thick, z_main_len), floor_mat)
 	_create_static_box(parent, "Ceiling_Main", Vector3(0, ceil_y, z_main_pos), Vector3(x_width, floor_thick, z_main_len), ceil_mat)
+
+	# The main slab as an occluder: it has no holes (both stairwells are cut out of the separate
+	# N/S slabs), so everything on the floor below is hidden behind it.
+	var slab_occluder = OccluderInstance3D.new()
+	slab_occluder.name = "Occluder_FloorMain"
+	var slab_box = BoxOccluder3D.new()
+	slab_box.size = Vector3(x_width, floor_thick, z_main_len)
+	slab_occluder.occluder = slab_box
+	slab_occluder.position = Vector3(0, floor_y, z_main_pos)
+	parent.add_child(slab_occluder)
 
 	# South West (covers Z=25.0 to 30.0, X=-12.65 to 1.87)
 	_create_static_box(parent, "Floor_SW", Vector3(x_sw_pos, floor_y, z_sw_pos), Vector3(x_sw_len, floor_thick, z_sw_len), floor_mat)
@@ -393,7 +473,7 @@ func _build_floor_geometry(f_num: int, y_offset: float, suffix: String, c_color:
 		_create_static_box(parent, "Floor_SouthStairs", Vector3(x_se_pos, floor_y, z_sw_pos), Vector3(x_se_len, floor_thick, z_sw_len), floor_mat)
 
 	# 3.6 Elevator
-	_generate_elevator(parent, f_scale, height, thickness, wall_mat)
+	_generate_elevator(parent, f_scale)
 	
 	# 3.7 North Stairs
 	_generate_north_stairs(parent, f_scale, f_num)
@@ -416,7 +496,10 @@ func _build_floor_geometry(f_num: int, y_offset: float, suffix: String, c_color:
 		_generate_single_room(parent, f_scale, f_num, room_num)
 	
 	_spawn_cassettes(parent, f_scale, f_num)
-	_spawn_cerberus(parent, f_scale)
+	# The level scene's own floor already has its hand-placed robot (base_hotel_level.tscn's
+	# Enemies/Cerberus) - a generated one on top of it would double it up.
+	if suffix != "Main":
+		_spawn_cerberus(parent, f_scale)
 
 	# Floor 3 only - see _add_floor3_corridor_barrier()'s own comment for why.
 	if f_num == 3:
@@ -427,28 +510,27 @@ func _build_floor_geometry(f_num: int, y_offset: float, suffix: String, c_color:
 	# never calls this one) - exactly "every floor except the roof and floor 1" per the request.
 	_add_floor_terminal(parent, f_scale)
 
-	# 5. Floor Map
+	# 5. Floor Map - drawn from this file's own layout constants (see floor_map.gd), so it shows
+	# this floor's number and room numbers and can't drift away from what was actually built.
 	var map_mesh = MeshInstance3D.new()
 	map_mesh.name = "FloorMap"
 	var quad = QuadMesh.new()
-	quad.size = Vector2(2.0, 1.5)
-	
+	quad.size = Vector2(2.0 * FloorMap.SIZE.x / FloorMap.SIZE.y, 2.0) * f_scale
+
+	var map_tex: Texture2D = FloorMap.make_texture(parent, f_num)
 	var map_mat = StandardMaterial3D.new()
-	if m_texture:
-		map_mat.albedo_texture = m_texture
-	else:
-		var map_tex = load("res://assets/textures/hotel_map.jpg")
-		if map_tex:
-			map_mat.albedo_texture = map_tex
-		else:
-			map_mat.albedo_color = Color(1.0, 0.0, 0.0)
-	map_mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	map_mat.albedo_texture = map_tex
+	# A faint glow of its own, so the plan is readable in an unlit corridor.
+	map_mat.emission_enabled = true
+	map_mat.emission_texture = map_tex
+	map_mat.emission_energy_multiplier = 0.6
 	quad.material = map_mat
 	map_mesh.mesh = quad
-	
+
 	map_mesh.position = Vector3(-2.74 * f_scale, 2.0 * f_scale, 0.0 * f_scale)
 	map_mesh.rotation.y = PI / 2.0
 	parent.add_child(map_mesh)
+
 	
 	# 6. Propaganda Screen
 	var prog_mesh = MeshInstance3D.new()
@@ -589,35 +671,13 @@ func _generate_maintenance_room(parent: Node, f_scale: float, height: float, thi
 			var wardrobe_inst = wardrobe_scene.instantiate()
 			wardrobe_inst.name = "MaintWardrobe" + str(i + 1)
 			wardrobe_inst.transform = Transform3D(Basis(Vector3(0, 0, 1), Vector3(0, 1, 0), Vector3(-1, 0, 0)), Vector3(12.25 * f_scale, 0, (-28.0 + i * 2.5) * f_scale))
+			_bake_csg(wardrobe_inst)
 			parent.add_child(wardrobe_inst)
 
-# Counts calls across the whole level generation pass (10 elevator instances, one per floor) -
-# tags each diagnostic line below so a log can tell which of the 10 PackedScene.instantiate()
-# calls on the SAME loaded elevator_shaft.tscn resource a given reading came from, in case the
-# ElevatorDoorHole-size corruption (README/AGENTS.md, 2026-08-24) turns out to depend on
-# instantiation order/count rather than file content or layout.
-var _elevator_instantiation_count: int = 0
-
-func _generate_elevator(parent: Node, f_scale: float, height: float, thickness: float, wall_mat: Material) -> void:
+func _generate_elevator(parent: Node, f_scale: float) -> void:
 	var scene = load("res://scenes/levels/hotel_siberia/blocks/elevator_shaft.tscn")
 	if scene:
 		var inst = scene.instantiate()
-		_elevator_instantiation_count += 1
-
-		# Diagnostic (2026-08-24) - checks ElevatorDoorHole/ElevatorFrameTop's size THE INSTANT
-		# instantiate() returns, before position/scale/add_child touch anything. If the size is
-		# already wrong here, the corruption happens inside PackedScene.instantiate() itself (or
-		# is baked into the resource some other way) - if it's still correct here but wrong by
-		# the time elevator_controller.gd's own _log_shaft_geometry() runs (after add_child()),
-		# something between instantiate() and _ready() is responsible instead.
-		var _door_hole_a = inst.get_node_or_null("ElevatorGeometry/ElevatorDoorHole")
-		var _frame_top_a = inst.get_node_or_null("ElevatorFrameTop")
-		print("[ElevatorDiag] instantiation #", _elevator_instantiation_count,
-			" right after instantiate() - DoorHole size=",
-			(_door_hole_a.size if _door_hole_a else "MISSING"),
-			" id=", (_door_hole_a.get_instance_id() if _door_hole_a else -1),
-			" | FrameTop size=", (_frame_top_a.size if _frame_top_a else "MISSING"),
-			" id=", (_frame_top_a.get_instance_id() if _frame_top_a else -1))
 
 		# position/scale MUST be set before add_child() - see _generate_maintenance_room()
 		# for why (add_child() fires _ready() synchronously on the whole subtree).
@@ -638,6 +698,7 @@ func _generate_elevator(parent: Node, f_scale: float, height: float, thickness: 
 			door_inst.position = Vector3(0, 0, 0.1 * f_scale)
 			inst.add_child(door_inst)
 
+		_bake_csg(inst)
 		parent.add_child(inst)
 
 		# Floor buttons are NOT created here. elevator_shaft.tscn already ships a real,
@@ -738,6 +799,7 @@ func _generate_north_stairs(parent: Node, f_scale: float, f_num: int) -> void:
 			landing_gate.add_child(landing_gate_coll)
 			inst.add_child(landing_gate)
 
+		_bake_csg(inst)
 		parent.add_child(inst)
 
 func _generate_south_stairs_wall(parent: Node, f_scale: float, height: float, thickness: float, wall_mat: Material) -> void:
@@ -975,13 +1037,24 @@ func _add_floor_terminal(parent: Node, f_scale: float) -> void:
 # missing from the raw resource before instantiate() ever runs - not an add_child()/instantiate()
 # bug on this end). Creating the door in code sidesteps that entirely, the same way
 # MaintenanceDoor/SouthStairsDoor/ElevatorDoor already reliably do across all 10 floors.
-func _add_room_door(room_inst: Node, node_name: String, local_pos: Vector3, rot_y: float) -> void:
+func _add_room_door(room_inst: Node3D, node_name: String, local_pos: Vector3, rot_y: float, number: String = "") -> void:
 	var door_scene = load("res://entities/props/door.tscn")
 	if not door_scene: return
 	var door_inst = door_scene.instantiate()
 	door_inst.name = node_name
 	door_inst.position = local_pos
 	door_inst.rotation.y = rot_y
+
+	# Room number plate on the corridor side (door.tscn's label sits on the door's +Z face, the
+	# side every door's basis.z points at). A mirrored room (scale.z=-1) would render the text
+	# mirrored too - flipping the label's own X cancels that out.
+	if number != "":
+		var label = door_inst.get_node_or_null("AnimatableBody3D/RoomNumberLabel")
+		if label:
+			label.text = number
+			if room_inst.scale.z < 0.0:
+				label.scale.x = -1.0
+
 	room_inst.add_child(door_inst)
 
 func _generate_double_room(parent: Node, f_scale: float, f_num: int, orig_num: int) -> void:
@@ -1003,10 +1076,11 @@ func _generate_double_room(parent: Node, f_scale: float, f_num: int, orig_num: i
 		inst.scale.z = -1.0
 
 	# Проём в RoomEastWall (X=4.8, Z=8.5), коридор к востоку -> basis.z смотрит +X (поворот +90°).
-	_add_room_door(inst, "RoomDoor", Vector3(4.8, 0.0, 8.5), PI / 2.0)
+	_add_room_door(inst, "RoomDoor", Vector3(4.8, 0.0, 8.5), PI / 2.0, str(final_num))
 	# Проём в WCSouthWall (X=2.35, Z=4.9), номер к югу -> basis.z смотрит +Z (без поворота).
 	_add_room_door(inst, "WCDoor", Vector3(2.35, 0.0, 4.9), 0.0)
 
+	_bake_csg(inst)
 	parent.add_child(inst)
 
 func _generate_single_room(parent: Node, f_scale: float, f_num: int, orig_num: int) -> void:
@@ -1025,10 +1099,11 @@ func _generate_single_room(parent: Node, f_scale: float, f_num: int, orig_num: i
 		inst.scale.z = -1.0
 
 	# Проём в RoomWestWall (X=-3.75, Z=3.5), коридор к западу -> basis.z смотрит -X (поворот -90°).
-	_add_room_door(inst, "RoomDoor", Vector3(-3.75, 0.0, 3.5), -PI / 2.0)
+	_add_room_door(inst, "RoomDoor", Vector3(-3.75, 0.0, 3.5), -PI / 2.0, str(final_num))
 	# Проём в WCSouthWall (X=-2.55, Z=2.5), номер к югу -> basis.z смотрит +Z (без поворота).
 	_add_room_door(inst, "WCDoor", Vector3(-2.55, 0.0, 2.5), 0.0)
 
+	_bake_csg(inst)
 	parent.add_child(inst)
 
 func _create_static_box(parent: Node, node_name: String, pos: Vector3, size: Vector3, mat: Material, rot: Vector3 = Vector3.ZERO) -> void:
@@ -1038,7 +1113,10 @@ func _create_static_box(parent: Node, node_name: String, pos: Vector3, size: Vec
 	static_body.rotation = rot
 	static_body.collision_layer = 2 # Matches old floor layer
 	
+	# Named explicitly: an unnamed node gets an auto-generated "@MeshInstance3D@123" name, and
+	# _create_exit_portal() looks this one up by path.
 	var mesh_inst = MeshInstance3D.new()
+	mesh_inst.name = "MeshInstance3D"
 	var box_mesh = BoxMesh.new()
 	box_mesh.size = size
 	box_mesh.material = mat
@@ -1046,6 +1124,7 @@ func _create_static_box(parent: Node, node_name: String, pos: Vector3, size: Vec
 	static_body.add_child(mesh_inst)
 	
 	var coll = CollisionShape3D.new()
+	coll.name = "CollisionShape3D"
 	var box_shape = BoxShape3D.new()
 	box_shape.size = size
 	coll.shape = box_shape
@@ -1237,7 +1316,11 @@ func _spawn_cerberus(parent: Node, f_scale: float) -> void:
 	var patrol_b = Marker3D.new()
 	patrol_b.position = Vector3(0, 0, (24.0 - 10.0) * f_scale)
 	inst.add_child(patrol_b)
-	inst.patrol_points = [patrol_a, patrol_b]
+	# Typed on purpose: patrol_points is Array[Marker3D], and assigning a plain untyped Array to
+	# it is a script error that aborts this function before add_child() below - which is why no
+	# generated floor actually had its robot.
+	var patrol_points: Array[Marker3D] = [patrol_a, patrol_b]
+	inst.patrol_points = patrol_points
 
 	parent.add_child(inst)
 
@@ -1338,7 +1421,10 @@ func _create_exit_portal() -> void:
 	var layout = DOUBLE_ROOM_LAYOUT if is_double else SINGLE_ROOM_LAYOUT
 	var room_layout = layout.get(GameStateManager.secret_portal_room_num)
 	if not room_layout: return
-	var room_z = room_layout["z"] * f_scale
+	var door_local_z = DOUBLE_ROOM_EXIT_DOOR_LOCAL_Z if is_double else SINGLE_ROOM_EXIT_DOOR_LOCAL_Z
+	if room_layout["mirror"]:
+		door_local_z = -door_local_z
+	var room_z = (room_layout["z"] + door_local_z) * f_scale
 
 	# Rooms only own their corridor-facing wall (RoomEastWall/RoomWestWall's equivalent) - the
 	# building's actual OUTER wall is one long Wall_West/Wall_East shared by every room on that
@@ -1400,7 +1486,12 @@ func _create_exit_portal() -> void:
 		area.collision_mask = 1 # Player layer
 		var coll = CollisionShape3D.new()
 		var shape = BoxShape3D.new()
-		shape.size = Vector3(thickness + 0.6, door_h, door_w * 0.8)
+		# Starts just PAST the wall's own center plane and extends outward from there, so it can
+		# only be reached by opening the door and stepping into the doorway. (It used to straddle
+		# the wall and reach 0.3m into the room - touching the still-closed door set it off.)
+		var portal_depth: float = 0.8 * f_scale
+		var outward: float = -1.0 if is_double else 1.0
+		shape.size = Vector3(portal_depth, door_h, door_w * 0.8)
 		coll.shape = shape
 		area.add_child(coll)
 		var script = load("res://scripts/interactables/secret_portal.gd")
@@ -1408,7 +1499,7 @@ func _create_exit_portal() -> void:
 			area.set_script(script)
 		area.target_position = GameStateManager.secret_portal_target
 		area.target_floor = GameStateManager.secret_portal_target_floor
-		area.position = Vector3(wall_x, door_h / 2.0, room_z)
+		area.position = Vector3(wall_x + outward * (0.05 * f_scale + portal_depth / 2.0), door_h / 2.0, room_z)
 		floor_node.add_child(area)
 
 	# "Something heavy just fell/crashed somewhere in the hotel" cue, per the request that
@@ -1438,24 +1529,9 @@ func _pick_random_floor3_target() -> Vector3:
 		return Vector3.ZERO
 	var target_pos = room_node.global_position
 	if is_single:
-		target_pos += room_node.global_basis * Vector3(-1.5, 0.5, 2.5)
+		# Open floor just inside RoomDoor, south of the WC. (Was Z=2.5 - dead center of
+		# WCSouthWall, which spans X -3.75..-1.35 there outside its own door hole.)
+		target_pos += room_node.global_basis * Vector3(-1.5, 0.5, 3.6)
 	else:
 		target_pos += room_node.global_basis * Vector3(2.5, 0.5, 7.5)
 	return target_pos
-
-var _retro_wall_mat: StandardMaterial3D
-
-func _apply_retro_wallpaper(room_inst: Node3D) -> void:
-	if not _retro_wall_mat:
-		_retro_wall_mat = StandardMaterial3D.new()
-		_retro_wall_mat.albedo_texture = retro_wall_texture
-		_retro_wall_mat.uv1_scale = Vector3(20, 2, 2)
-		_retro_wall_mat.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_ALWAYS
-	
-	var geometry = room_inst.get_node_or_null("RoomGeometry")
-	if geometry:
-		for child in geometry.get_children():
-			if child is CSGBox3D and "Wall" in child.name:
-				child.material = _retro_wall_mat
-			elif child is CSGCombiner3D and child.name == "RoomNorthWall":
-				child.material = _retro_wall_mat

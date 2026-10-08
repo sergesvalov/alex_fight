@@ -5,9 +5,6 @@ extends Node
 @onready var ray_interact: RayCast3D = get_parent().get_node("CameraRig/Camera3D/RayCast3D")
 @onready var camera: Camera3D = get_parent().get_node("CameraRig/Camera3D")
 
-var tapes_collected: int = 0
-var max_tapes: int = 3
-
 # Android's camera is locked to horizontal-only look (player_camera.gd::process_swipe() drops
 # the vertical component of every swipe), so ray_interact - a fixed dead-ahead ray from the
 # camera - can only ever reach whatever single interactable happens to sit at the exact height
@@ -22,7 +19,7 @@ const PROXIMITY_FORWARD_DOT: float = 0.5
 
 func _ready() -> void:
     is_android = OS.get_name() == "Android"
-    update_tapes_ui()
+    GameStateManager._emit_tape_count() # so the HUD counter starts at "0/3" instead of blank
 
 var interact_btn: Control = null
 
@@ -84,10 +81,3 @@ func _find_nearby_interactable() -> Node:
             best = body
     return best
 
-func collect_tape() -> void:
-    tapes_collected += 1
-    update_tapes_ui()
-
-func update_tapes_ui() -> void:
-    if EventBus.has_signal("tapes_collected_updated"):
-        EventBus.tapes_collected_updated.emit(tapes_collected, max_tapes)

@@ -104,6 +104,14 @@ pipeline {
                                     echo '❌ АВТОТЕСТ СТЫКОВ ГЕОМЕТРИИ (СТЕНЫ/КОМНАТЫ/ЛИФТ/ЛЕСТНИЦЫ) ПРОВАЛЕН!'
                                     exit 1
                                 }
+                                godot --headless tests/test_map_layout.tscn || {
+                                    echo '❌ АВТОТЕСТ СООТВЕТСТВИЯ УРОВНЯ КАРТЕ ПРОВАЛЕН!'
+                                    exit 1
+                                }
+                                godot --headless tests/test_progression.tscn || {
+                                    echo '❌ АВТОТЕСТ ПРОГРЕССА (КАССЕТЫ/ЛИФТ/ЭТАЖИ) ПРОВАЛЕН!'
+                                    exit 1
+                                }
                                 godot --headless tests/test_stairs_doors.tscn || {
                                     echo '❌ АВТОТЕСТ ЛЕСТНИЦ И ПРОЕМОВ ПРОВАЛЕН!'
                                     exit 1

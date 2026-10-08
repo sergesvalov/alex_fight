@@ -68,13 +68,13 @@ material = SubResource("StandardMaterial3D_wall")
 [node name="ElevatorDoorHole" type="CSGBox3D" parent="ElevatorGeometry"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.15, 0.1)
 operation = 2
-# Hole stayed 1.2m wide through the 2026-08-24 door redesign - what changed is the door itself
-# (elevator_door.tscn), which used to be one panel squeezed by a generator-side X scale
-# (HotelLevelGenerator.ELEVATOR_DOOR_SCALE_X, since removed) to fit this hole and had to travel
-# its FULL width to clear it, leaving only ~0.25m of margin before punching through the car's
-# own side wall. It's now two panels (sliding_door_pair.gd) sized directly at 0.65m each,
-# meeting with a small overlap in the closed position, each only needing to clear HALF this
-# hole's width when opening - see that scene's own comment for the full clearance numbers.
+; Hole stayed 1.2m wide through the 2026-08-24 door redesign - what changed is the door itself
+; (elevator_door.tscn), which used to be one panel squeezed by a generator-side X scale
+; (HotelLevelGenerator.ELEVATOR_DOOR_SCALE_X, since removed) to fit this hole and had to travel
+; its FULL width to clear it, leaving only ~0.25m of margin before punching through the car's
+; own side wall. It's now two panels (sliding_door_pair.gd) sized directly at 0.65m each,
+; meeting with a small overlap in the closed position, each only needing to clear HALF this
+; hole's width when opening - see that scene's own comment for the full clearance numbers.
 size = Vector3(1.2, 2.5, 1.0)
 
 [node name="ElevatorLight" type="OmniLight3D" parent="."]
@@ -83,24 +83,24 @@ light_color = Color(0.9, 0.95, 1, 1)
 light_energy = 1.15
 omni_range = 8.0
 
-# Floor/Ceiling/SouthWall added 2026-08-23 - this block used to be only 3 walls (West/East/North)
-# with no floor, ceiling, or south wall at all, so opening ElevatorDoor didn't reveal a car -
-# it left the whole 5m-deep interior open on 3 sides, letting the camera see straight through to
-# whatever hotel geometry happened to be physically coincident there (all 10 floors share the
-# same X/Z, stacked only in Y - see AGENTS.md's "P.T. Non-Euclidean Loop" note), which is why the
-# "open door" screenshot showed an unrelated wallpaper/carpet patch instead of a coherent cabin.
-# Sealing it with a distinct gunmetal material (StandardMaterial3D_car, matching
-# elevator_door.tscn's own door material) both fixes the leak and reads as an actual elevator car
-# rather than a hollow wallpapered nook.
-#
-# Deliberately siblings of "." (like ElevatorPanel below), NOT children of the "ElevatorGeometry"
-# combiner above - that combiner's ElevatorDoorHole is a SUBTRACTION, and this project has already
-# hit "new union geometry touching/coplanar with an existing subtraction corrupts the whole cut"
-# once before (North Stairs South Wall, see AGENTS.md's CSG gotchas) with the door hole disappearing
-# in a completely unrelated-looking way. Adding these as standalone CSGBox3D roots (each is its own
-# independent CSG tree, same as ElevatorPanel already is) makes that class of bug structurally
-# impossible here, at the cost of not being able to boolean-merge with the walls (not needed - they
-# don't overlap the walls' own geometry, just sit flush against their inner faces).
+; Floor/Ceiling/SouthWall added 2026-08-23 - this block used to be only 3 walls (West/East/North)
+; with no floor, ceiling, or south wall at all, so opening ElevatorDoor didn't reveal a car -
+; it left the whole 5m-deep interior open on 3 sides, letting the camera see straight through to
+; whatever hotel geometry happened to be physically coincident there (all 10 floors share the
+; same X/Z, stacked only in Y - see AGENTS.md's "P.T. Non-Euclidean Loop" note), which is why the
+; "open door" screenshot showed an unrelated wallpaper/carpet patch instead of a coherent cabin.
+; Sealing it with a distinct gunmetal material (StandardMaterial3D_car, matching
+; elevator_door.tscn's own door material) both fixes the leak and reads as an actual elevator car
+; rather than a hollow wallpapered nook.
+;
+; Deliberately siblings of "." (like ElevatorPanel below), NOT children of the "ElevatorGeometry"
+; combiner above - that combiner's ElevatorDoorHole is a SUBTRACTION, and this project has already
+; hit "new union geometry touching/coplanar with an existing subtraction corrupts the whole cut"
+; once before (North Stairs South Wall, see AGENTS.md's CSG gotchas) with the door hole disappearing
+; in a completely unrelated-looking way. Adding these as standalone CSGBox3D roots (each is its own
+; independent CSG tree, same as ElevatorPanel already is) makes that class of bug structurally
+; impossible here, at the cost of not being able to boolean-merge with the walls (not needed - they
+; don't overlap the walls' own geometry, just sit flush against their inner faces).
 [node name="ElevatorFloor" type="CSGBox3D" parent="."]
 use_collision = true
 collision_layer = 2
@@ -122,20 +122,20 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.0, 4.9)
 size = Vector3(4.7, 4.0, 0.2)
 material = SubResource("StandardMaterial3D_car")
 
-# Doorway frame trim (2026-08-24) - a flat dark door sitting flush against the wallpaper with no
-# surface detail read as an unlit "hole" rather than a door in-game (reported from a screenshot).
-# Four independent CSGBox3D strips bordering ElevatorDoorHole (in ElevatorGeometry above) on all
-# sides, in a brighter brushed-steel material than either the door panels or the wallpaper, so the
-# opening has a visible silhouette even under a dim flashlight. Standalone roots, same reasoning as
-# ElevatorFloor/Ceiling/SouthWall above (see AGENTS.md's CSG gotchas) - moved to sit right after
-# them (2026-08-24) rather than immediately after ElevatorDoorHole itself: a build kept reporting
-# ElevatorDoorHole's own size as (1.36, 0.1, 0.28) - exactly these frame nodes' size - even from a
-# git commit verified correct via `git show`, which stopped once these were no longer adjacent to
-# it in the file. Root cause in Godot's own .tscn loading never fully confirmed, but the symptom
-# tracked file adjacency, not file content. Each protrudes 0.04m past both faces of
-# ElevatorNorthWall (which spans local Z 0..0.2) so it reads from either side regardless of which
-# way this whole block ends up mirrored (scale.z=-1.0, see
-# hotel_level_generator.gd::_generate_elevator()).
+; Doorway frame trim (2026-08-24) - a flat dark door sitting flush against the wallpaper with no
+; surface detail read as an unlit "hole" rather than a door in-game (reported from a screenshot).
+; Four independent CSGBox3D strips bordering ElevatorDoorHole (in ElevatorGeometry above) on all
+; sides, in a brighter brushed-steel material than either the door panels or the wallpaper, so the
+; opening has a visible silhouette even under a dim flashlight. Standalone roots, same reasoning as
+; ElevatorFloor/Ceiling/SouthWall above (see AGENTS.md's CSG gotchas) - moved to sit right after
+; them (2026-08-24) rather than immediately after ElevatorDoorHole itself: a build kept reporting
+; ElevatorDoorHole's own size as (1.36, 0.1, 0.28) - exactly these frame nodes' size - even from a
+; git commit verified correct via `git show`, which stopped once these were no longer adjacent to
+; it in the file. Root cause in Godot's own .tscn loading never fully confirmed, but the symptom
+; tracked file adjacency, not file content. Each protrudes 0.04m past both faces of
+; ElevatorNorthWall (which spans local Z 0..0.2) so it reads from either side regardless of which
+; way this whole block ends up mirrored (scale.z=-1.0, see
+; hotel_level_generator.gd::_generate_elevator()).
 [node name="ElevatorFrameTop" type="CSGBox3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.45, 0.1)
 size = Vector3(1.36, 0.1, 0.28)

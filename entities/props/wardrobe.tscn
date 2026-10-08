@@ -13,12 +13,12 @@ albedo_color = Color(0.32, 0.2, 0.08, 1)
 
 [node name="Wardrobe" type="Node3D"]
 
-# Shell built from 5 solid union boxes (back/left/right/top/bottom, front left open) instead
-# of a Body-minus-Inside CSG subtraction. The subtraction version (2026-08-22, fixing a too-thin
-# back wall) made the ENTIRE shell disappear in-game - a CSG boolean glitch, not a dimension
-# problem - matching this project's already-documented CSG subtraction fragility. Union-only
-# boxes have no boolean computation to fail, and give the same look with zero risk of this class
-# of bug recurring.
+; Shell built from 5 solid union boxes (back/left/right/top/bottom, front left open) instead
+; of a Body-minus-Inside CSG subtraction. The subtraction version (2026-08-22, fixing a too-thin
+; back wall) made the ENTIRE shell disappear in-game - a CSG boolean glitch, not a dimension
+; problem - matching this project's already-documented CSG subtraction fragility. Union-only
+; boxes have no boolean computation to fail, and give the same look with zero risk of this class
+; of bug recurring.
 [node name="Geometry" type="CSGCombiner3D" parent="."]
 use_collision = true
 collision_layer = 2

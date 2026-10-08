@@ -27,7 +27,7 @@ This file provides architectural guidelines and debugging instructions for AI ag
    - Hotel plumbing is often shared between adjacent rooms.
    - We achieve this by mirroring specific rooms along the `Z` axis (`scale.z = -1.0`).
    - For example, Double Room 403 is mirrored so its WC touches Double Room 405's WC at `Z = 0.0`.
-   - Single Rooms 411, 413, 416, and 417 are mirrored to ensure their WCs align back-to-back with neighboring single rooms, or cross-corridor with double rooms.
+   - Single Rooms 411, 413, 416, 417, and 421 are mirrored (421 per the blueprint `hotel_map.jpg`: door north, WC south, against the South Stairs wall) to ensure their WCs align back-to-back with neighboring single rooms, or cross-corridor with double rooms.
    - **Elevator Shaft (`elevator_shaft.tscn`)**: Mirrored along the Z axis (`scale.z = -1.0`) to correctly orient its interior (panel, lights) while keeping the doorway (`ElevatorDoorHole`) on the South face (local Z=0.1) pointing towards the horizontal corridor.
 
 ## Hotel Level Geometry Map (Modular Grid)
@@ -242,6 +242,20 @@ Floor 3 (not floor 4 - corrected 2026-08-23 per user report; floor 4 is the star
 Легенда: `N` — зона северной лестницы, `#` — стена, `E` — интерьер кабины лифта, `D` — дверной проём, `.` — открытый пол коридора, `M` — интерьер техпомещения, пусто — снаружи здания.
 
 ## Godot 4 CSG & Headless Testing Gotchas
+
+> [!CAUTION]
+> **Comments in `.tscn` / `.tres` files start with `;` - never `#`**
+> Godot's text resource parser only knows `;` as a comment. A `#` line is read as the start of a property name: it swallows everything up to the next `=`, including a following `[node ...]` tag - that node silently never exists and its properties land on the previous node. This is what was behind several "mystery" bugs chased here in August 2026: the wardrobe shell vanishing in-game (its `Geometry` node was swallowed - 3000+ "Parent path './Geometry' ... has vanished" warnings per load), `ElevatorDoorHole` reporting the frame trim's size ("tracked file adjacency, not file content"), and very likely the "rooms lose nodes once packed into a PCK" door problem. None of them were CSG or export bugs. All scene comments were converted to `;` on 2026-10-07.
+>
+> **Check:** run the game or any test and grep the log for `has vanished when instantiating`.
+
+> [!NOTE]
+> **Runtime CSG baking (`scripts/levels/csg_baker.gd`)**
+> The generator replaces every block's CSG tree with a shared pre-computed `MeshInstance3D` + `StaticBody3D` ("BakedCollision") right before `add_child()`. The `.tscn` files stay CSG. Consequence: in the running game there is no `RoomGeometry/RoomNorthWall` etc. to look up - only the baked `RoomGeometry` mesh. Code or tests that need the live CSG boxes set `generator.bake_csg = false` first (see `tests/test_layout_seams.gd`). Baking is skipped automatically when the floor/player scale isn't 1.
+
+> [!NOTE]
+> **Tests that guard behavior, not just geometry**
+> `tests/test_map_layout.gd` compares the generated floor with the blueprint (room spans, which end each door/WC is at, door number plates). `tests/test_progression.gd` walks the unlock chain (tapes -> secret door -> floor 3 -> barrier -> floor 5, elevator routing). A script that fails to compile makes a test hang rather than fail - run them with a timeout.
 
 > [!CAUTION]
 > **Headless CSG Mesh Generation Delay**

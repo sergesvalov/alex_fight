@@ -39,7 +39,7 @@ window/size/viewport_width=1280
 window/size/viewport_height=720
 window/stretch/mode="canvas_items"
 window/stretch/aspect="keep"
-window/vsync/vsync_mode=0
+window/vsync/vsync_mode=1
 
 [xr]
 
@@ -60,7 +60,7 @@ renderer/rendering_method.mobile="gl_compatibility"
 vrs/mode=1
 environment/defaults/default_environment="res://default_env.tres"
 limits/global_shader_variables/buffer_size=65536
-scaling_3d/mode=2
+scaling_3d/mode=0
 scaling_3d/scale=0.75
 occlusion_culling/use_occlusion_culling=true
 textures/vram_compression/import_etc2_astc=true

@@ -18,54 +18,6 @@ func _ready() -> void:
 	_setup_audio()
 	_setup_interior_detection()
 	add_to_group("elevator_controller")
-	_log_shaft_geometry("_ready")
-
-	# Diagnostic (2026-08-24) - re-checks ElevatorDoorHole one frame later. If this reads
-	# differently than the "_ready" pass right above, something mutates it AFTER scene setup
-	# (a deferred CSG rebuild, a signal callback, etc.) rather than the value being wrong from
-	# the moment the scene is built - narrows down where in the pipeline to keep looking.
-	await get_tree().process_frame
-	_log_shaft_geometry("_deferred+1frame")
-
-# Diagnostic only (2026-08-23, extended 2026-08-24) - dumps the actual world-space transform of
-# every piece of the shaft's own geometry (walls, door hole, frame trim, car floor/ceiling/back
-# wall, the door prop itself) right after this instance is fully built, so a screenshot of
-# something looking wrong ("the doorway is still square", stray bright reflections, etc.) can be
-# cross-checked against real numbers instead of guessed from hotel_level_generator.gd's authored
-# constants. `tag` distinguishes which call site triggered this (see call sites below) - compare
-# against hotel_level_generator.gd's own "[ElevatorDiag] instantiation #N" print (same instance,
-# right after PackedScene.instantiate(), before this node ever entered the tree) via instance_id
-# to see whether ElevatorDoorHole's size is already wrong at that earliest possible point or only
-# becomes wrong later. Print, not push_warning - this is expected on every elevator instance
-# (10 per level), not an error condition.
-func _log_shaft_geometry(tag: String) -> void:
-	var f_scale_str := "f_scale=%s" % f_scale
-	print("[ElevatorShaft:", tag, "] ", name, " ", f_scale_str, " root_global_pos=", global_position,
-		" root_global_scale=", global_transform.basis.get_scale())
-	for path in ["ElevatorGeometry/ElevatorWestWall", "ElevatorGeometry/ElevatorEastWall",
-			"ElevatorGeometry/ElevatorNorthWall", "ElevatorGeometry/ElevatorDoorHole",
-			"ElevatorFrameTop", "ElevatorFrameBottom", "ElevatorFrameLeft", "ElevatorFrameRight",
-			"ElevatorFloor", "ElevatorCeiling", "ElevatorSouthWall", "ElevatorPanel"]:
-		var node = get_node_or_null(path)
-		if not node:
-			print("[ElevatorShaft:", tag, "]   ", path, " -> MISSING")
-			continue
-		var size_str := ""
-		if node is CSGBox3D:
-			size_str = " size=%s operation=%s" % [node.size, node.operation]
-		print("[ElevatorShaft:", tag, "]   ", path, " id=", node.get_instance_id(),
-			" global_pos=", node.global_position,
-			" global_scale=", node.global_transform.basis.get_scale(), size_str)
-	var door = get_node_or_null("ElevatorDoor")
-	if door:
-		print("[ElevatorShaft:", tag, "]   ElevatorDoor global_pos=", door.global_position,
-			" scale=", door.scale)
-		if door_animatable:
-			print("[ElevatorShaft:", tag, "]   ElevatorDoor/AnimatableBody3D open_offset=",
-				door_animatable.open_offset, " is_open=", door_animatable.is_open,
-				" global_pos=", door_animatable.global_position)
-	else:
-		print("[ElevatorShaft:", tag, "]   ElevatorDoor -> MISSING")
 
 func _process(_delta: float) -> void:
 	var is_door_closed = (door_animatable and not door_animatable.is_open)
@@ -173,11 +125,16 @@ func request_floor(floor_num: int) -> void:
 	# floor's button here still runs the elevator - it just always delivers to HUB_FLOOR instead
 	# of the pressed floor, same as a building directory that only lists authorized floors and
 	# defaults elsewhere back to the lobby.
-	var target_floor = floor_num
-	if not GameStateManager.is_floor_unlocked(floor_num):
-		target_floor = HUB_FLOOR
+	var target_floor = route_floor(floor_num)
 	print("Elevator button pressed for floor: ", floor_num, " -> routing to ", target_floor)
 	_run_elevator_sequence(target_floor)
+
+# Where a press of `floor_num`'s button actually takes the car: that floor if it's unlocked,
+# HUB_FLOOR for every locked one. So with nothing unlocked yet every button is a ride from 4 to
+# 4; once floor 3 is open the car runs 3 <-> 4 and every other button still lands on 4; and so
+# on as the range grows. Static so tests/test_progression.gd can check the rule on its own.
+static func route_floor(floor_num: int) -> int:
+	return floor_num if GameStateManager.is_floor_unlocked(floor_num) else HUB_FLOOR
 
 func _run_elevator_sequence(target_floor: int) -> void:
 	# 1. Close doors if open

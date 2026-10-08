@@ -92,6 +92,8 @@ func _check_generated_floor(f_scale: float) -> void:
 	var gen_script = load("res://scripts/levels/hotel_level_generator.gd")
 	var generator := Node3D.new()
 	generator.set_script(gen_script)
+	# These checks read the declared size of the CSG wall boxes inside the generated floor.
+	generator.bake_csg = false
 	# add_child() on a node already inside a live tree fires _ready() synchronously,
 	# which is what actually runs _generate_level() - don't call it again here (it
 	# would just free and rebuild everything a second time for nothing).

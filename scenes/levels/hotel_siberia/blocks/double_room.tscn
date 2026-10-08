@@ -22,6 +22,12 @@ emission_energy_multiplier = 5.0
 material = SubResource("StandardMaterial3D_light")
 size = Vector3(0.6, 0.05, 0.6)
 
+[sub_resource type="BoxOccluder3D" id="BoxOccluder3D_corridor"]
+size = Vector3(0.2, 4.0, 8.0)
+
+[sub_resource type="BoxOccluder3D" id="BoxOccluder3D_side"]
+size = Vector3(9.8, 4.0, 0.2)
+
 [node name="DoubleRoomBlock" type="Node3D"]
 script = ExtResource("3_script")
 
@@ -64,6 +70,21 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.35, 1.1, 4.9)
 operation = 2
 size = Vector3(1.0, 2.2, 2.0)
 
+; Occluders - same boxes as the solid walls above, so a room behind a wall isn't drawn at all.
+; The corridor-side one stops at Z=8.0, short of RoomDoorHole (Z 8.0..9.0): covering the doorway
+; would hide the room's contents from someone looking in through the open door.
+[node name="OccluderCorridorWall" type="OccluderInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.8, 2.0, 4.0)
+occluder = SubResource("BoxOccluder3D_corridor")
+
+[node name="OccluderNorthWall" type="OccluderInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.0, 0.1)
+occluder = SubResource("BoxOccluder3D_side")
+
+[node name="OccluderSouthWall" type="OccluderInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.0, 9.9)
+occluder = SubResource("BoxOccluder3D_side")
+
 [node name="MainRoomLightMesh" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.45, 3.95, 5.0)
 mesh = SubResource("BoxMesh_light")
@@ -83,7 +104,6 @@ mesh = SubResource("BoxMesh_light")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.4, 3.7, 2.45)
 light_color = Color(1, 0.980392, 0.882353, 1)
 light_energy = 1.15
-shadow_enabled = true
 omni_range = 5.0
 
 [node name="EntranceLightMesh" type="MeshInstance3D" parent="."]
@@ -94,7 +114,6 @@ mesh = SubResource("BoxMesh_light")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.3, 3.7, 8.5)
 light_color = Color(1, 0.9, 0.8, 1)
 light_energy = 1.15
-shadow_enabled = true
 
 
 [node name="Bed1" parent="." instance=ExtResource("5_bed")]
@@ -118,9 +137,9 @@ transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, -0.5, 
 [node name="Chair2" parent="." instance=ExtResource("4_chair")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5, 0.0, 8.5)
 
-# RoomDoor/WCDoor used to be embedded here as door.tscn instances, but any single_room.tscn
-# or double_room.tscn that embeds door.tscn as a node instance loses nodes when packed into
-# an exported PCK (see hotel_level_generator.gd's _generate_double_room/_generate_single_room -
-# this was diagnosed 2026-08-22 via PackedScene.get_state(), which showed the raw resource
-# already missing nodes before instantiate() ever runs). Both doors are created in code there
-# instead, the same proven-reliable way MaintenanceDoor/SouthStairsDoor/ElevatorDoor already are.
+; RoomDoor/WCDoor used to be embedded here as door.tscn instances, but any single_room.tscn
+; or double_room.tscn that embeds door.tscn as a node instance loses nodes when packed into
+; an exported PCK (see hotel_level_generator.gd's _generate_double_room/_generate_single_room -
+; this was diagnosed 2026-08-22 via PackedScene.get_state(), which showed the raw resource
+; already missing nodes before instantiate() ever runs). Both doors are created in code there
+; instead, the same proven-reliable way MaintenanceDoor/SouthStairsDoor/ElevatorDoor already are.

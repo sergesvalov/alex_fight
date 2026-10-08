@@ -39,9 +39,17 @@ var floor4_spawn_position: Vector3 = Vector3.ZERO
 var current_floor: int = 4:
     set(value):
         if value != current_floor:
+            # Not a plain clear(): a collected tape is gone from the level for good, so coming
+            # back to a floor has to pick its count up where it was left. Floor 3 needs this to
+            # be completable at all - its tapes sit on both sides of corridor_barrier.gd, and the
+            # only way from the south half to the north one is a detour through floor 4.
             tapes_found.clear()
+            for entry in collected_tapes:
+                if entry["floor"] == value:
+                    tapes_found.append(entry["id"])
             cerberus_spawned = false
-            exit_code_known = false
+            exit_code_known = 2 in tapes_found
+            _emit_tape_count()
             # Reactive line for the first time floor 3 is actually reached, regardless of how
             # (secret door, stairs, elevator once unlocked) - distinct from "secret_portal"
             # (fired the moment the door is stepped through, if that's how they got here) since
@@ -109,15 +117,24 @@ func add_to_inventory(floor_num: int, tape_id: int) -> void:
             return # already have this one, don't duplicate
     collected_tapes.append({"floor": floor_num, "id": tape_id})
 
+const TAPES_PER_FLOOR: int = 3
+
+# The HUD counter ("1/3") shows the CURRENT floor's tapes - it has to follow tapes_found, both
+# when one is picked up and when the floor changes. (It used to be a separate running total kept
+# by the player node, which never reset and read "4/3" on the second floor.)
+func _emit_tape_count() -> void:
+    EventBus.tapes_collected_updated.emit(tapes_found.size(), TAPES_PER_FLOOR)
+
 func collect_tape(tape_id: int) -> void:
     if tape_id not in tapes_found:
         tapes_found.append(tape_id)
         tape_collected.emit(tape_id)
+        _emit_tape_count()
         # Кассета #3 даёт код выхода
         if tape_id == 2:
             exit_code_known = true
         # После сбора 3 кассет
-        if tapes_found.size() == 3:
+        if tapes_found.size() == TAPES_PER_FLOOR:
             all_tapes_collected.emit()
             if not cerberus_spawned:
                 cerberus_spawned = true

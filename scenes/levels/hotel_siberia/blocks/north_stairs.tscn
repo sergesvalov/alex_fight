@@ -113,9 +113,9 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.0, 5.0, 3.5)
 light_energy = 1.15
 omni_range = 6.0
 
-# DoorEast/DoorWest used to be embedded here as door.tscn instances - a scene that embeds
-# door.tscn as a node instance loses nodes once packed into an exported PCK (confirmed
-# 2026-08-22 via PackedScene.get_state() on single_room.tscn/double_room.tscn, which showed
-# nodes already missing from the raw resource before instantiate() ever runs). Both doors are
-# created in code in _generate_north_stairs() (hotel_level_generator.gd) instead.
+; DoorEast/DoorWest used to be embedded here as door.tscn instances - a scene that embeds
+; door.tscn as a node instance loses nodes once packed into an exported PCK (confirmed
+; 2026-08-22 via PackedScene.get_state() on single_room.tscn/double_room.tscn, which showed
+; nodes already missing from the raw resource before instantiate() ever runs). Both doors are
+; created in code in _generate_north_stairs() (hotel_level_generator.gd) instead.
 

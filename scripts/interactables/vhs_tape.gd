@@ -9,12 +9,10 @@ extends Area3D
 # with a plain paper evidence-tag label instead.
 func _ready() -> void:
     var mesh_inst := get_node_or_null("MeshInstance3D")
-    print("[vhs_tape] _ready tape_id=", tape_id, " path=", get_path(), " mesh_inst=", mesh_inst)
     if not mesh_inst:
         push_error("[vhs_tape] tape_id=" + str(tape_id) + " has no MeshInstance3D child - material never applied")
         return
     var tex := _generate_tape_texture()
-    print("[vhs_tape] tape_id=", tape_id, " generated texture=", tex, " size=", (tex.get_size() if tex else "N/A"))
     var mat := StandardMaterial3D.new()
     mat.albedo_texture = tex
     mat.uv1_scale = Vector3(2, 1, 2)
@@ -23,8 +21,6 @@ func _ready() -> void:
     # (worn plastic + label noise) under a flat glowing purple, especially with bloom/glow
     # enabled, which is exactly what the screenshot that flagged this showed.
     mesh_inst.material_override = mat
-    print("[vhs_tape] tape_id=", tape_id, " material_override set=", mesh_inst.material_override,
-        " mesh=", mesh_inst.mesh, " global_position=", global_position)
 
 func _generate_tape_texture() -> ImageTexture:
     var size = 64
@@ -62,8 +58,6 @@ func _generate_tape_texture() -> ImageTexture:
 func interact(player):
     print("[vhs_tape] interact tape_id=", tape_id, " global_position=", global_position,
         " is_playing_before=", DialogSystem.is_playing, " current_floor=", GameStateManager.current_floor)
-    if player.has_method("collect_tape"):
-        player.collect_tape()
     GameStateManager.collect_tape(tape_id)
     GameStateManager.add_to_inventory(GameStateManager.current_floor, tape_id)
     DialogSystem.play_tape(tape_id, global_position)

@@ -21,15 +21,15 @@ size = Vector3(0.65, 2.5, 0.2)
 
 [node name="AnimatableBody3D" type="Node3D" parent="."]
 script = ExtResource("1_pair")
-# Panel half-width 0.325 - closed centers at +-0.28 give a 0.045m overlap in the middle (real
-# elevator doors meet with a slight overlap, not a hairline seam) and each panel's outer edge
-# lands at 0.605, just past ElevatorDoorHole's own 0.6 half-width (elevator_shaft.tscn) - no gap
-# when closed. open_offset=1.3 sends each panel's near edge to 1.58-0.325=1.255 (clear of the
-# 0.6 hole edge) and far edge to 1.905, still well inside the car's own side wall inner face at
-# 2.15 (ElevatorWestWall/EastWall centered at +-2.25, half-thickness 0.1) - so neither panel
-# punches through into the hotel wall beyond, the exact failure this replaces fixed for good.
-# Panel mesh/collision is also sized (2.5) and offset (y=1.15) to match the hole's own height and
-# vertical center exactly, closing the ~0.1m gap the old single door left at floor level.
+; Panel half-width 0.325 - closed centers at +-0.28 give a 0.045m overlap in the middle (real
+; elevator doors meet with a slight overlap, not a hairline seam) and each panel's outer edge
+; lands at 0.605, just past ElevatorDoorHole's own 0.6 half-width (elevator_shaft.tscn) - no gap
+; when closed. open_offset=1.3 sends each panel's near edge to 1.58-0.325=1.255 (clear of the
+; 0.6 hole edge) and far edge to 1.905, still well inside the car's own side wall inner face at
+; 2.15 (ElevatorWestWall/EastWall centered at +-2.25, half-thickness 0.1) - so neither panel
+; punches through into the hotel wall beyond, the exact failure this replaces fixed for good.
+; Panel mesh/collision is also sized (2.5) and offset (y=1.15) to match the hole's own height and
+; vertical center exactly, closing the ~0.1m gap the old single door left at floor level.
 open_offset = Vector3(1.3, 0, 0)
 move_time = 1.5
 

@@ -74,7 +74,14 @@ func _test_ray(space_state: PhysicsDirectSpaceState3D, origin: Vector3, dest: Ve
 	p.collide_with_areas = false
 	p.collide_with_bodies = true
 	var hit = space_state.intersect_ray(p)
-	
+	# This checks the doorway cut into the wall, not the door leaf hanging in it - skip any
+	# AnimatableBody3D (door.tscn, closed by default) and keep casting.
+	var excluded: Array[RID] = []
+	while not hit.is_empty() and hit.collider is AnimatableBody3D:
+		excluded.append(hit.rid)
+		p.exclude = excluded
+		hit = space_state.intersect_ray(p)
+
 	var is_hit = not hit.is_empty()
 	var collider_name = hit.collider.name if is_hit else "None"
 	

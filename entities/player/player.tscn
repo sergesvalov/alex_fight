@@ -6,6 +6,7 @@
 [ext_resource type="Script" path="res://scripts/player/components/player_camera.gd" id="cam_script"]
 [ext_resource type="Script" path="res://scripts/player/components/player_interaction.gd" id="inter_script"]
 [ext_resource type="Script" path="res://scripts/player/components/player_weapon.gd" id="weap_script"]
+[ext_resource type="Script" path="res://scripts/player/components/player_body.gd" id="body_script"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_pl"]
 radius = 0.35
@@ -21,13 +22,36 @@ albedo_color = Color(0.2, 0.4, 0.8, 1)
 material = SubResource("StandardMaterial3D_skin")
 size = Vector3(0.4, 0.4, 0.4)
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_pants"]
+albedo_color = Color(0.14, 0.15, 0.2, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_shoes"]
+albedo_color = Color(0.07, 0.06, 0.06, 1)
+roughness = 0.6
+
 [sub_resource type="BoxMesh" id="BoxMesh_torso"]
 material = SubResource("StandardMaterial3D_clothes")
-size = Vector3(0.6, 0.8, 0.3)
+size = Vector3(0.5, 0.55, 0.26)
 
 [sub_resource type="BoxMesh" id="BoxMesh_arm"]
 material = SubResource("StandardMaterial3D_clothes")
-size = Vector3(0.2, 0.7, 0.2)
+size = Vector3(0.14, 0.6, 0.16)
+
+[sub_resource type="BoxMesh" id="BoxMesh_leg"]
+material = SubResource("StandardMaterial3D_pants")
+size = Vector3(0.2, 0.74, 0.22)
+
+[sub_resource type="BoxMesh" id="BoxMesh_foot"]
+material = SubResource("StandardMaterial3D_shoes")
+size = Vector3(0.2, 0.1, 0.3)
+
+[sub_resource type="BoxMesh" id="BoxMesh_forearm"]
+material = SubResource("StandardMaterial3D_clothes")
+size = Vector3(0.08, 0.08, 0.32)
+
+[sub_resource type="BoxMesh" id="BoxMesh_hand"]
+material = SubResource("StandardMaterial3D_skin")
+size = Vector3(0.09, 0.1, 0.12)
 
 [node name="Player" type="CharacterBody3D" groups=["player"]]
 collision_layer = 1
@@ -41,8 +65,12 @@ script = ExtResource("1_player")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
 shape = SubResource("CapsuleShape3D_pl")
 
+; First-person body (see player_body.gd). Shifted 0.2m back so that looking down shows mostly
+; legs and feet with just the edge of the chest, instead of the camera staring into the torso.
+; Meshes on layer 2 are hidden from the player's own camera (Camera3D cull_mask below).
 [node name="PlayerBodyModel" type="Node3D" parent="."]
-transform = Transform3D(1.0, 0, 0, 0, 1.0, 0, 0, 0, 1.0, 0, 0, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.2)
+script = ExtResource("body_script")
 
 [node name="Head" type="MeshInstance3D" parent="PlayerBodyModel"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
@@ -50,19 +78,42 @@ layers = 2
 mesh = SubResource("BoxMesh_head")
 
 [node name="Torso" type="MeshInstance3D" parent="PlayerBodyModel"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
-layers = 2
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.075, 0)
 mesh = SubResource("BoxMesh_torso")
 
-[node name="ArmL" type="MeshInstance3D" parent="PlayerBodyModel"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.4, 0.9, 0)
-layers = 2
+[node name="ArmL" type="Node3D" parent="PlayerBodyModel"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.33, 1.3, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="PlayerBodyModel/ArmL"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.3, 0)
 mesh = SubResource("BoxMesh_arm")
 
 [node name="ArmR" type="MeshInstance3D" parent="PlayerBodyModel"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.4, 0.9, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.33, 1.0, 0)
 layers = 2
 mesh = SubResource("BoxMesh_arm")
+
+[node name="LegL" type="Node3D" parent="PlayerBodyModel"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.14, 0.82, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="PlayerBodyModel/LegL"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.37, 0)
+mesh = SubResource("BoxMesh_leg")
+
+[node name="Foot" type="MeshInstance3D" parent="PlayerBodyModel/LegL"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.77, -0.06)
+mesh = SubResource("BoxMesh_foot")
+
+[node name="LegR" type="Node3D" parent="PlayerBodyModel"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.14, 0.82, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="PlayerBodyModel/LegR"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.37, 0)
+mesh = SubResource("BoxMesh_leg")
+
+[node name="Foot" type="MeshInstance3D" parent="PlayerBodyModel/LegR"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.77, -0.06)
+mesh = SubResource("BoxMesh_foot")
 
 [node name="CameraRig" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.65, 0)
@@ -92,6 +143,18 @@ collide_with_areas = true
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3, -0.3, -0.5)
 
 [node name="LaserPistol" parent="CameraRig/Camera3D/WeaponHolder" instance=ExtResource("2_laser")]
+
+; The hand and forearm holding the pistol - part of WeaponHolder so they follow the gun both
+; here and in VR, where player_controller.gd moves the whole holder onto the right controller.
+[node name="Hand" type="MeshInstance3D" parent="CameraRig/Camera3D/WeaponHolder"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.14, 0.07)
+cast_shadow = 0
+mesh = SubResource("BoxMesh_hand")
+
+[node name="Forearm" type="MeshInstance3D" parent="CameraRig/Camera3D/WeaponHolder"]
+transform = Transform3D(1, 0, 0, 0, 0.766044, -0.642788, 0, 0.642788, 0.766044, 0.0, -0.27, 0.22)
+cast_shadow = 0
+mesh = SubResource("BoxMesh_forearm")
 
 
 

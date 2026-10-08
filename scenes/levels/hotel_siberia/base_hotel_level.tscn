@@ -5,76 +5,14 @@
 [ext_resource type="Script" path="res://scripts/levels/base_hotel_level.gd" id="4_level"]
 [ext_resource type="Script" path="res://scripts/levels/enemy_spawner.gd" id="spawner_script"]
 [ext_resource type="PackedScene" path="res://entities/enemies/cerberus/cerberus.tscn" id="cerberus_scene"]
-[ext_resource type="Texture2D" path="res://assets/textures/hotel_carpet.jpg" id="5_carpet"]
-[ext_resource type="Texture2D" path="res://assets/textures/hotel_wallpaper.jpg" id="6_wallpaper"]
 [ext_resource type="Texture2D" path="res://assets/textures/coca_cola.jpg" id="coca_cola_tex"]
 [ext_resource type="PackedScene" uid="uid://cerb123" path="res://entities/enemies/cerberus/cerberus.tscn" id="7_cerb"]
-[ext_resource type="Texture2D" path="res://assets/textures/hotel_map.jpg" id="8_map"]
 
 [ext_resource type="PackedScene" path="res://entities/props/dead_body.tscn" id="dead_body"]
 
 [ext_resource type="Script" path="res://scripts/levels/hotel_level_generator.gd" id="99_generator"]
 
 [sub_resource type="NavigationMesh" id="NavigationMesh_nav"]
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_floor"]
-size = Vector3(10, 0.5, 10)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_floor"]
-albedo_texture = ExtResource("5_carpet")
-uv1_scale = Vector3(10, 10, 10)
-
-[sub_resource type="BoxMesh" id="BoxMesh_floor"]
-material = SubResource("StandardMaterial3D_floor")
-size = Vector3(10, 0.5, 10)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wall"]
-albedo_texture = ExtResource("6_wallpaper")
-uv1_scale = Vector3(20, 2, 2)
-roughness = 0.9
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_wall"]
-size = Vector3(10, 4, 1)
-
-[sub_resource type="BoxMesh" id="BoxMesh_wall"]
-material = SubResource("StandardMaterial3D_wall")
-size = Vector3(10, 4, 1)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_wall_half"]
-size = Vector3(3.5, 4, 1)
-
-[sub_resource type="BoxMesh" id="BoxMesh_wall_half"]
-material = SubResource("StandardMaterial3D_wall")
-size = Vector3(3.5, 4, 1)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_corridor_floor"]
-size = Vector3(6, 0.5, 40)
-
-[sub_resource type="BoxMesh" id="BoxMesh_corridor_floor"]
-material = SubResource("StandardMaterial3D_floor")
-size = Vector3(6, 0.5, 40)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_corridor_wall"]
-size = Vector3(1, 4, 40)
-
-[sub_resource type="BoxMesh" id="BoxMesh_corridor_wall"]
-material = SubResource("StandardMaterial3D_wall")
-size = Vector3(1, 4, 40)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_corridor_wall_end"]
-size = Vector3(6, 4, 1)
-
-[sub_resource type="BoxMesh" id="BoxMesh_corridor_wall_end"]
-material = SubResource("StandardMaterial3D_wall")
-size = Vector3(6, 4, 1)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_map"]
-albedo_texture = ExtResource("8_map")
-shading_mode = 0
-
-[sub_resource type="QuadMesh" id="QuadMesh_map"]
-material = SubResource("StandardMaterial3D_map")
-size = Vector2(2, 2)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_coca"]
 albedo_texture = ExtResource("coca_cola_tex")
@@ -85,9 +23,6 @@ uv1_scale = Vector3(1, 1, 1)
 material = SubResource("StandardMaterial3D_coca")
 size = Vector2(2, 3)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_teleport"]
-size = Vector3(6, 4, 1)
-
 [node name="HotelLevel" type="Node3D"]
 script = ExtResource("4_level")
 
@@ -95,7 +30,6 @@ script = ExtResource("4_level")
 transform = Transform3D(0.707107, -0.5, 0.5, 0, 0.707107, 0.707107, -0.707107, -0.5, 0.5, 0, 10, 0)
 light_color = Color(0.35, 0.45, 0.6, 1)
 light_energy = 0.0575
-shadow_enabled = true
 
 [node name="AtmosphereLight" type="OmniLight3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, -5)
