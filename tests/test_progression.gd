@@ -194,6 +194,16 @@ func _ready() -> void:
 		_check(tapes_inside == 1 and tapes_on_floor == 3,
 			"exactly one of floor 5's three tapes is in the sealed room (%d of %d)" % [tapes_inside, tapes_on_floor])
 
+		# The hint: an open door lights the lamp over the door of the room it leads to.
+		var hint_from = traps[0]
+		var hint_to = traps[hint_from.destination_index(0, GameStateManager.tapes_found.size(), traps.size())]
+		var lamps_lit = func(): return traps.filter(func(t): return t.door_lamp != null and t.door_lamp.visible)
+		_check(traps.all(func(t): return t.door_lamp != null) and lamps_lit.call().is_empty(), "every room on floor 5 has a lamp over its door, dark at first")
+		hint_from._on_door_state_changed(true)
+		_check(lamps_lit.call() == [hint_to], "opening a door lights the lamp of the room it really leads to")
+		hint_from._on_door_state_changed(false)
+		_check(lamps_lit.call().is_empty(), "closing it puts the lamp out")
+
 		# --- Floor 5 done -> trap off, sealed door opens, floor 6 unlocked ---
 		GameStateManager.current_floor = 5
 		_check(not GameStateManager.is_floor_unlocked(6), "floor 6 is locked before floor 5 is done")
@@ -379,6 +389,9 @@ func _ready() -> void:
 	var sweep = floor9.get_node_or_null("SweepCameraTrap")
 	_check(sweep != null and generator.get_floor_node(8).get_node_or_null("SweepCameraTrap") == null, "floor 9, and only floor 9, has the sweeping units")
 	_check(sweep.active_count() == 2, "two units run at first")
+	var sleepers9: Array = floor9.get_children().filter(func(c): return c.name.begins_with("Sleeper_"))
+	_check(sleepers9.size() == 2 and sleepers9.all(func(s): return s.off_flag == &"floor9_cameras_off"),
+		"floor 9 also has two sleepers, switched off by its own tapes")
 	var bar_at: float = sweep.bar_z(0, sweep._time)
 	listener.global_position = floor9.global_position + Vector3(1.0, 0.1, bar_at)
 	sweep._process(0.0)
@@ -404,6 +417,17 @@ func _ready() -> void:
 	var floor10: Node3D = generator.get_floor_node(10)
 	var edge = floor10.get_node_or_null("EdgeWallTrap")
 	_check(edge != null and floor9.get_node_or_null("EdgeWallTrap") == null, "floor 10, and only floor 10, has the edge")
+	var blackout10 = floor10.get_node_or_null("BlackoutTrap")
+	_check(blackout10 != null and blackout10.floor_num == 10 and blackout10.off_flag == &"floor10_edge_stopped",
+		"floor 10 also has the blackouts, stopped by its own tapes")
+	if blackout10:
+		listener.global_position = floor10.global_position + Vector3(1.0, 0.1, -20.0)
+		edge._process(0.0)
+		var dark_z: float = edge.edge_z
+		blackout10.phase = blackout10.Phase.DARK
+		edge._process(5.0)
+		_check(is_equal_approx(edge.edge_z, dark_z), "the edge stands still while the lights are out")
+		blackout10.phase = blackout10.Phase.LIT
 	listener.global_position = floor10.global_position + Vector3(1.0, 0.1, -20.0)
 	edge._process(0.0)
 	var start_z: float = edge.edge_z

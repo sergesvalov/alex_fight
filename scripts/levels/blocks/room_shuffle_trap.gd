@@ -6,7 +6,8 @@
 #
 # The rule is fixed, so it can be worked out by watching the door plates rather than by trial
 # and error: with the floor's rooms taken in room-number order, entering room i puts you in room
-# i + 1 + (tapes already collected on this floor), wrapping around. One room's door is locked
+# i + 1 + (tapes already collected on this floor), wrapping around. An open door also lights
+# the lamp over the door of the room it leads to. One room's door is locked
 # from the corridor side - the only way into it is to enter the room that maps onto it.
 # Collecting all three of the floor's tapes switches the whole thing off for good
 # (GameStateManager.floor5_rooms_unlocked).
@@ -21,6 +22,9 @@ var traps: Array = []        # every room's trap on this floor, in room-number o
 var index: int = 0           # this trap's own place in `traps`
 var inside_local: Vector3    # where an arriving player is put, in the room's local space
 var facing_yaw: float = 0.0  # player yaw that looks from the doorway into the room
+var door_lamp: Node3D        # the lamp over this room's own door, on the corridor side
+
+var _lit_lamp: Node3D = null # the lamp this room's open door has switched on
 
 var _armed_until_ms: int = 0
 
@@ -30,6 +34,20 @@ static func destination_index(from_index: int, tapes_collected: int, room_count:
 func _ready() -> void:
 	body_entered.connect(_on_body_entered)
 	$Threshold.body_entered.connect(_on_threshold_entered)
+
+func destination() -> Node:
+	return traps[destination_index(index, GameStateManager.tapes_found.size(), traps.size())]
+
+# While this room's door stands open, the lamp over the door of the room it leads to is lit.
+# The lamp that was switched on is remembered: a tape found meanwhile changes the destination.
+func _on_door_state_changed(is_open: bool) -> void:
+	if is_instance_valid(_lit_lamp):
+		_lit_lamp.visible = false
+	_lit_lamp = null
+	if is_open and not GameStateManager.floor5_rooms_unlocked:
+		_lit_lamp = destination().door_lamp
+		if is_instance_valid(_lit_lamp):
+			_lit_lamp.visible = true
 
 func _on_threshold_entered(body: Node) -> void:
 	if body.name == "Player":
@@ -42,7 +60,7 @@ func _on_body_entered(body: Node) -> void:
 		return # walking around inside the room, or on the way out
 	_armed_until_ms = 0
 
-	var dest = traps[destination_index(index, GameStateManager.tapes_found.size(), traps.size())]
+	var dest = destination()
 	var target: Vector3 = dest.room.global_transform * dest.inside_local
 	# Same kind of line every other teleport in the game prints (see stairs_gate.gd).
 	print("[RoomShuffleTrap] entered ", room.name, " -> placed in ", dest.room.name,

@@ -1,9 +1,17 @@
 class_name HotelTrapBuilder
 extends RefCounted
 
+# The middle of a room's doorway and which way along X leads into the room, in the room's own
+# coordinates (double_room.tscn / single_room.tscn).
+static func doorway_local(is_double: bool) -> Vector3:
+	return Vector3(4.8, 1.1, 8.5) if is_double else Vector3(-3.75, 1.1, 3.5)
+
+static func doorway_inward_x(is_double: bool) -> float:
+	return -1.0 if is_double else 1.0
+
 static func make_doorway_trigger(room: Node3D, is_double: bool, trigger_script: Script) -> Area3D:
-	var doorway: Vector3 = Vector3(4.8, 1.1, 8.5) if is_double else Vector3(-3.75, 1.1, 3.5)
-	var inward_x: float = -1.0 if is_double else 1.0
+	var doorway: Vector3 = doorway_local(is_double)
+	var inward_x: float = doorway_inward_x(is_double)
 
 	var trigger = Area3D.new()
 	trigger.collision_layer = 0
@@ -83,6 +91,28 @@ static func add_room_shuffle_trap(generator: HotelLevelGenerator, parent: Node3D
 		trap.inside_local = Vector3(2.5, 0.1, 7.5) if is_double else Vector3(-1.5, 0.1, 3.6)
 		trap.facing_yaw = PI / 2.0 if is_double else -PI / 2.0
 
+		# The hint: a lamp over every door, on the corridor side. Opening a door lights the lamp
+		# of the room that door really leads to (room_shuffle_trap.gd), so the rule can be seen
+		# from the corridor instead of counted. A glowing bulb, not a Light3D: the generator
+		# switches every light under the floor node on and off with the floor.
+		var lamp = MeshInstance3D.new()
+		lamp.name = "DestinationLamp_" + str(num)
+		var bulb = SphereMesh.new()
+		bulb.radius = 0.09
+		bulb.height = 0.18
+		var glow = StandardMaterial3D.new()
+		glow.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		glow.albedo_color = Color(1.0, 0.75, 0.25)
+		bulb.material = glow
+		lamp.mesh = bulb
+		lamp.position = room.transform * (doorway_local(is_double) + Vector3(-doorway_inward_x(is_double) * 0.3, 1.3, 0.0))
+		lamp.visible = false
+		parent.add_child(lamp)
+		trap.door_lamp = lamp
+		var door = room.get_node_or_null("RoomDoor/AnimatableBody3D")
+		if door and door.has_signal("state_changed"):
+			door.state_changed.connect(trap._on_door_state_changed)
+
 		traps.append(trap)
 		parent.add_child(trap)
 
@@ -99,7 +129,7 @@ static func add_blackout_trap(parent: Node3D, f_num: int, lights: Array, f_scale
 	trap.name = "BlackoutTrap"
 	trap.set_script(load("res://scripts/levels/blocks/blackout_trap.gd"))
 	trap.floor_num = f_num
-	trap.off_flag = &"floor7_lights_steady" if f_num == 7 else &"floor2_done"
+	trap.off_flag = {7: &"floor7_lights_steady", 2: &"floor2_done", 10: &"floor10_edge_stopped"}.get(f_num, &"floor7_lights_steady")
 	trap.lights = lights
 	trap.lamp_meshes = parent.find_children("*LightMesh", "MeshInstance3D", true, false)
 	trap.return_position = parent.global_position + Vector3(HotelConstants.ELEVATOR_CENTER_X * f_scale, 0.1, (HotelConstants.ELEVATOR_CENTER_Z + 2.0) * f_scale)

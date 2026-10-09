@@ -9,7 +9,10 @@
 # whole width of the floor - rooms included. So it is a race with a clock you can see: go for
 # the tape furthest south first. Each tape found throws the wall back to the south end, but
 # from then on it comes faster (SPEEDS). It stops short of the elevator (NORTH_LIMIT_Z), so
-# the way off the floor is never cut. Floor 10's own three tapes stop it for good
+# the way off the floor is never cut. The floor also has floor 7's blackouts (blackout_trap.gd):
+# while the lights are out the edge stands still, like everyone who wants to stay - the dark
+# costs the player nothing in the race, but he has to stop for it. Floor 10's own three tapes
+# stop it for good
 # (GameStateManager.floor10_edge_stopped) and open the roof.
 #
 # One instance, created only on floor 10 by hotel_level_generator.gd::_add_edge_wall().
@@ -29,6 +32,11 @@ var height: float = 4.0
 var edge_z: float = SOUTH_Z
 var _tapes_seen: int = 0
 var _wall: MeshInstance3D
+
+# True while this floor's blackout trap has the lights out.
+func in_the_dark() -> bool:
+	var blackout = get_parent().get_node_or_null("BlackoutTrap") if get_parent() else null
+	return blackout != null and blackout.phase == blackout.Phase.DARK
 
 func _ready() -> void:
 	_wall = MeshInstance3D.new()
@@ -75,7 +83,8 @@ func _process(delta: float) -> void:
 	if tapes > _tapes_seen:
 		_reset() # a tape found throws it back...
 	_tapes_seen = tapes
-	edge_z = maxf(NORTH_LIMIT_Z, edge_z - speed_for(tapes) * delta) # ...and from then on it is faster
+	if not in_the_dark():
+		edge_z = maxf(NORTH_LIMIT_Z, edge_z - speed_for(tapes) * delta) # ...and from then on it is faster
 	_wall.position.z = edge_z
 
 	var player = get_tree().get_first_node_in_group("player")

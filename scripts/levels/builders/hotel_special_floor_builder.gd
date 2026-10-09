@@ -184,6 +184,20 @@ static func build_lobby(parent: Node3D, f_scale: float, height: float, wall_mat:
 	for side in [-1.0, 1.0]:
 		box.call("Turret_%s" % ("N" if side < 0.0 else "S"), steel, turret_x - 0.25, turret_x + 0.25, hh - 0.45, hh, side * 1.5 - 0.25, side * 1.5 + 0.25)
 		box.call("TurretEye_%s" % ("N" if side < 0.0 else "S"), eye_mat, turret_x - 0.32, turret_x - 0.25, hh - 0.32, hh - 0.2, side * 1.5 - 0.08, side * 1.5 + 0.08)
+	# Why the turrets cannot be got past from here: their cable. It runs from each turret along
+	# the ceiling, across the hall and down the wall beside the second lift - whatever feeds
+	# them is below, where that lift goes.
+	var cable_mat = StandardMaterial3D.new()
+	cable_mat.albedo_color = Color(0.25, 0.03, 0.03)
+	cable_mat.emission_enabled = true
+	cable_mat.emission = Color(1.0, 0.15, 0.05)
+	cable_mat.emission_energy_multiplier = 0.8
+	var cable_z: float = -0.95 # beside the lift doors, on the side away from its panel
+	for side in [-1.0, 1.0]:
+		box.call("TurretCable_%s" % ("N" if side < 0.0 else "S"), cable_mat, turret_x - 0.04, turret_x + 0.04, hh - 0.06, hh, minf(side * 1.5, cable_z), maxf(side * 1.5, cable_z))
+	box.call("TurretCable_Run", cable_mat, turret_x, east - 0.02, hh - 0.06, hh, cable_z - 0.04, cable_z + 0.04)
+	box.call("TurretCable_Drop", cable_mat, east - 0.08, east - 0.02, 0.0, hh, cable_z - 0.04, cable_z + 0.04)
+
 	var turret_light = OmniLight3D.new()
 	turret_light.name = "TurretLight"
 	turret_light.light_color = Color(1.0, 0.12, 0.08)

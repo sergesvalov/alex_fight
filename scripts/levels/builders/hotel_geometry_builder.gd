@@ -189,6 +189,11 @@ static func build_floor_geometry(generator: HotelLevelGenerator, f_num: int, y_o
 	# The level scene's own floor already has its hand-placed robot (base_hotel_level.tscn's
 	# Enemies/Cerberus) - a generated one on top of it would double it up.
 	# Floor 6 has no patrol at all - its robots are the sleepers (see sleeper_cerberus.gd).
+	# The last two floors add a rule the player already knows to their own: floor 9's sweeping
+	# units share the corridor with two sleepers, so a tape taken there has to be paid for in
+	# noise (floor 10's is the blackout, see hotel_level_generator.gd).
+	if f_num == 9:
+		HotelPropSpawner.spawn_sleepers(parent, f_scale, &"floor9_cameras_off", HotelPropSpawner.SLEEPER_POSTS_ENDS)
 	if f_num == 6 or f_num == 2:
 		HotelPropSpawner.spawn_sleepers(parent, f_scale, &"floor6_sleepers_off" if f_num == 6 else &"floor2_done")
 	elif suffix != "Main":

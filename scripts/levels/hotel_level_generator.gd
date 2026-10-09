@@ -172,7 +172,8 @@ func _generate_level() -> void:
 		if i == 9 or i == 10:
 			_add_floor_wide_trap(floor_node, i, f_scale)
 		# Floor 2 replays "that night": the blackouts of floor 7 and the sleepers of floor 6 at once.
-		if i == 7 or i == 2:
+		# Floor 10 has them too, on top of its own edge (edge_wall_trap.gd waits out the dark).
+		if i == 7 or i == 2 or i == 10:
 			_add_blackout_trap(floor_node, i, lights, f_scale)
 
 	# Generate roof above the 10th floor

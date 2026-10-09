@@ -249,12 +249,15 @@ static func spawn_cassettes_other_floor(parent: Node, f_scale: float, scene: Pac
 # taking a tape there would be a guaranteed catch instead of a decision.
 const SLEEPER_POSTS: Array = [Vector2(-0.6, -16.0), Vector2(2.8, -5.0), Vector2(-0.6, 7.0), Vector2(2.8, 19.0)] # X, Z
 
-static func spawn_sleepers(parent: Node3D, f_scale: float, off_flag: StringName) -> void:
+# Floor 9 has only the two at the ends of the corridor: the middle belongs to its sweeping units.
+const SLEEPER_POSTS_ENDS: Array = [Vector2(-0.6, -16.0), Vector2(2.8, 19.0)] # X, Z
+
+static func spawn_sleepers(parent: Node3D, f_scale: float, off_flag: StringName, posts: Array = SLEEPER_POSTS) -> void:
 	var scene = load("res://entities/enemies/cerberus/cerberus.tscn")
 	var sleeper_script = load("res://scripts/enemies/sleeper_cerberus.gd")
 	if not scene or not sleeper_script: return
-	for i in range(HotelPropSpawner.SLEEPER_POSTS.size()):
-		var post: Vector2 = HotelPropSpawner.SLEEPER_POSTS[i]
+	for i in range(posts.size()):
+		var post: Vector2 = posts[i]
 		var inst = scene.instantiate()
 		inst.set_script(sleeper_script)
 		inst.name = "Sleeper_" + str(i + 1)
