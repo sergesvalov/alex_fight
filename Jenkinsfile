@@ -229,15 +229,23 @@ pipeline {
                                     # android/build/gradle.properties. Сборка от 2026-10-08 упала
                                     # на dexBuilderStandardRelease с "Gradle build daemon
                                     # disappeared unexpectedly" - демона убили извне, так обычно
-                                    # выглядит OOM-killer (не подтверждено: для этого ниже печать
-                                    # памяти и memory.events). gradle.properties из GRADLE_USER_HOME
+                                    # OOM-killer: сборка от 2026-10-09 это подтвердила (oom_kill 1 в
+                                    # memory.events). У хоста 3.4 ГБ памяти, из них перед gradle
+                                    # свободно около 1.3 ГБ, поэтому куча 2 ГБ тоже не помещалась.
+                                    # Отсюда 1 ГБ, один воркер и последовательный GC (у него
+                                    # наименьшие накладные расходы). Если кучи не хватит, это будет
+                                    # уже java.lang.OutOfMemoryError в логе, а не исчезнувший демон.
+                                    # gradle.properties из GRADLE_USER_HOME
                                     # имеет приоритет над проектным, поэтому ужимаем кучу здесь, а
                                     # не правим шаблон, который Godot перезаписывает при установке.
                                     mkdir -p "$HOME/.gradle"
                                     cat > "$HOME/.gradle/gradle.properties" <<'EOF'
-org.gradle.jvmargs=-Xmx2g -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError
-org.gradle.workers.max=2
+org.gradle.jvmargs=-Xmx1g -XX:MaxMetaspaceSize=384m -XX:+UseSerialGC -XX:TieredStopAtLevel=1
+org.gradle.workers.max=1
+org.gradle.parallel=false
 org.gradle.daemon=false
+org.gradle.vfs.watch=false
+kotlin.compiler.execution.strategy=in-process
 EOF
                                     echo "Память перед gradle-сборкой:"
                                     grep -E 'MemTotal|MemAvailable|SwapTotal|SwapFree' /proc/meminfo || true
