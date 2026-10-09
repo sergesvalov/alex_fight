@@ -239,6 +239,25 @@ func _ready() -> void:
 	cassettes[0].interact(listener)
 	_check(robot6 != null and robot6.state_machine.current_state_name == "INVESTIGATE" and robot6._noise_position.distance_to(cassettes[0].global_position) < 0.01, "a tape playing on floor 6 sends floor 6's robot to the spot it was played at")
 	_check(robot5 != null and robot5.state_machine.current_state_name != "INVESTIGATE", "floor 5's robot does not hear a tape played on floor 6")
+	# A patrol robot cannot be destroyed: a hit blinds it for a while, and its own laser puts
+	# the player back by the elevator of the robot's floor.
+	if robot5:
+		robot5.take_damage(1)
+		_check(is_instance_valid(robot5) and not robot5.is_queued_for_deletion() and robot5.state_machine.current_state_name == "STUNNED",
+			"a shot blinds a patrol robot instead of destroying it")
+		robot5.hear_noise(robot5.global_position + Vector3(2, 0, 0))
+		_check(robot5.state_machine.current_state_name == "STUNNED", "a blinded robot hears nothing")
+		robot5._stun_left = 0.0
+		robot5._physics_process(0.016)
+		_check(robot5.state_machine.current_state_name == "RETURN", "the blindness passes and the robot goes back to its post")
+		var prey := CharacterBody3D.new()
+		add_child(prey)
+		prey.global_position = robot5.global_position + Vector3(0, 0, 3)
+		robot5.player = prey
+		robot5.return_to_elevator(prey)
+		var floor5_lift: Vector3 = generator.get_floor_node(5).global_position + Vector3(HotelConstants.ELEVATOR_CENTER_X, 0.1, HotelConstants.ELEVATOR_CENTER_Z + 2.0) * GlobalConfig.get_floor_scale()
+		_check(prey.global_position.distance_to(floor5_lift) < 0.01, "a patrol robot's laser returns the player to its floor's elevator")
+		prey.queue_free()
 	# Caught: an awake sleeper within arm's reach puts the player back by the elevator.
 	listener.global_position = robot6.global_position + Vector3(0.6, 0.0, 0.0)
 	robot6._physics_process(0.016)

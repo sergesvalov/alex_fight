@@ -13,7 +13,7 @@ func hear_noise(noise_position: Vector3) -> void:
 	if not enabled:
 		return
 	var sm = ai.state_machine
-	if sm.current_state_name in ["DEAD", "CHASE", "ATTACK"]:
+	if sm.current_state_name in ["DEAD", "STUNNED", "CHASE", "ATTACK"]:
 		return
 	if ai.process_mode == Node.PROCESS_MODE_DISABLED:
 		return

@@ -67,6 +67,10 @@ func _physics_process(delta: float) -> void:
 		player_detected.emit(_candidate)
 	_sees_candidate = sees
 
+# The player, if the enemy has line of sight to him right now.
+func visible_player() -> Node3D:
+	return _candidate if _sees_candidate and is_instance_valid(_candidate) else null
+
 const AIM_HEIGHT: float = 0.9 # middle of the player's 1.8m capsule (player.tscn)
 
 func has_line_of_sight(target: Node3D) -> bool:

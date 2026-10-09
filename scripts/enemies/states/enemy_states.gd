@@ -69,6 +69,10 @@ class AttackState extends EnemyState:
 	func enter() -> void:
 		ai.velocity.x = 0.0
 		ai.velocity.z = 0.0
+		# The first shot comes one cooldown after taking aim, not at once: that is the time
+		# the player has to break line of sight.
+		ai.attack_timer = ai.attack_cooldown
+		ai._on_attack_started()
 
 	func physics_process(delta: float) -> void:
 		if not is_instance_valid(ai.player):
@@ -143,6 +147,33 @@ class InvestigateState extends EnemyState:
 		ai._investigate_look_left -= delta
 		
 		if ai._investigate_look_left <= 0.0 or ai._investigate_time_left <= 0.0:
+			ai.state_machine.change_state("RETURN")
+
+# Blinded by a hit (see cerberus_ai.gd): stands still, sees and hears nothing, then goes back to
+# its post - or straight after the player, if he is still standing in plain view.
+class StunnedState extends EnemyState:
+	func enter() -> void:
+		ai.velocity.x = 0.0
+		ai.velocity.z = 0.0
+		ai.player = null
+		if GameStateManager.current_state == GameStateManager.GameState.COMBAT:
+			GameStateManager.change_state(GameStateManager.GameState.EXPLORING)
+		ai._on_stun_changed(true)
+
+	func exit() -> void:
+		ai._on_stun_changed(false)
+
+	func physics_process(delta: float) -> void:
+		ai.velocity.x = 0.0
+		ai.velocity.z = 0.0
+		ai._stun_left -= delta
+		if ai._stun_left > 0.0:
+			return
+		var seen: Node3D = ai.sensors.visible_player()
+		if ai.can_see and seen and GameStateManager.current_state != GameStateManager.GameState.SPECTATOR:
+			ai.player = seen
+			ai.state_machine.change_state("CHASE")
+		else:
 			ai.state_machine.change_state("RETURN")
 
 class DeadState extends EnemyState:

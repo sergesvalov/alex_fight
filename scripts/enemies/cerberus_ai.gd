@@ -43,20 +43,68 @@ func _on_player_detected(p: Node3D) -> void:
 	DialogSystem.trigger_alex_line("cerberus_sighting")
 	super._on_player_detected(p)
 
-# Ranged attack - unlike a plain melee bite, a wall between the robot and the player must
-# actually block the shot, not just distance.
+# How long a hit blinds the robot. It cannot be destroyed - a shot only buys time.
+const STUN_TIME: float = 10.0
+const AIM_SOUND_PITCH: float = 0.45
+const EYE_STUNNED_ENERGY: float = 0.0
+var _eye_lit_energy: float = -1.0
+
+# Taking aim is audible: the laser's own sound, pitched down, one cooldown before the shot.
+func _on_attack_started() -> void:
+	if audio:
+		audio.stream = shoot_sound
+		audio.pitch_scale = AIM_SOUND_PITCH
+		audio.play()
+
+# The shot does no damage: like every trap in the hotel, it puts the player back by this
+# floor's elevator. A wall between the robot and the player blocks it.
 func _perform_attack() -> void:
 	if not sensors.has_line_of_sight(player):
 		return
 
 	_fire_laser()
-	if player.has_method("take_damage"):
-		player.take_damage(attack_damage)
-		print(name, " attacked player for ", attack_damage)
+	return_to_elevator(player)
+
+func return_to_elevator(target: Node3D) -> void:
+	var back_to: Vector3 = elevator_return_position()
+	print("[Cerberus] ", name, " caught the player at ", target.global_position, " - returning to ", back_to)
+	target.global_position = back_to
+	if "velocity" in target:
+		target.velocity = Vector3.ZERO
+	DialogSystem.trigger_alex_line("cerberus_caught")
+	player = null
+	state_machine.change_state("RETURN")
+
+# In front of the elevator of the floor the robot is standing on. Floors differ only in height
+# and are a whole number of floor steps apart (see hotel_level_generator.gd).
+func elevator_return_position() -> Vector3:
+	var f_scale: float = GlobalConfig.get_floor_scale()
+	var y_step: float = HotelConstants.BASE_FLOOR_TO_FLOOR_HEIGHT * f_scale
+	var floor_y: float = roundf(global_position.y / y_step) * y_step
+	return Vector3(HotelConstants.ELEVATOR_CENTER_X * f_scale, floor_y + 0.1, (HotelConstants.ELEVATOR_CENTER_Z + 2.0) * f_scale)
+
+func take_damage(_amount: int) -> void:
+	if state_machine.current_state_name in ["STUNNED", "DEAD"]:
+		return
+	print("[Cerberus] ", name, " blinded for ", STUN_TIME, "s")
+	_stun_left = STUN_TIME
+	state_machine.change_state("STUNNED")
+	DialogSystem.trigger_alex_line("cerberus_blinded")
+
+func _on_stun_changed(stunned: bool) -> void:
+	var eye: MeshInstance3D = get_node_or_null("RobotBody/Eye")
+	if not eye or not eye.material_override:
+		return
+	if _eye_lit_energy < 0.0:
+		# Shared by every instance of cerberus.tscn until duplicated.
+		eye.material_override = eye.material_override.duplicate()
+		_eye_lit_energy = eye.material_override.emission_energy_multiplier
+	eye.material_override.emission_energy_multiplier = EYE_STUNNED_ENERGY if stunned else _eye_lit_energy
 
 func _fire_laser() -> void:
 	if audio:
 		audio.stream = shoot_sound
+		audio.pitch_scale = 1.0
 		audio.play()
 
 	if not weapon_beam or not is_instance_valid(player):

@@ -33,6 +33,10 @@ func _update_eye() -> void:
 func _on_player_detected(_p: Node3D) -> void:
 	pass
 
+# The sleeper's eye follows is_awake(), and a blinded one is not awake.
+func _on_stun_changed(_stunned: bool) -> void:
+	_update_eye()
+
 func hear_noise(noise_position: Vector3) -> void:
 	if _switched_off():
 		return

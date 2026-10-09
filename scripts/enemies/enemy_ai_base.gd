@@ -68,6 +68,7 @@ func _ready() -> void:
 	state_machine.add_state("ATTACK", EnemyStates.AttackState.new(self))
 	state_machine.add_state("RETURN", EnemyStates.ReturnState.new(self))
 	state_machine.add_state("INVESTIGATE", EnemyStates.InvestigateState.new(self))
+	state_machine.add_state("STUNNED", EnemyStates.StunnedState.new(self))
 	state_machine.add_state("DEAD", EnemyStates.DeadState.new(self))
 
 	idle_timer = idle_wait_time * 3.0
@@ -113,7 +114,7 @@ func _perform_attack() -> void:
 func _on_player_detected(p: Node3D) -> void:
 	if GameStateManager.current_state == GameStateManager.GameState.SPECTATOR:
 		return
-	if state_machine.current_state_name != "ATTACK":
+	if state_machine.current_state_name not in ["ATTACK", "STUNNED", "DEAD"]:
 		player = p
 		state_machine.change_state("CHASE")
 
@@ -126,6 +127,15 @@ func hear_noise(noise_position: Vector3) -> void:
 func take_damage(amount: int) -> void:
 	print(name, " took damage: ", amount)
 	state_machine.change_state("DEAD")
+
+# Hooks for subclasses: taking aim, and being blinded / recovering (StunnedState).
+var _stun_left: float = 0.0
+
+func _on_attack_started() -> void:
+	pass
+
+func _on_stun_changed(_stunned: bool) -> void:
+	pass
 
 func _die() -> void:
 	queue_free()
