@@ -100,6 +100,7 @@ func _ready() -> void:
             zone.swipe_dragged.connect(camera_comp.process_swipe)
             zone.walk_changed.connect(_on_touch_walk_changed.bind(zone_name))
             zone.tapped.connect(weapon.shoot)
+            zone.turned_around.connect(camera_comp.turn_around)
             if is_vr: zone.hide()
         
         var interact_btn = hud.find_child("InteractButton", true, false)

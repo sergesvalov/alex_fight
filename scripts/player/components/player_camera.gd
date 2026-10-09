@@ -25,8 +25,20 @@ func process_swipe(relative: Vector2) -> void:
     # Mobile is restricted to horizontal rotation only
     _rotate_camera(-relative.x, 0.0)
 
+# Touch only (one_finger_input.gd's downward flick): there is no walking backwards, so this is
+# how to face what is behind you without dragging the finger across the whole screen.
+const TURN_AROUND_TIME: float = 0.18
+var _turn_tween: Tween = null
+
+func turn_around() -> void:
+    if player.is_vr: return
+    if _turn_tween and _turn_tween.is_running():
+        return
+    _turn_tween = create_tween()
+    _turn_tween.tween_property(player, "rotation:y", player.rotation.y + PI, TURN_AROUND_TIME)
+
 func _rotate_camera(rot_x: float, rot_y: float) -> void:
-    var look_factor = camera_sensitivity * 0.5
+    var look_factor = camera_sensitivity * 0.5 * GameSettings.look_sensitivity
     player.rotate_y(rot_x * look_factor)
     
     if rot_y != 0.0:

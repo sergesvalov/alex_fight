@@ -32,6 +32,7 @@ UIStrings="*res://scripts/autoloads/UIStrings.gd"
 AudioManager="*res://scripts/autoloads/AudioManager.gd"
 SaveManager="*res://scripts/autoloads/SaveManager.gd"
 GameLogger="*res://scripts/autoloads/GameLogger.gd"
+GameSettings="*res://scripts/autoloads/GameSettings.gd"
 
 [display]
 

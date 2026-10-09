@@ -35,6 +35,12 @@
     "tape_hint_unknown": "местонахождение не установлено",
     "game_title_top": "СЛУЧАЙ В ГОСТИНИЦЕ",
     "game_title_main": "«СИБИРЬ»",
+    "start_settings": "НАСТРОЙКИ",
+    "settings_look": "ЧУВСТВИТЕЛЬНОСТЬ: %d%%",
+    "settings_volume": "ГРОМКОСТЬ: %d%%",
+    "settings_subtitles": "СУБТИТРЫ: %s",
+    "settings_subtitle_sizes": "ОБЫЧНЫЕ,КРУПНЫЕ,ОЧЕНЬ КРУПНЫЕ",
+    "settings_back": "НАЗАД",
     "floor8_own_name": "НЕЧАЕВ",
     "floor8_other_names": "КРЫЛОВА,СОКОЛОВ,ЛЕБЕДЕВ,ВОЛКОВ,ЗАЙЦЕВА,МОРОЗОВ,ПАВЛОВ,ОРЛОВА,ГУСЕВ,ТИТОВ,БЕЛОВА,КОМАРОВ,ЖУКОВ,НЕЧАЕВА"
 }

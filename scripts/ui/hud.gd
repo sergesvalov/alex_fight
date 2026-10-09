@@ -23,6 +23,20 @@ func _ready() -> void:
     if EventBus.has_signal("narrative_thought_requested"):
         EventBus.narrative_thought_requested.connect(_on_thought_requested)
 
+    if narrative_text:
+        for size_name in SUBTITLE_FONT_SIZES:
+            _subtitle_base_sizes[size_name] = narrative_text.get_theme_font_size(size_name)
+        GameSettings.changed.connect(_apply_subtitle_scale)
+        _apply_subtitle_scale()
+
+# The tape texts carry the whole story, so their size is the player's to set (GameSettings).
+const SUBTITLE_FONT_SIZES: Array = ["normal_font_size", "bold_font_size"]
+var _subtitle_base_sizes: Dictionary = {}
+
+func _apply_subtitle_scale() -> void:
+    for size_name in _subtitle_base_sizes:
+        narrative_text.add_theme_font_size_override(size_name, roundi(_subtitle_base_sizes[size_name] * GameSettings.subtitle_scale))
+
 var _thought_token: int = 0
 
 func _on_thought_requested(text: String, duration: float) -> void:

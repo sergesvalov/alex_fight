@@ -9,6 +9,7 @@ var errors: int = 0
 var taps: int = 0
 var walk_events: Array = []
 var turned: Vector2 = Vector2.ZERO
+var turn_arounds: int = 0
 
 func _check(ok: bool, label: String) -> void:
 	if ok:
@@ -39,6 +40,7 @@ func _ready() -> void:
 	zone.tapped.connect(func(): taps += 1)
 	zone.walk_changed.connect(func(walking): walk_events.append(walking))
 	zone.swipe_dragged.connect(func(relative): turned += relative)
+	zone.turned_around.connect(func(): turn_arounds += 1)
 
 	_touch(zone, 0, true)
 	zone._process(0.08)
@@ -64,7 +66,38 @@ func _ready() -> void:
 	_drag(zone, 0, Vector2(60, 5))
 	zone._process(0.05)
 	_touch(zone, 0, false)
-	_check(taps == 2 and turned == Vector2(60, 5), "a quick swipe turns and is not a tap")
+	_check(taps == 2 and turned == Vector2(60, 5) and turn_arounds == 0, "a quick swipe turns and is not a tap")
+
+	_touch(zone, 0, true)
+	_drag(zone, 0, Vector2(4, 70))
+	_drag(zone, 0, Vector2(-2, 60))
+	zone._process(0.1)
+	_touch(zone, 0, false)
+	_check(turn_arounds == 1 and taps == 2, "a quick flick straight down turns round and does not shoot")
+
+	_touch(zone, 0, true)
+	_drag(zone, 0, Vector2(0, 130))
+	zone._process(0.3)
+	zone._process(0.3)
+	_touch(zone, 0, false)
+	_check(turn_arounds == 1, "a slow drag down is not a flick")
+
+	# --- Settings (GameSettings): each one steps through its values and survives a reload ---
+	GameSettings.settings_path = "user://test_settings.cfg"
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(GameSettings.settings_path))
+	GameSettings.look_sensitivity = 1.0
+	GameSettings.subtitle_scale = 1.0
+	GameSettings.volume = 1.0
+	_check(is_equal_approx(GameSettings.cycle("look_sensitivity"), 1.25), "the look sensitivity steps up")
+	_check(is_equal_approx(GameSettings.cycle("volume"), 0.0) and AudioServer.is_bus_mute(0), "the volume wraps round to silence and mutes the output")
+	GameSettings.cycle("volume")
+	_check(not AudioServer.is_bus_mute(0) and is_equal_approx(db_to_linear(AudioServer.get_bus_volume_db(0)), 0.25), "the next step is audible again, at a quarter")
+	GameSettings.cycle("subtitle_scale")
+	GameSettings.look_sensitivity = 1.0
+	GameSettings.subtitle_scale = 1.0
+	GameSettings.load_settings()
+	_check(is_equal_approx(GameSettings.look_sensitivity, 1.25) and is_equal_approx(GameSettings.subtitle_scale, 1.3), "settings are read back from disk")
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(GameSettings.settings_path))
 
 	print("==================================================")
 	if errors > 0:
