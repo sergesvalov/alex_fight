@@ -51,7 +51,7 @@ func _ready() -> void:
 	_check(cassette != null and room.get_node("Wardrobe").global_position.distance_to(cassette.global_position) < 1.5,
 		"it is the room with the first tape in its wardrobe")
 	_check(room_door.locked and lock != null and pickup != null, "its door is locked, with a lock on it and the pistol lying inside")
-	_check(light.light_energy == 0.0, "the room's lamp is off")
+	_check(light.light_energy > 0.0 and room.get_node("MainRoomLightMesh").visible, "the room's lamp is on from the start")
 
 	# The bathroom is the room's north-west corner (single_room.tscn: WCEastWall, WCSouthWall).
 	var pistol_in_room: Vector3 = room.global_transform.affine_inverse() * pickup.global_position
@@ -86,7 +86,6 @@ func _ready() -> void:
 	pickup.interact(player)
 	await get_tree().create_timer(0.8).timeout
 	_check(player.weapon.armed and pistol.get_parent().visible, "picking it up arms him")
-	_check(is_equal_approx(light.light_energy, 2.3), "and the lamp comes on")
 	_check(wake.stage == wake.Stage.TAPE, "the tape is next")
 
 	for i in range(lock.HITS_TO_BREAK - 1):

@@ -10,15 +10,20 @@ signal changed
 const LOOK_STEPS: Array = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0]
 const VOLUME_STEPS: Array = [0.0, 0.25, 0.5, 0.75, 1.0]
 const SUBTITLE_STEPS: Array = [1.0, 1.3, 1.6]
-const STEPS: Dictionary = {"look_sensitivity": LOOK_STEPS, "volume": VOLUME_STEPS, "subtitle_scale": SUBTITLE_STEPS}
+const TOUCH_STEPS: Array = [0.0, 1.0]   # two thumbs (stick + look), one finger
+const STEPS: Dictionary = {"look_sensitivity": LOOK_STEPS, "volume": VOLUME_STEPS, "subtitle_scale": SUBTITLE_STEPS, "touch_scheme": TOUCH_STEPS}
 
 var settings_path: String = "user://settings.cfg"   # tests point this somewhere else
 var look_sensitivity: float = 1.0
 var volume: float = 1.0
 var subtitle_scale: float = 1.0
+var touch_scheme: float = 0.0
 
 func _ready() -> void:
 	load_settings()
+
+func one_finger() -> bool:
+	return touch_scheme >= 0.5
 
 func load_settings() -> void:
 	var file := ConfigFile.new()

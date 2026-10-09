@@ -91,8 +91,9 @@ func _ready() -> void:
         hud = get_node_or_null("../HUD")
         
     if hud:
-        # Touch: both halves of the screen carry one_finger_input.gd and behave the same -
-        # drag to turn, hold to walk forward, tap to shoot.
+        # Touch: both halves of the screen carry one_finger_input.gd - drag to turn, tap to
+        # shoot, and in the one-finger scheme hold to walk forward. In the two-thumb scheme the
+        # left half is a stick instead (_apply_touch_scheme()).
         for zone_name in ["LeftJoystick", "RightZone"]:
             var zone = hud.find_child(zone_name, true, false)
             if not zone:
@@ -102,7 +103,14 @@ func _ready() -> void:
             zone.tapped.connect(weapon.shoot)
             zone.turned_around.connect(camera_comp.turn_around)
             if is_vr: zone.hide()
-        
+        _left_touch_zone = hud.find_child("LeftJoystick", true, false)
+        _right_touch_zone = hud.find_child("RightZone", true, false)
+        _move_stick = hud.find_child("MoveStick", true, false)
+        if _move_stick:
+            _move_stick.moved.connect(movement.set_move_input)
+        _apply_touch_scheme()
+        GameSettings.changed.connect(_apply_touch_scheme)
+
         var interact_btn = hud.find_child("InteractButton", true, false)
         if interact_btn:
             interaction.interact_btn = interact_btn
@@ -174,6 +182,22 @@ func _on_touch_walk_changed(walking: bool, zone_name: String) -> void:
     _touch_walking[zone_name] = walking
     # (0, -1) is "forward" to player_movement.gd, the same thing the up key gives it.
     movement.set_move_input(Vector2(0, -1) if _touch_walking.values().has(true) else Vector2.ZERO)
+
+var _left_touch_zone: Control = null
+var _right_touch_zone: Control = null
+var _move_stick: Control = null
+
+# GameSettings.touch_scheme: two thumbs (a stick on the left, look and shoot on the right) or
+# one finger (the whole screen is one_finger_input.gd). The stick draws itself, so it is kept
+# off the screen where there is nothing to touch it with.
+func _apply_touch_scheme() -> void:
+    var one_finger: bool = GameSettings.one_finger()
+    if _left_touch_zone:
+        _left_touch_zone.visible = one_finger and not is_vr
+    if _move_stick:
+        _move_stick.visible = not one_finger and not is_vr and not camera_comp.is_desktop
+    if _right_touch_zone:
+        _right_touch_zone.walk_on_hold = one_finger
 
 
 func _on_right_controller_button_pressed(button_name: String) -> void:

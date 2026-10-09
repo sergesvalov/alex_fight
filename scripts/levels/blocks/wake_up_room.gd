@@ -4,7 +4,7 @@
 # once he has done everything the game is played with - in an order the room itself imposes:
 #
 #   turn      he wakes facing the bed and the wall behind it; everything else is behind him
-#   walk      the only light is the strip under the bathroom door, across the room
+#   walk      the room's lamp is on; a strip of light shows under the bathroom door, across the room
 #   interact  that door is the first thing that takes a press; the pistol lies behind it,
 #             on the washbasin
 #   tape      the cassette in the wardrobe by the way out (the generator's own Cassette_0) -
@@ -53,9 +53,6 @@ var _wc_door: Node = null
 var _lock: Node = null
 var _pickup: Node = null
 var _cassette: Node = null
-var _main_light: Light3D = null
-var _main_light_mesh: Node3D = null
-var _main_light_energy: float = 0.0
 
 var _wc_slit: MeshInstance3D = null
 var _door_glow: OmniLight3D = null
@@ -87,18 +84,7 @@ func _ready() -> void:
 	_pickup.name = "PistolPickup"
 	_pickup.set_script(load("res://scripts/interactables/pistol_pickup.gd"))
 	_pickup.position = _at(PISTOL_POS)
-	_pickup.taken.connect(_on_pistol_taken)
 	add_child(_pickup)
-
-	# The room's own ceiling light stays off until the pistol is in hand - light_energy, not
-	# `visible`: the generator switches whole floors on and off through `visible`.
-	_main_light = room.get_node_or_null("MainRoomLight")
-	_main_light_mesh = room.get_node_or_null("MainRoomLightMesh")
-	if _main_light:
-		_main_light_energy = _main_light.light_energy
-		_main_light.light_energy = 0.0
-	if _main_light_mesh:
-		_main_light_mesh.visible = false
 
 	_wc_slit = _make_slit(_at(WC_SLIT_POS), Vector3(0.9, 0.02, 0.02), Color(1.0, 0.95, 0.8), 3.0)
 	var door_slit := _make_slit(_at(DOOR_SLIT_POS), Vector3(0.02, 0.02, 0.9), ROBOT_GLOW_COLOR, 0.0)
@@ -227,25 +213,7 @@ func _update_robot_glow(delta: float) -> void:
 		_robot_step_timer = ROBOT_STEP_INTERVAL
 		AudioManager.play_sfx(_step_sound, nearest.global_position, 0.6, -4.0)
 
-func _on_pistol_taken() -> void:
-	if not _main_light:
-		return
-	if _main_light_mesh:
-		_main_light_mesh.visible = true
-	# The lamp stutters on, as everything electrical in this hotel does.
-	var tween := create_tween()
-	for step in [[0.6, 0.05], [0.0, 0.08], [1.0, 0.1], [0.3, 0.05], [1.0, 0.25]]:
-		tween.tween_property(_main_light, "light_energy", _main_light_energy * step[0], step[1])
-
 func _finish() -> void:
 	print("[wake_up] the door is open - the room is done")
 	GameStateManager.wake_up_done = true
 	queue_free()
-
-# However this node goes - the door opened, or the level was rebuilt under it - the room gets
-# its light back.
-func _exit_tree() -> void:
-	if is_instance_valid(_main_light):
-		_main_light.light_energy = _main_light_energy
-	if is_instance_valid(_main_light_mesh):
-		_main_light_mesh.visible = true

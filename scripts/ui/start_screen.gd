@@ -48,7 +48,7 @@ func _ready() -> void:
 	add_child(column)
 
 	column.add_child(_line(UIStrings.get_string("start_header", ">> ГОСТИНИЦА «СИБИРЬ» :: ВНУТРЕННЯЯ СЕТЬ <<"), 20, DIM_GREEN))
-	column.add_child(_line(UIStrings.get_string("game_title_top", "СЛУЧАЙ В ГОСТИНИЦЕ"), 30, GREEN))
+	column.add_child(_line(UIStrings.get_string("game_title_top", "ГОСТИНИЦА"), 30, GREEN))
 	column.add_child(_line(UIStrings.get_string("game_title_main", "«СИБИРЬ»"), 64, GREEN))
 	_status = _line("", 18, DIM_GREEN)
 	column.add_child(_status)
@@ -73,7 +73,10 @@ func _ready() -> void:
 		_menu_buttons.append(quit_btn)
 
 	# One button per setting: pressing it moves the setting to its next value.
-	for key in ["look_sensitivity", "volume", "subtitle_scale"]:
+	var setting_keys: Array = ["look_sensitivity", "volume", "subtitle_scale"]
+	if DisplayServer.is_touchscreen_available():
+		setting_keys.append("touch_scheme")
+	for key in setting_keys:
 		var setting_btn := _button("")
 		setting_btn.pressed.connect(_on_setting_pressed.bind(key))
 		setting_btn.visible = false
@@ -123,6 +126,9 @@ func _refresh_settings() -> void:
 	var sizes: PackedStringArray = UIStrings.get_string("settings_subtitle_sizes", "ОБЫЧНЫЕ,КРУПНЫЕ,ОЧЕНЬ КРУПНЫЕ").split(",")
 	var size_index: int = clampi(GameSettings.SUBTITLE_STEPS.find(GameSettings.subtitle_scale), 0, sizes.size() - 1)
 	_settings_buttons["subtitle_scale"].text = UIStrings.get_string("settings_subtitles", "СУБТИТРЫ: %s") % sizes[size_index]
+	if _settings_buttons.has("touch_scheme"):
+		var schemes: PackedStringArray = UIStrings.get_string("settings_touch_schemes", "ДВА ПАЛЬЦА,ОДИН ПАЛЕЦ").split(",")
+		_settings_buttons["touch_scheme"].text = UIStrings.get_string("settings_touch", "УПРАВЛЕНИЕ: %s") % schemes[1 if GameSettings.one_finger() else 0]
 
 func _on_new_pressed() -> void:
 	# One slot: a new game replaces the saved one, so with a save present ask a second time.

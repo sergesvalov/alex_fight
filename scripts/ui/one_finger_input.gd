@@ -10,11 +10,16 @@
 # There is no walking backwards - turn round. A second finger tapping while the first one holds
 # shoots without stopping.
 #
-# It replaces the old pair of zones - a virtual joystick on the left half of the screen and a
-# swipe-to-look area on the right, with a double tap to shoot. Both of those zones in hud.tscn
-# now carry this script, so the whole screen behaves the same wherever it is touched;
-# player_controller.gd listens to both.
+# Both touch zones in hud.tscn carry this script; player_controller.gd listens to both. Which
+# of them work, and how, depends on GameSettings.touch_scheme:
+#
+#   one finger   - both zones as described above: the whole screen behaves the same
+#   two thumbs   - the default. The left zone is hidden under a stick (move_stick_input.gd) and
+#                  the right one has walk_on_hold off: it turns, shoots and flicks, and holding
+#                  a finger still on it does nothing - looking round without taking a step
 extends Control
+
+var walk_on_hold: bool = true
 
 signal swipe_dragged(relative: Vector2)  # finger moved: turn by this much (pixels)
 signal walk_changed(walking: bool)       # the hold started / the finger came up
@@ -80,7 +85,7 @@ func _process(delta: float) -> void:
 	if _main_touch == -1:
 		return
 	_held_for += delta
-	if not _walking and _held_for >= HOLD_DELAY:
+	if walk_on_hold and not _walking and _held_for >= HOLD_DELAY:
 		_set_walking(true)
 
 func _set_walking(walking: bool) -> void:
